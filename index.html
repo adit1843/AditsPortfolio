@@ -319,6 +319,7 @@
     grid-template-columns: repeat(3, 1fr);
     gap: 1px;
     background: var(--rule);
+    padding: 0 clamp(40px, 10vw, 160px);
     border-bottom: 1px solid var(--rule);
   }
   .other-tile {
@@ -436,7 +437,7 @@
     grid-template-columns: repeat(3, 1fr);
     column-gap: 56px;
     row-gap: 0;
-    padding: 40px var(--pad-x) 44px;
+    padding: 40px clamp(40px, 10vw, 160px) 44px;
   }
   .skill-block {
     display: flex;
