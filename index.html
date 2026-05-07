@@ -17,7 +17,7 @@
   /* HERO — full-viewport, minimal */
   .hero-min {
     min-height: calc(100vh - 50px);
-    padding: 32px var(--pad-x) 32px;
+    padding: 32px var(--pad-x) 32px calc(var(--pad-x) + clamp(20px, 4vw, 80px));
     display: grid;
     grid-template-columns: repeat(12, 1fr);
     grid-template-rows: auto auto auto;
