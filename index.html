@@ -1,0 +1,1214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Adit Sanghani — Product Design Engineer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css" />
+<style>
+  /* Page-level overrides for minimal layout */
+  body { font-size: 16px; }
+
+  .nav-inner { padding: 16px var(--pad-x); }
+
+  /* HERO — full-viewport, minimal */
+  .hero-min {
+    min-height: calc(100vh - 50px);
+    padding: 32px var(--pad-x) 32px;
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-template-rows: auto auto auto;
+    gap: 0 var(--grid-gap);
+    align-items: start;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .hero-name-min {
+    grid-column: 1 / span 7;
+    grid-row: 1;
+    align-self: end;
+    font-family: "Inter Tight", sans-serif;
+    font-weight: 700;
+    font-size: clamp(56px, 9vw, 140px);
+    line-height: 0.88;
+    letter-spacing: -0.04em;
+    margin: 0 0 20px;
+    color: var(--fg);
+    text-wrap: balance;
+  }
+  .hero-name-min .last { color: var(--accent); }
+
+  .hero-bio-wrap {
+    grid-column: 1 / span 7;
+    grid-row: 2;
+    align-self: start;
+    margin-top: 36px;
+  }
+  .hero-bio {
+    font-size: clamp(15px, 1.2vw, 17px);
+    line-height: 1.5;
+    color: var(--fg-dim);
+    max-width: 60ch;
+    text-wrap: pretty;
+    margin: 0 0 14px;
+  }
+  .hero-bio:last-of-type { margin-bottom: 0; }
+  .hero-bio strong { color: var(--fg); font-weight: 500; }
+
+  .hero-portrait {
+    grid-column: 8 / span 5;
+    grid-row: 1 / span 2;
+    align-self: stretch;
+    aspect-ratio: 1 / 1;
+    max-height: none;
+    background: transparent;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-portrait .stripes {
+    position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(
+      135deg, transparent 0 12px, rgba(255,255,255,0.04) 12px 13px
+    );
+  }
+  .hero-portrait .label {
+    position: absolute; bottom: 12px; left: 12px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--fg-mute);
+  }
+  .hero-portrait img {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: contain;
+    object-position: left bottom;
+  }
+
+  .hero-meta {
+    grid-column: 1 / span 12;
+    grid-row: 3;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 28px;
+    align-items: center;
+    margin-top: 28px;
+    padding-top: 18px;
+    border-top: 1px solid var(--rule);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--fg-mute);
+  }
+  .hero-meta .meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .hero-meta .meta-item .k { color: var(--fg-mute); }
+  .hero-meta .meta-item .v { color: var(--fg); font-weight: 500; }
+  .hero-meta a.meta-item {
+    text-decoration: none;
+    color: var(--fg);
+    border: 1px solid var(--rule);
+    padding: 8px 14px;
+    transition: background 160ms, color 160ms, border-color 160ms;
+  }
+  .hero-meta a.meta-item:hover {
+    background: var(--accent);
+    color: var(--accent-ink);
+    border-color: var(--accent);
+  }
+  .hero-meta .sep { width: 1px; height: 16px; background: var(--rule); }
+
+  /* SECTION HEAD — minimal */
+  .sh {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 28px var(--pad-x) 14px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--fg-mute);
+    border-top: 1px solid var(--rule);
+  }
+  .sh .lbl { color: var(--fg); font-weight: 500; letter-spacing: 0.1em; }
+  .sh .num { color: var(--fg-mute); }
+
+  /* PROJECTS — image-first 2-column cards */
+  .proj-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+    background: var(--rule);
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+  }
+  .proj-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    text-decoration: none;
+    color: var(--fg);
+    transition: background 200ms;
+    overflow: hidden;
+  }
+  .proj-card:hover { background: var(--bg-2); }
+  .proj-card:hover .pc-arr { color: var(--accent); transform: translateX(6px); }
+  .proj-card:hover .pc-media { filter: brightness(1.1); }
+
+  .pc-media {
+    aspect-ratio: 4 / 3;
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--rule);
+    position: relative;
+    overflow: hidden;
+    transition: filter 200ms;
+  }
+  .pc-media.has-video { aspect-ratio: 4 / 3; }
+  .pc-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+    z-index: 1;
+    background: #000;
+  }
+  .pc-stripes {
+    position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(
+      135deg, transparent 0 14px, rgba(255,255,255,0.025) 14px 15px
+    );
+  }
+  .pc-tag-tl {
+    position: absolute; top: 14px; left: 14px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 4px 8px;
+    background: rgba(11,11,12,0.6);
+    backdrop-filter: blur(4px);
+  }
+  .pc-bigmark {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    color: var(--fg);
+  }
+  .pc-mark-row { display: flex; align-items: baseline; }
+  .pc-mark {
+    font-family: "Inter Tight", sans-serif;
+    font-weight: 700;
+    font-size: clamp(48px, 6vw, 88px);
+    letter-spacing: -0.04em;
+    color: var(--fg);
+    opacity: 0.92;
+    transition: color 200ms;
+  }
+  .pc-mark-sub {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--fg-mute);
+  }
+  .pc-placeholder {
+    position: absolute; bottom: 14px; left: 14px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--fg-mute);
+    opacity: 0.6;
+  }
+
+  .pc-card-num {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--accent);
+    z-index: 1;
+  }
+  .pc-mark-accent {
+    color: var(--accent);
+  }
+  .proj-card:hover .pc-mark { color: var(--accent); }
+  .proj-card:hover .pc-title { color: var(--accent); }
+  .proj-card:hover .pc-tag-tl { background: var(--accent); color: #0a0a0a; }
+
+  .pc-meta {
+    padding: 22px 26px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .pc-title {
+    font-family: "Inter Tight", sans-serif;
+    font-size: clamp(22px, 2vw, 28px);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin: 0;
+    transition: color 160ms;
+  }
+  .pc-tag {
+    color: var(--fg-dim);
+    font-size: 14px;
+    line-height: 1.4;
+    margin: 0;
+    text-wrap: pretty;
+  }
+  .pc-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-top: 10px;
+    padding-top: 14px;
+    border-top: 1px solid var(--rule);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .pc-stamp { color: var(--fg-mute); }
+  .pc-arr { color: var(--fg); transition: color 160ms, transform 200ms; }
+
+  /* OTHERS — mini grid */
+  .others-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--rule);
+    border-bottom: 1px solid var(--rule);
+  }
+  .other-tile {
+    background: var(--bg);
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    color: var(--fg);
+  }
+  .ot-thumb {
+    aspect-ratio: 16 / 9;
+    position: relative;
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--rule);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .ot-mark {
+    position: relative;
+    font-family: "Inter Tight", sans-serif;
+    font-weight: 700;
+    font-size: clamp(28px, 3vw, 40px);
+    letter-spacing: -0.03em;
+    color: var(--fg);
+    opacity: 0.85;
+  }
+  .ot-label {
+    padding: 12px 16px 4px;
+    font-size: 14px;
+    color: var(--fg);
+    line-height: 1.3;
+  }
+  .ot-meta {
+    padding: 0 16px 14px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--fg-mute);
+  }
+  .proj-row {
+    display: grid;
+    grid-template-columns: 80px 1fr 220px 100px 40px;
+    gap: var(--grid-gap);
+    padding: 28px var(--pad-x);
+    border-bottom: 1px solid var(--rule);
+    align-items: center;
+    transition: background 160ms, color 160ms, padding 220ms;
+    cursor: pointer;
+    text-decoration: none;
+    color: var(--fg);
+  }
+  .proj-row:hover {
+    background: var(--accent);
+    color: var(--accent-ink);
+    padding-left: calc(var(--pad-x) + 12px);
+  }
+  .proj-row:hover .pr-meta,
+  .proj-row:hover .pr-tag,
+  .proj-row:hover .pr-num { color: var(--accent-ink); }
+  .proj-row:hover .pr-tag { border-color: var(--accent-ink); }
+
+  .pr-num {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px;
+    color: var(--fg-mute);
+    letter-spacing: 0.06em;
+  }
+  .pr-title {
+    font-size: clamp(22px, 2.2vw, 30px);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    text-wrap: balance;
+  }
+  .pr-meta {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    color: var(--fg-mute);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    text-align: right;
+  }
+  .pr-tag {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--fg-mute);
+    border: 1px solid var(--rule);
+    padding: 4px 8px;
+    text-align: center;
+  }
+  .pr-arr {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 18px;
+    color: var(--fg-mute);
+    text-align: right;
+    transition: transform 200ms;
+  }
+  .proj-row:hover .pr-arr {
+    color: var(--accent-ink);
+    transform: translateX(8px);
+  }
+
+  /* SKILLS — PD-focused capability matrix */
+  /* SKILLS — editorial, three columns */
+  .skills-pd {
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    column-gap: 56px;
+    row-gap: 0;
+    padding: 40px var(--pad-x) 44px;
+  }
+  .skill-block {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    position: relative;
+  }
+  .skill-block + .skill-block {
+    padding-left: 56px;
+    margin-left: -56px;
+  }
+  .skill-block + .skill-block::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--rule);
+  }
+  .skill-block .meta {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .skill-block .num {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--accent);
+  }
+  .skill-block h3 {
+    font-family: "Inter Tight", sans-serif;
+    font-size: clamp(22px, 2vw, 28px);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin: 0;
+    line-height: 1.1;
+    text-wrap: balance;
+  }
+  .skill-block .body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .skill-block .lede {
+    color: var(--fg);
+    font-size: 15px;
+    line-height: 1.55;
+    margin: 0;
+    text-wrap: pretty;
+  }
+  .skill-block .chips {
+    color: var(--fg-mute);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11.5px;
+    line-height: 1.75;
+    margin: 0;
+    letter-spacing: 0.02em;
+  }
+  .skill-block .chips strong {
+    display: block;
+    color: var(--fg-dim);
+    font-weight: 500;
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    margin-top: 8px;
+    margin-bottom: 2px;
+  }
+  .skill-block .chips strong:first-child { margin-top: 0; }
+
+  /* Legacy skills (still used elsewhere) */
+  .skills-min {
+    border-top: 1px solid var(--rule);
+  }
+  .sk-row {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: var(--grid-gap);
+    padding: 22px var(--pad-x);
+    border-bottom: 1px solid var(--rule);
+    align-items: baseline;
+  }
+  .sk-row .k {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--fg-mute);
+  }
+  .sk-row .v {
+    font-size: clamp(16px, 1.5vw, 20px);
+    color: var(--fg);
+    line-height: 1.4;
+    text-wrap: pretty;
+  }
+
+  /* CONTACT — minimal */
+  .contact-min {
+    padding: 80px var(--pad-x) 60px;
+    border-top: 1px solid var(--rule);
+  }
+  .contact-min h2 {
+    font-family: "Inter Tight", sans-serif;
+    font-weight: 700;
+    font-size: clamp(36px, 5vw, 64px);
+    line-height: 1;
+    letter-spacing: -0.04em;
+    margin: 0 0 40px;
+    text-wrap: balance;
+  }
+  .contact-min h2 em { font-style: normal; color: var(--accent); }
+
+  /* Contact form box */
+  .contact-direct {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 28px 40px;
+    margin: -20px 0 36px;
+    align-items: center;
+    color: var(--fg);
+    font-size: clamp(15px, 1.3vw, 18px);
+  }
+  .contact-direct a {
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 2px;
+    transition: color 160ms, border-color 160ms;
+  }
+  .contact-direct a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+  .contact-direct .cd-k {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--fg-mute);
+    margin-right: 10px;
+  }
+  .contact-direct .li-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--fg-dim);
+    border-bottom: 1px solid var(--fg-dim);
+    padding: 8px 14px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    transition: background 180ms, color 180ms, border-color 180ms;
+  }
+  .contact-direct .li-pill:hover {
+    background: var(--accent);
+    color: #0a0a0a;
+    border-color: var(--accent);
+  }
+
+  .contact-grid {
+    border-top: 1px solid var(--rule);
+    display: grid;
+    grid-template-columns: minmax(0, 640px) 1fr;
+    gap: 56px;
+    align-items: start;
+  }
+  .currently {
+    padding: 28px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .currently .cu-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--accent);
+    margin-bottom: 18px;
+  }
+  .currently .cu-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px rgba(255, 74, 28, 0.18);
+    animation: cu-pulse 2.4s ease-in-out infinite;
+  }
+  .currently .cu-statement {
+    font-family: "Inter Tight", sans-serif;
+    font-size: clamp(22px, 2.2vw, 30px);
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--fg);
+    margin: 0 0 18px;
+    text-wrap: balance;
+    max-width: 18ch;
+  }
+  .currently .cu-roles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .currently .cu-role {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--fg-dim);
+    border: 1px solid var(--rule);
+    padding: 6px 10px;
+  }
+  @keyframes cu-pulse {
+    0%, 100% { box-shadow: 0 0 0 3px rgba(255, 74, 28, 0.18); }
+    50%      { box-shadow: 0 0 0 6px rgba(255, 74, 28, 0.05); }
+  }
+  .contact-form {
+    padding: 28px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .contact-form .cf-head {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+  .contact-form input,
+  .contact-form textarea {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--rule);
+    color: var(--fg);
+    font-family: inherit;
+    font-size: 14px;
+    padding: 10px 0;
+    outline: none;
+    width: 100%;
+    resize: none;
+    transition: border-color 160ms;
+  }
+  .contact-form input::placeholder,
+  .contact-form textarea::placeholder {
+    color: var(--fg-mute);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+  }
+  .contact-form input:focus,
+  .contact-form textarea:focus { border-bottom-color: var(--accent); }
+  .contact-form textarea { min-height: 84px; line-height: 1.5; }
+  .contact-form .cf-send {
+    align-self: flex-start;
+    background: var(--accent);
+    color: #0a0a0a;
+    border: none;
+    padding: 11px 20px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 6px;
+    transition: transform 160ms, opacity 160ms;
+  }
+  .contact-form .cf-send:hover { transform: translateX(4px); }
+  .contact-rows-wrap {
+    padding: 28px 0 28px 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 18px;
+  }
+  .li-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    border: 1px solid var(--fg-dim);
+    color: var(--fg);
+    text-decoration: none;
+    padding: 22px 26px;
+    font-family: "Inter Tight", sans-serif;
+    font-weight: 600;
+    font-size: clamp(18px, 1.6vw, 22px);
+    letter-spacing: -0.01em;
+    transition: background 180ms, color 180ms, border-color 180ms, transform 180ms;
+  }
+  .li-button:hover {
+    background: var(--accent);
+    color: #0a0a0a;
+    border-color: var(--accent);
+  }
+  .li-button:hover .li-arr { transform: translate(4px, -4px); }
+  .li-button .li-sub {
+    display: block;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--fg-mute);
+    margin-bottom: 6px;
+  }
+  .li-button:hover .li-sub { color: #0a0a0a; opacity: 0.7; }
+  .li-button .li-arr { font-size: 24px; transition: transform 180ms; flex-shrink: 0; }
+
+  /* Section focus dim — quiet other sections while you're reading one */
+  .page-sec {
+    transition: opacity 420ms ease, filter 420ms ease;
+    will-change: opacity;
+  }
+  body.sec-focus-on .page-sec {
+    opacity: 0.32;
+    filter: saturate(0.7);
+  }
+  body.sec-focus-on .page-sec.is-active {
+    opacity: 1;
+    filter: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .page-sec { transition: none; }
+  }
+
+  /* Foot */
+  .foot-min {
+    padding: 18px var(--pad-x);
+    border-top: 1px solid var(--rule);
+    display: flex;
+    justify-content: space-between;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--fg-mute);
+  }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .hero-name-min { grid-column: 1 / -1; }
+    .hero-bio-wrap { grid-column: 1 / -1; grid-row: auto; }
+    .hero-portrait { grid-column: 1 / -1; grid-row: auto; aspect-ratio: 1 / 1; max-width: 320px; margin-bottom: 24px; }
+    .hero-meta { grid-template-columns: repeat(2, 1fr); }
+    .proj-grid { grid-template-columns: 1fr; }
+    .others-grid { grid-template-columns: repeat(2, 1fr); }
+    .skills-pd { grid-template-columns: 1fr; column-gap: 0; row-gap: 36px; padding: 32px 0; }
+    .skill-block + .skill-block { padding-left: 0; margin-left: 0; padding-top: 36px; border-top: 1px solid var(--rule); }
+    .skill-block + .skill-block::before { display: none; }
+    .contact-grid { grid-template-columns: 1fr; gap: 0; }
+    .currently { padding: 24px 0; border-top: 1px solid var(--rule); }
+    .contact-form { padding: 24px 0; }
+    .sk-row { grid-template-columns: 1fr; }
+    .contact-direct { gap: 16px 28px; margin: -8px 0 28px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-left">
+      <span class="brand">ADIT SANGHANI</span>
+    </div>
+    <div></div>
+    <div class="nav-right">
+      <a class="navlink" href="#projects">Projects</a>
+      <a class="navlink" href="#skills">Skills</a>
+      <a class="navlink" href="resume.html">Resume</a>
+      <a class="navlink" href="#contact">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="page-sec" data-sec="hero">
+<header class="hero-min">
+  <div class="hero-portrait">
+    <img src="assets/portrait.png?v=6" alt="Adit Sanghani" />
+  </div>
+
+  <h1 class="hero-name-min">Adit<br/>Sanghani<span class="last">.</span></h1>
+
+  <div class="hero-bio-wrap">
+    <p class="hero-bio">
+      I&rsquo;m a mechanical engineer who notices the small things most people eventually accept, and can&rsquo;t help thinking about how to improve them.
+    </p>
+
+    <p class="hero-bio hero-bio-2">
+      I pay attention to how systems behave in the real world: how they&rsquo;re used, how they wear over time, and where friction, mechanical or otherwise, starts to show up. My background in manufacturing and automation keeps me grounded in what&rsquo;s actually buildable, scalable, and reliable, not just what looks good on paper.
+    </p>
+
+    <p class="hero-bio hero-bio-2">
+      I&rsquo;m drawn to designing things that work the way people expect them to, whether that&rsquo;s a physical interface, a piece of infrastructure, or a system behind the scenes, and then refining them until they perform a little better, last a little longer, and fail a little less.
+    </p>
+  </div>
+
+  <div class="hero-meta">
+    <div class="meta-item"><span class="k">▪</span><span class="v">College Station, TX</span></div>
+    <span class="sep"></span>
+    <a class="meta-item" href="tel:+14407713203"><span class="k">☎</span><span class="v">(440) 771-3203</span></a>
+    <a class="meta-item" href="mailto:aditsanghani@gmail.com"><span class="k">✉</span><span class="v">Email</span></a>
+    <a class="meta-item" href="https://linkedin.com/in/aditsa" target="_blank" rel="noopener"><span class="k">in</span><span class="v">LinkedIn</span></a>
+  </div>
+</header>
+</section>
+
+<!-- PROJECTS -->
+<section class="page-sec" data-sec="projects">
+<div class="sh" id="projects">
+  <span class="lbl">Projects</span>
+  <span class="num">04 / featured</span>
+</div>
+
+<div class="proj-grid">
+
+  <a class="proj-card" href="projects/dell-liquid-cooled.html">
+    <div class="pc-media has-video">
+      <video class="pc-video" data-hover-video data-still-time="3" src="assets/dell.mp4#t=3" muted loop playsinline preload="auto"></video>
+      <div class="pc-tag-tl" style="z-index:3;">P/001 · PATENT-PENDING</div>
+    </div>
+    <div class="pc-meta">
+      <h3 class="pc-title">Leak-Stop System for Data-Center Racks</h3>
+      <p class="pc-tag">Patent-pending leak isolation for liquid-cooled data-center racks</p>
+      <div class="pc-foot">
+        <span class="pc-stamp">2024–25 · Dell × TAMU</span>
+        <span class="pc-arr">Case study →</span>
+      </div>
+    </div>
+  </a>
+
+  <a class="proj-card" href="projects/smart-door-lock.html">
+    <div class="pc-media">
+      <div class="pc-stripes"></div>
+      <div class="pc-tag-tl">P/002 · OPEN SOURCE</div>
+      <div class="pc-bigmark">
+        <span class="pc-mark-row"><span class="pc-mark">ESP<span class="pc-mark-accent">32</span></span></span>
+        <span class="pc-mark-sub">LORA · SERVO · MQTT</span>
+      </div>
+      <div class="pc-placeholder">[ RENDER · DOOR + WALL UNIT ]</div>
+    </div>
+    <div class="pc-meta">
+      <h3 class="pc-title">Smart Electronic Door Lock</h3>
+      <p class="pc-tag">Self-hosted residential lock—ESP32, LoRa, servo-driven latch</p>
+      <div class="pc-foot">
+        <span class="pc-stamp">2026 · Personal</span>
+        <span class="pc-arr">Case study →</span>
+      </div>
+    </div>
+  </a>
+
+  <a class="proj-card" href="projects/glance.html">
+    <div class="pc-media">
+      <div class="pc-stripes"></div>
+      <div class="pc-tag-tl">P/003 · IN PROGRESS</div>
+      <div class="pc-bigmark">
+        <span class="pc-mark-row"><span class="pc-mark">GLANCE</span></span>
+        <span class="pc-mark-sub">DESK NOTIFICATION DISPLAY</span>
+      </div>
+      <div class="pc-placeholder">[ RENDER · DESK DISPLAY · PHONE TETHER ]</div>
+    </div>
+    <div class="pc-meta">
+      <h3 class="pc-title">Glance</h3>
+      <p class="pc-tag">Desk display that mirrors your phone—so the phone stays away</p>
+      <div class="pc-foot">
+        <span class="pc-stamp">2026 · Personal</span>
+        <span class="pc-arr">Case study →</span>
+      </div>
+    </div>
+  </a>
+
+  <a class="proj-card" href="projects/ice-cream-dispenser.html">
+    <div class="pc-media">
+      <div class="pc-stripes"></div>
+      <div class="pc-tag-tl">P/004 · IN PROGRESS</div>
+      <div class="pc-bigmark">
+        <span class="pc-mark-row"><span class="pc-mark">SCOOP</span></span>
+        <span class="pc-mark-sub">CONSISTENT · FAST · BACK-OF-HOUSE</span>
+      </div>
+      <div class="pc-placeholder">[ RENDER · SCOOP DISPENSER MECH ]</div>
+    </div>
+    <div class="pc-meta">
+      <h3 class="pc-title">Ice Cream Scoop Dispenser</h3>
+      <p class="pc-tag">Back-of-house dispenser for consistent, fast portions in shops</p>
+      <div class="pc-foot">
+        <span class="pc-stamp">2026 · Personal</span>
+        <span class="pc-arr">Case study →</span>
+      </div>
+    </div>
+  </a>
+
+</div>
+</section>
+
+<!-- OTHERS -->
+<section class="page-sec" data-sec="others">
+<div class="sh" id="others" style="margin-top: 0;">
+  <span class="lbl">Others</span>
+  <span class="num">Industry &amp; research — most under NDA</span>
+</div>
+<div class="others-grid">
+  <div class="other-tile">
+    <div class="ot-thumb"><div class="pc-stripes"></div><div class="ot-mark">$344K/yr</div></div>
+    <div class="ot-label">Tesla · AGV adaptive support</div>
+    <div class="ot-meta">2024 · NDA</div>
+  </div>
+  <div class="other-tile">
+    <div class="ot-thumb"><div class="pc-stripes"></div><div class="ot-mark">×6</div></div>
+    <div class="ot-label">Tesla · Forklift ⇌ AGV conveyor</div>
+    <div class="ot-meta">2023–24 · NDA</div>
+  </div>
+  <div class="other-tile">
+    <div class="ot-thumb"><div class="pc-stripes"></div><div class="ot-mark">~$200K/yr</div></div>
+    <div class="ot-label">Nucor · Pneumatic retrofit</div>
+    <div class="ot-meta">2025 · NDA</div>
+  </div>
+  <div class="other-tile">
+    <div class="ot-thumb"><div class="pc-stripes"></div><div class="ot-mark">+30%</div></div>
+    <div class="ot-label">Nucor · CV metrology station</div>
+    <div class="ot-meta">2025 · NDA</div>
+  </div>
+  <a class="other-tile" href="https://advanced.onlinelibrary.wiley.com/doi/full/10.1002/admt.202300213" target="_blank" rel="noopener">
+    <div class="ot-thumb"><div class="pc-stripes"></div><div class="ot-mark">PAPER</div></div>
+    <div class="ot-label">Electroadhesion droplet rig</div>
+    <div class="ot-meta">2022–23 · Adv. Mat. Tech.</div>
+  </a>
+  <div class="other-tile">
+    <div class="ot-thumb"><div class="pc-stripes"></div><div class="ot-mark">OCT</div></div>
+    <div class="ot-label">INVENT Lab · OCT fingertip rig</div>
+    <div class="ot-meta">2023–25 · Research</div>
+  </div>
+</div>
+</section>
+
+<!-- SKILLS — PD focus -->
+<section class="page-sec" data-sec="skills">
+<div class="sh" id="skills">
+  <span class="lbl">Capabilities</span>
+  <span class="num">End-to-end product development</span>
+</div>
+<div class="skills-pd">
+
+  <div class="skill-block">
+    <div class="meta">
+      <div class="num">§ 01</div>
+      <h3>Define &amp; Design</h3>
+    </div>
+    <div class="body">
+      <p class="lede">From concept through detailed design&mdash;turning a stated problem into geometry that builds, holds tolerance, and makes sense to the people who use it.</p>
+      <p class="chips"><strong>Discovery</strong>User interviews, Problem framing.<strong>Concepting</strong>Sketches, Pugh matrices, Trade studies.<strong>Parametric</strong>NX, SolidWorks, Onshape, Creo, CATIA.<strong>Detailing</strong>GD&amp;T, DFMA, Tolerance stacks.</p>
+    </div>
+  </div>
+
+  <div class="skill-block">
+    <div class="meta">
+      <div class="num">§ 02</div>
+      <h3>Build &amp; Bring-up</h3>
+    </div>
+    <div class="body">
+      <p class="lede">Getting a working V0 on the bench fast, then closing the loop&mdash;mechanism, sensors, firmware, and the controls glue that makes them behave together.</p>
+      <p class="chips"><strong>Fab</strong>FDM, SLA, CNC, Sheet metal, Weldments.<strong>Electronics</strong>ESP32, Embedded C, PCB bring-up.<strong>Controls</strong>MATLAB, LabVIEW, Python, Sensors, Motion.<strong>Assembly</strong>Precision assembly, Fixturing.</p>
+    </div>
+  </div>
+
+  <div class="skill-block">
+    <div class="meta">
+      <div class="num">§ 03</div>
+      <h3>Make &amp; Validate</h3>
+    </div>
+    <div class="body">
+      <p class="lede">Process engineering as a daily habit. Designing the test that proves it works, the data that catches drift, and the documentation that lets a vendor build it without asking.</p>
+      <p class="chips"><strong>Test design</strong>DOE, Drop / cycle, Accelerated life.<strong>Process eng</strong>FMEA, Control plans, Poka-yoke.<strong>Quality / data</strong>SPC, Cp/Cpk, GR&amp;R, RCA, 8D, FEA.<strong>Standards / supply</strong>ISO 9001 / 14001, RFQs, PPAP, Vendor bring-up.</p>
+    </div>
+  </div>
+
+</div>
+</section>
+
+<!-- CONTACT -->
+<section class="page-sec" data-sec="contact">
+<section class="contact-min" id="contact">
+  <div class="sh" style="margin: 0 calc(var(--pad-x) * -1) 24px; padding-top: 0; border-top: none;">
+    <span class="lbl">Contact</span>
+    <span class="num"></span>
+  </div>
+
+  <h2>Let&rsquo;s build <em>something</em>.</h2>
+
+  <div class="contact-direct">
+    <span><span class="cd-k">Email</span><a href="mailto:aditsanghani@gmail.com">aditsanghani@gmail.com</a></span>
+    <span><span class="cd-k">Phone</span><a href="tel:+14407713203">(440) 771-3203</a></span>
+    <a class="li-pill" href="https://linkedin.com/in/aditsa" target="_blank" rel="noopener">LinkedIn ↗</a>
+  </div>
+
+  <div class="contact-grid">
+    <form class="contact-form" id="contact-form" onsubmit="return sendContact(event)">
+      <div class="cf-head">§ Send a note</div>
+      <input type="text" name="name" placeholder="Your name" required />
+      <input type="email" name="email" placeholder="Your email" required />
+      <textarea name="message" placeholder="A few words about why you’re reaching out." required></textarea>
+      <button type="submit" class="cf-send">Send →</button>
+    </form>
+
+    <aside class="currently">
+      <div class="cu-head"><span class="cu-dot"></span>Currently</div>
+      <p class="cu-statement">Looking for my next role.</p>
+      <div class="cu-roles">
+        <span class="cu-role">Product development</span>
+        <span class="cu-role">R&amp;D</span>
+        <span class="cu-role">Mechanical engineering</span>
+      </div>
+    </aside>
+  </div>
+</section>
+</section>
+
+<script>
+  // Hover-to-play project card videos. The video itself is the still frame:
+  // we seek it to data-still-time on load and pause it; hover plays from start.
+  (function() {
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    document.querySelectorAll('[data-hover-video]').forEach(v => {
+      const card = v.closest('.proj-card');
+      if (!card) return;
+      const stillT = parseFloat(v.dataset.stillTime || '0');
+      const seekToStill = () => {
+        try { v.pause(); v.currentTime = stillT; } catch(e) {}
+      };
+      if (v.readyState >= 1) seekToStill();
+      else v.addEventListener('loadedmetadata', seekToStill, { once: true });
+      if (reduce) return;
+      const play = () => { v.currentTime = 0; v.play().catch(() => {}); };
+      const stop = () => { v.pause(); v.currentTime = stillT; };
+      card.addEventListener('mouseenter', play);
+      card.addEventListener('mouseleave', stop);
+      card.addEventListener('focusin', play);
+      card.addEventListener('focusout', stop);
+    });
+  })();
+
+  function sendContact(e) {
+    e.preventDefault();
+    const f = e.target;
+    const name = encodeURIComponent(f.name.value || '');
+    const email = f.email.value || '';
+    const msg = f.message.value || '';
+    const subject = encodeURIComponent('Portfolio inquiry from ' + (f.name.value || ''));
+    const body = encodeURIComponent(msg + '\n\n— ' + (f.name.value || '') + '\n' + email);
+    window.location.href = 'mailto:aditsanghani@gmail.com?subject=' + subject + '&body=' + body;
+    return false;
+  }
+
+  // Section focus — dim non-active sections as the reader scrolls
+  (function() {
+    const secs = document.querySelectorAll('.page-sec');
+    if (!secs.length) return;
+
+    let active = null;
+    const setActive = (el) => {
+      if (el === active) return;
+      active = el;
+      secs.forEach(s => s.classList.toggle('is-active', s === el));
+    };
+
+    // Pick the section closest to the viewport's vertical center
+    const pick = () => {
+      const mid = window.innerHeight / 2;
+      let best = null, bestDist = Infinity;
+      secs.forEach(s => {
+        const r = s.getBoundingClientRect();
+        if (r.bottom < 0 || r.top > window.innerHeight) return;
+        const center = (r.top + r.bottom) / 2;
+        const d = Math.abs(center - mid);
+        if (d < bestDist) { bestDist = d; best = s; }
+      });
+      if (best) setActive(best);
+    };
+
+    // Turn focus on once the user starts scrolling; off when they go back to top
+    const updateMode = () => {
+      document.body.classList.toggle('sec-focus-on', window.scrollY > 80);
+    };
+
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        updateMode();
+        pick();
+        ticking = false;
+      });
+    }, { passive: true });
+
+    window.addEventListener('resize', pick);
+    updateMode();
+    pick();
+  })();
+</script>
+
+<!-- FOOT -->
+<footer class="foot-min">
+  <div>© 2026 A. Sanghani</div>
+  <div>v2026.04</div>
+</footer>
+
+<!-- TWEAKS -->
+<div class="tweaks" id="tweaks">
+  <h6>TWEAKS <span style="color:var(--fg-mute);">PANEL</span></h6>
+  <div class="tweak-row">
+    <label>Accent</label>
+    <div class="swatches" id="sw-accent">
+      <div class="swatch on" data-val="#FF4A1C" style="background:#FF4A1C;"></div>
+      <div class="swatch" data-val="#E8E247" style="background:#E8E247;"></div>
+      <div class="swatch" data-val="#6CFFB0" style="background:#6CFFB0;"></div>
+      <div class="swatch" data-val="#62B6FF" style="background:#62B6FF;"></div>
+      <div class="swatch" data-val="#EDEBE6" style="background:#EDEBE6;"></div>
+    </div>
+  </div>
+  <div class="tweak-row">
+    <label>Theme</label>
+    <div>
+      <button class="tweak-btn on" data-theme="dark">Dark</button>
+      <button class="tweak-btn" data-theme="light">Light</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "accent": "#FF4A1C",
+  "theme": "dark"
+}/*EDITMODE-END*/;
+
+const state = { ...TWEAK_DEFAULTS };
+
+function applyState() {
+  const root = document.documentElement;
+  root.style.setProperty('--accent', state.accent);
+  if (state.theme === 'light') {
+    root.style.setProperty('--bg', '#F2F0EA');
+    root.style.setProperty('--bg-2', '#E8E5DE');
+    root.style.setProperty('--fg', '#141414');
+    root.style.setProperty('--fg-dim', '#4A4A4A');
+    root.style.setProperty('--fg-mute', '#8A857E');
+    root.style.setProperty('--rule', '#CAC6BF');
+    root.style.setProperty('--rule-2', '#DDD9D1');
+  } else {
+    root.style.setProperty('--bg', '#0B0B0C');
+    root.style.setProperty('--bg-2', '#111113');
+    root.style.setProperty('--fg', '#EDEBE6');
+    root.style.setProperty('--fg-dim', '#A7A29A');
+    root.style.setProperty('--fg-mute', '#6B6B6B');
+    root.style.setProperty('--rule', '#2A2A2C');
+    root.style.setProperty('--rule-2', '#1A1A1C');
+  }
+}
+
+document.querySelectorAll('#sw-accent .swatch').forEach(s => {
+  s.addEventListener('click', () => {
+    state.accent = s.dataset.val;
+    document.querySelectorAll('#sw-accent .swatch').forEach(x => x.classList.remove('on'));
+    s.classList.add('on');
+    applyState();
+    try { window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { accent: state.accent } }, '*'); } catch(e){}
+  });
+});
+document.querySelectorAll('[data-theme]').forEach(b => {
+  b.addEventListener('click', () => {
+    state.theme = b.dataset.theme;
+    document.querySelectorAll('[data-theme]').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    applyState();
+    try { window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { theme: state.theme } }, '*'); } catch(e){}
+  });
+});
+
+window.addEventListener('message', (ev) => {
+  const d = ev.data || {};
+  if (d.type === '__activate_edit_mode') document.getElementById('tweaks').classList.add('active');
+  if (d.type === '__deactivate_edit_mode') document.getElementById('tweaks').classList.remove('active');
+});
+applyState();
+try { window.parent.postMessage({ type: '__edit_mode_available' }, '*'); } catch(e){}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Resume · Adit Sanghani</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css" />
+<style>
+  body { font-size: 16px; }
+
+  .nav-inner { padding: 16px var(--pad-x); }
+
+  .resume-head {
+    padding: 56px var(--pad-x) 32px;
+    border-bottom: 1px solid var(--rule);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--grid-gap);
+    align-items: end;
+  }
+  .resume-head .left {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .resume-head .kicker {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--fg-mute);
+  }
+  .resume-head h1 {
+    font-family: "Inter Tight", sans-serif;
+    font-weight: 700;
+    font-size: clamp(56px, 9vw, 140px);
+    letter-spacing: -0.04em;
+    line-height: 0.9;
+    margin: 0;
+    color: var(--fg);
+  }
+  .resume-head h1 .dot { color: var(--accent); }
+  .resume-head .meta {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--fg-mute);
+  }
+  .resume-head .meta strong { color: var(--fg); font-weight: 500; }
+
+  .download-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    padding: 18px 26px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-family: "Inter Tight", sans-serif;
+    font-weight: 600;
+    font-size: 18px;
+    letter-spacing: -0.01em;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: transform 160ms, filter 160ms;
+  }
+  .download-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+  .download-btn .arr {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 22px;
+    transition: transform 200ms;
+  }
+  .download-btn:hover .arr { transform: translateY(2px); }
+  .download-btn .sub {
+    display: block;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-top: 2px;
+    opacity: 0.7;
+  }
+
+  /* PDF viewer */
+  .resume-viewer {
+    padding: 32px var(--pad-x) 60px;
+    background: var(--bg-2);
+  }
+  .resume-frame {
+    width: 100%;
+    aspect-ratio: 8.5 / 11;
+    max-width: 900px;
+    margin: 0 auto;
+    border: 1px solid var(--rule);
+    background: #fff;
+    position: relative;
+    overflow: hidden;
+  }
+  .resume-frame embed,
+  .resume-frame iframe,
+  .resume-frame object {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+  }
+  .resume-fallback {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    background: var(--bg-2);
+    color: var(--fg-dim);
+    text-align: center;
+    padding: 24px;
+  }
+  .resume-fallback.show { display: flex; }
+  .resume-fallback p {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin: 0;
+  }
+
+  .foot-min {
+    padding: 18px var(--pad-x);
+    border-top: 1px solid var(--rule);
+    display: flex;
+    justify-content: space-between;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--fg-mute);
+  }
+
+  @media (max-width: 720px) {
+    .resume-head { grid-template-columns: 1fr; }
+    .resume-head h1 { font-size: clamp(48px, 14vw, 80px); }
+    .download-btn { font-size: 15px; padding: 14px 18px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-left">
+      <a class="brand" href="index.html" style="text-decoration:none; color:inherit;">ADIT SANGHANI</a>
+    </div>
+    <div></div>
+    <div class="nav-right">
+      <a class="navlink" href="index.html">← Back</a>
+      <a class="navlink" href="index.html#skills">Skills</a>
+      <a class="navlink" href="index.html#contact">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HEAD -->
+<header class="resume-head">
+  <div class="left">
+    <div class="kicker">— § Resume · v2026.04</div>
+    <h1>Resume<span class="dot">.</span></h1>
+    <div class="meta">▪ Updated April 2026</div>
+  </div>
+
+  <a class="download-btn" href="assets/Adit_Sanghani_Resume.pdf" download="Adit_Sanghani_Resume.pdf">
+    <div>
+      Download PDF
+    </div>
+    <span class="arr">↓</span>
+  </a>
+</header>
+
+<!-- VIEWER -->
+<section class="resume-viewer">
+  <div class="resume-frame" id="frame">
+    <iframe src="assets/Adit_Sanghani_Resume.pdf#view=FitH" title="Adit Sanghani Resume" id="pdf-iframe"></iframe>
+    <div class="resume-fallback" id="fallback">
+      <p>▪ PDF preview blocked in this browser pane</p>
+      <p style="max-width: 40ch; line-height: 1.5; text-transform: none; letter-spacing: 0; color: var(--fg-mute); font-family: 'Inter Tight', sans-serif; font-size: 14px;">This is a preview-environment limitation. On the live site the PDF will render here directly. In the meantime:</p>
+      <a class="download-btn" href="assets/Adit_Sanghani_Resume.pdf" download="Adit_Sanghani_Resume.pdf">
+        <div>Download PDF</div>
+        <span class="arr">↓</span>
+      </a>
+      <a href="assets/Adit_Sanghani_Resume.pdf" target="_blank" rel="noopener" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--fg-mute); text-decoration: underline;">Or open in a new tab ↗</a>
+    </div>
+  </div>
+</section>
+
+<footer class="foot-min">
+  <div>© 2026 A. Sanghani</div>
+  <div>v2026.04</div>
+</footer>
+
+<script>
+// Detect whether the PDF iframe rendered. In sandboxed preview iframes (some hosts, Chrome's
+// nested-frame PDF block) it won't — show the fallback so the user can still download/open.
+window.addEventListener('load', () => {
+  const iframe = document.getElementById('pdf-iframe');
+  const fallback = document.getElementById('fallback');
+  if (!iframe || !fallback) return;
+
+  // 1) Detect if we are in a cross-origin / sandboxed iframe — PDF rendering is unreliable here.
+  const isSandboxed = (() => {
+    try { return window.self !== window.top; } catch (e) { return true; }
+  })();
+
+  // 2) After a short delay, see if the iframe actually has content.
+  setTimeout(() => {
+    let blocked = isSandboxed;
+    try {
+      // If we can't even read the iframe document, assume blocked.
+      if (!iframe.contentWindow || !iframe.contentDocument) blocked = true;
+    } catch (e) { blocked = true; }
+    if (blocked) fallback.classList.add('show');
+  }, 1000);
+
+  iframe.addEventListener('error', () => fallback.classList.add('show'));
+});
+</script>
+
+</body>
+</html>
