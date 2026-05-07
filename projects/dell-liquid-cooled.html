@@ -35,7 +35,10 @@
   .case-pitch .v { grid-column: span 9; font-size: clamp(19px, 1.9vw, 26px); line-height: 1.35; text-wrap: pretty; }
   .case-pitch .v em { font-style: normal; background: var(--accent); color: var(--accent-ink); padding: 0 4px; }
 
-  .case-section { padding: 56px var(--pad-x); border-top: 1px solid var(--rule); }
+  .case-section { 
+    padding: 56px clamp(40px, 10vw, 160px); 
+    border-top: 1px solid var(--rule); 
+  }
   .case-section.alt { background: var(--bg-2); }
 
   /* Context section: image+quote stacked on the right, sized to content */
