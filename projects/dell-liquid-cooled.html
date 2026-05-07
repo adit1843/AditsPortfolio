@@ -655,16 +655,23 @@
     <span>Four modules, one job: isolate the leaking node</span>
   </div>
 
-  <div class="prose" style="max-width: 72ch; margin-bottom: 28px;">
+<div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 56px; margin-bottom: 28px; align-items: start;">
+  <div class="prose" style="max-width: 72ch;">
     <p>
-      The mechanism doesn&rsquo;t detect leaks&mdash;Dell&rsquo;s sensors already do that. It receives the leak-level signal, drives an <strong>actuator up the rack to that level</strong>, and physically pulls apart the two QDs feeding that server. Coolant flow to the leaking node stops. Coolant flow to every other node continues. The data center never sees an aisle drop.
+      The mechanism doesn't detect leaks—Dell's sensors already do that. It receives the leak-level signal, drives an <strong>actuator up the rack to that level</strong>, and physically pulls apart the two QDs feeding that server. Coolant flow to the leaking node stops. Coolant flow to every other node continues. The data center never sees an aisle drop.
     </p>
     <p>
       It splits cleanly into four modules, each independently testable, each replaceable without taking the others apart.
     </p>
   </div>
+  <div class="prose" style="max-width: 56ch;">
+    <p>
+      Everything sits inside an <strong>8020 aluminum frame</strong> built to the dimensions of a Dell rack column. We didn't build a full 42U-tall prototype; we built a five-level test stand that exercises every motion the production version would.
+    </p>
+  </div>
+</div>
 
-  <div class="mod-grid">
+<div class="mod-grid">
     <div class="mod">
       <div class="num">01</div>
       <div>
@@ -698,10 +705,6 @@
       </div>
     </div>
   </div>
-
-  <p style="margin-top: 28px; max-width: 72ch; color: var(--fg-dim); font-size: 14px; line-height: 1.6;">
-    Everything sits inside an <strong style="color: var(--fg); font-weight: 500;">8020 aluminum frame</strong> built to the dimensions of a Dell rack column. We didn&rsquo;t build a full 42U-tall prototype; we built a five-level test stand that exercises every motion the production version would.
-  </p>
 </section>
 
 <!-- SUBSYSTEM DETAIL -->
