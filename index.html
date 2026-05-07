@@ -171,7 +171,11 @@
     overflow: hidden;
   }
   .proj-card:hover { background: var(--bg-2); }
-  .proj-card:hover .pc-arr { color: var(--accent); transform: translateX(6px); }
+  .proj-card:hover .pc-arr {
+    color: var(--accent-ink);
+    background: var(--accent);
+    transform: translateX(6px);
+  }
   .proj-card:hover .pc-media { filter: brightness(1.1); }
 
   .pc-media {
@@ -301,7 +305,13 @@
     letter-spacing: 0.1em;
   }
   .pc-stamp { color: var(--fg-mute); }
-  .pc-arr { color: var(--fg); transition: color 160ms, transform 200ms; }
+  .pc-arr {
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 6px 12px;
+    font-weight: 600;
+    transition: color 160ms, background 160ms, transform 200ms;
+  }
 
   /* OTHERS — mini grid */
   .others-grid {
