@@ -747,33 +747,33 @@
   </div>
 
   <!-- Elevator -->
-  <div class="sub-row flip" style="align-items: stretch;">
-    <div class="sub-img">
-      <div class="imgframe" style="background: linear-gradient(180deg,#1d1d1f,#0e0e10); aspect-ratio: auto; height: 100%;">
-        <span class="cap">FIG. 03 · Elevator</span>
-        <img src="assets/dell/Screw.jpg" alt="Lead-screw elevator CAD: linear rail, screw, stepper at base, mounting plate carrying the actuator." style="width: 100%; height: 100%; object-fit: contain; display: block;" />
-      </div>
-    </div>
-    <div>
-      <div class="sub-num">▪ 03.2 — ELEVATOR</div>
-      <h3>Belt drive looked elegant. Lead screw won.</h3>
-      <p>
-        I trade-studied a <strong>belt-and-sprocket</strong> elevator first. Faster, cheaper bearings, but it needed a <em>brake</em> to hold position under the actuator&rsquo;s reaction loads. That&rsquo;s another failure mode living above expensive hardware.
-      </p>
-      <p>
-        A lead screw is <strong>self-locking</strong>&mdash;cut the power and the carriage stays where it is. It&rsquo;s slower per revolution, but the actuation cycle is dominated by the QD pull, not the climb. Net cycle time still hit 10.2 s, well inside the 15 s spec.
-      </p>
-      <p>
-        The carriage zeros itself against a limit switch at the bottom of travel every time it powers on. Without that, stepper drift compounds and the actuator starts hunting for QDs. With it, the system landed within <strong>6 mm of every target level</strong> across 50 consecutive runs.
-      </p>
-      <dl class="specs">
-        <dt>Drive</dt><dd>NEMA 17 stepper</dd>
-        <dt>Mechanism</dt><dd>Lead screw, self-locking</dd>
-        <dt>Repeatability</dt><dd>±6 mm</dd>
-        <dt>Homing</dt><dd>Limit switch, every boot</dd>
-      </dl>
+  <div class="sub-row flip">
+  <div class="sub-img" style="align-self: stretch; display: flex; align-items: center; justify-content: center; min-height: 0;">
+    <div class="imgframe" style="background: linear-gradient(180deg,#1d1d1f,#0e0e10); aspect-ratio: auto; max-height: 100%; display: flex; align-items: center; justify-content: center;">
+      <span class="cap">FIG. 03 · Elevator</span>
+      <img src="assets/dell/Screw.jpg" alt="Lead-screw elevator CAD: linear rail, screw, stepper at base, mounting plate carrying the actuator." style="max-width: 100%; max-height: 100%; width: auto; height: auto; display: block; object-fit: contain;" />
     </div>
   </div>
+  <div>
+    <div class="sub-num">▪ 03.2 — ELEVATOR</div>
+    <h3>Belt drive looked elegant. Lead screw won.</h3>
+    <p>
+      I trade-studied a <strong>belt-and-sprocket</strong> elevator first. Faster, cheaper bearings, but it needed a <em>brake</em> to hold position under the actuator&rsquo;s reaction loads. That&rsquo;s another failure mode living above expensive hardware.
+    </p>
+    <p>
+      A lead screw is <strong>self-locking</strong>&mdash;cut the power and the carriage stays where it is. It&rsquo;s slower per revolution, but the actuation cycle is dominated by the QD pull, not the climb. Net cycle time still hit 10.2 s, well inside the 15 s spec.
+    </p>
+    <p>
+      The carriage zeros itself against a limit switch at the bottom of travel every time it powers on. Without that, stepper drift compounds and the actuator starts hunting for QDs. With it, the system landed within <strong>6 mm of every target level</strong> across 50 consecutive runs.
+    </p>
+    <dl class="specs">
+      <dt>Drive</dt><dd>NEMA 17 stepper</dd>
+      <dt>Mechanism</dt><dd>Lead screw, self-locking</dd>
+      <dt>Repeatability</dt><dd>±6 mm</dd>
+      <dt>Homing</dt><dd>Limit switch, every boot</dd>
+    </dl>
+  </div>
+</div>
 
   <!-- Water circulation -->
   <div class="sub-row">
