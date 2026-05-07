@@ -65,7 +65,7 @@ a { color: inherit; text-decoration: none; }
   align-items: center;
   padding: 14px var(--pad-x);
   font-family: "JetBrains Mono", monospace;
-  font-size: 11px;
+  font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -84,7 +84,7 @@ a { color: inherit; text-decoration: none; }
   100% { box-shadow: 0 0 0 10px rgba(255,74,28,0); }
 }
 .nav .brand {
-  font-weight: 600; color: var(--fg); letter-spacing: 0.02em;
+  font-weight: 600; color: var(--fg); letter-spacing: 0.02em; font-size: 14px
 }
 
 /* ——— Section header ——— */
