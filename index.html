@@ -14,6 +14,15 @@
 
   .nav-inner { padding: 16px var(--pad-x); }
 
+
+  @keyframes nudge {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(4px); }
+  }
+  .pc-arr {
+    animation: nudge 2s ease-in-out infinite;
+  }
+  
   /* HERO — full-viewport, minimal */
   .hero-min {
     min-height: calc(100vh - 50px);
