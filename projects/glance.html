@@ -10,6 +10,48 @@
 <link rel="stylesheet" href="../styles.css" />
 <style>
   .case-hero { padding: 40px var(--pad-x) 24px; }
+
+  /* Coming-soon banner */
+  .cs-banner {
+    background: var(--accent);
+    color: var(--accent-ink);
+    border-bottom: 1px solid var(--rule);
+    padding: 28px clamp(40px, 10vw, 160px);
+    position: relative;
+    overflow: hidden;
+  }
+  .cs-banner::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(45deg, rgba(0,0,0,0.06) 0px, rgba(0,0,0,0.06) 8px, transparent 8px, transparent 16px);
+    pointer-events: none;
+  }
+  .cs-banner-inner {
+    position: relative;
+    display: flex; flex-wrap: wrap; align-items: baseline;
+    gap: 14px 28px;
+  }
+  .cs-banner .cs-tag {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    border: 1px solid var(--accent-ink);
+    padding: 5px 9px;
+  }
+  .cs-banner .cs-big {
+    font-family: "Inter Tight", sans-serif;
+    font-weight: 700;
+    font-size: clamp(36px, 5vw, 64px);
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  .cs-banner .cs-sub {
+    font-size: 14px;
+    letter-spacing: 0.01em;
+    opacity: 0.85;
+    max-width: 48ch;
+  }
   .case-meta {
     display: grid; grid-template-columns: repeat(12, 1fr); gap: var(--grid-gap);
     font-family: "JetBrains Mono", monospace; font-size: 11px;
@@ -238,6 +280,15 @@
     </div>
   </div>
 </nav>
+
+<!-- COMING SOON BANNER -->
+<div class="cs-banner">
+  <div class="cs-banner-inner">
+    <span class="cs-tag">▪ Status</span>
+    <span class="cs-big">Coming&nbsp;Soon</span>
+    <span class="cs-sub">This case study is still being written. Check back later for the full write-up.</span>
+  </div>
+</div>
 
 <!-- HERO -->
 <header class="case-hero">

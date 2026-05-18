@@ -11,33 +11,33 @@
 <style>
   /* Case-page shared chrome */
   .case-hero {
-    padding: 32px clamp(24px, 6vw, 96px) 20px;
+    padding: 40px var(--pad-x) 24px calc(var(--pad-x) + 80px);
   }
   .case-meta {
     display: grid; grid-template-columns: repeat(12, 1fr); gap: var(--grid-gap);
     font-family: "JetBrains Mono", monospace; font-size: 11px;
     text-transform: uppercase; letter-spacing: 0.08em;
-    color: var(--fg-mute); margin-bottom: 20px;
+    color: var(--fg-mute); margin-bottom: 28px;
   }
   .case-meta > div { grid-column: span 3; }
   .case-meta strong { color: var(--fg); font-weight: 500; display: block; margin-top: 4px; font-size: 13px; letter-spacing: 0.02em; }
   .case-title {
     font-family: "Inter Tight", sans-serif;
-    font-weight: 700; font-size: clamp(40px, 7vw, 112px);
-    line-height: 0.9; letter-spacing: -0.035em;
-    margin: 0 0 16px; text-wrap: balance;
+    font-weight: 700; font-size: clamp(48px, 8vw, 128px);
+    line-height: 0.88; letter-spacing: -0.035em;
+    margin: 0 0 20px; text-wrap: balance;
   }
   .case-pitch {
     display: grid; grid-template-columns: repeat(12, 1fr); gap: var(--grid-gap);
-    border-top: 1px solid var(--rule); padding-top: 16px;
+    border-top: 1px solid var(--rule); padding-top: 18px;
   }
   .case-pitch .k { grid-column: span 3; font-family: "JetBrains Mono", monospace; font-size: 11px; color: var(--fg-mute); text-transform: uppercase; letter-spacing: 0.08em; }
-  .case-pitch .v { grid-column: span 9; font-size: clamp(17px, 1.7vw, 24px); line-height: 1.35; text-wrap: pretty; }
+  .case-pitch .v { grid-column: span 9; font-size: clamp(19px, 1.9vw, 26px); line-height: 1.35; text-wrap: pretty; }
   .case-pitch .v em { font-style: normal; background: var(--accent); color: var(--accent-ink); padding: 0 4px; }
 
-  .case-section {
-    padding: 44px clamp(24px, 6vw, 96px);
-    border-top: 1px solid var(--rule);
+  .case-section { 
+    padding: 56px clamp(40px, 10vw, 160px); 
+    border-top: 1px solid var(--rule); 
   }
   .case-section.alt { background: var(--bg-2); }
 
@@ -100,7 +100,7 @@
   .cs-head .lbl { color: var(--fg); font-weight: 500; }
 
   .two-col {
-    display: grid; grid-template-columns: 1fr 1fr; gap: var(--grid-gap) 36px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: var(--grid-gap) 48px;
   }
   .two-col h3 {
     font-size: clamp(22px, 2vw, 28px); font-weight: 600;
@@ -151,11 +151,11 @@
   }
   .mod {
     background: var(--bg); padding: 24px;
-    display: grid; grid-template-columns: 56px 1fr; gap: 18px; align-items: center;
+    display: grid; grid-template-columns: 56px 1fr; gap: 18px; align-items: start;
   }
   .mod .num {
     font-family: "JetBrains Mono", monospace; font-size: 11px;
-    color: var(--accent); letter-spacing: 0.1em;
+    color: var(--accent); letter-spacing: 0.1em; padding-top: 4px;
   }
   .mod h4 {
     margin: 0 0 6px; font-size: 18px; font-weight: 600; letter-spacing: -0.01em;
@@ -170,9 +170,9 @@
 
   /* Subsystem detail layouts (image + prose) */
   .sub-row {
-    display: grid; grid-template-columns: 5fr 4fr; gap: var(--grid-gap) 40px;
+    display: grid; grid-template-columns: 5fr 4fr; gap: var(--grid-gap) 56px;
     align-items: start;
-    padding: 36px 0;
+    padding: 48px 0;
     border-bottom: 1px solid var(--rule);
   }
   .sub-row:first-child { padding-top: 0; }
@@ -201,6 +201,8 @@
 
   /* Image frames */
   .imgframe {
+    background: var(--bg-2);
+    border: 1px solid var(--rule);
     overflow: hidden;
     position: relative;
   }
@@ -215,7 +217,7 @@
     z-index: 2;
   }
   .imgframe.tall { aspect-ratio: 4 / 5; }
-  .imgframe.tall img { width: 100%; height: 100%; object-fit: contain; }
+  .imgframe.tall img { width: 100%; height: 100%; object-fit: contain; background: linear-gradient(180deg, #1a1a1c 0%, #0e0e10 100%); }
   .imgframe.bench img { object-position: center 30%; }
 
   /* Hero composite: video + stats column on the right */
@@ -270,12 +272,12 @@
   .hero-composite .stat-band .stat .v {
     font-size: clamp(26px, 2.4vw, 36px);
   }
-  @media (max-width: 1280px) {
+  @media (max-width: 1100px) {
     .hero-composite { grid-template-columns: 1fr; }
     .hero-composite::before { display: none; }
     .hero-composite .hero-fig { border-right: none; border-bottom: 1px solid var(--rule); }
     .hero-composite .stat-band { flex-direction: row; }
-    .hero-composite .stat-band .stat { flex: 1 1 0; width: auto; }
+    .hero-composite .stat-band .stat { flex: 1 1 0; }
   }
   @media (max-width: 700px) {
     .hero-composite .stat-band { flex-wrap: wrap; }
@@ -466,69 +468,6 @@
     font-size: 12.5px; color: var(--fg-dim); line-height: 1.4;
   }
 
-  /* Bullet list — surgical scannability */
-  .bullets {
-    list-style: none;
-    margin: 0 0 16px;
-    padding: 0;
-    max-width: 60ch;
-  }
-  .bullets li {
-    position: relative;
-    padding: 11px 0 11px 26px;
-    border-bottom: 1px solid var(--rule);
-    font-size: 15px;
-    line-height: 1.55;
-    color: var(--fg-dim);
-  }
-  .bullets li:last-child { border-bottom: none; }
-  .bullets li::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 18px;
-    width: 10px;
-    height: 1px;
-    background: var(--accent);
-  }
-  .bullets li strong { color: var(--fg); font-weight: 500; }
-  .bullets li em { font-style: normal; color: var(--fg); background: rgba(255,74,28,0.12); padding: 0 3px; border-bottom: 1px solid var(--accent); }
-
-  /* TL;DR card at the top of subsystem detail */
-  .tldr { display: none; }
-
-  /* System hero (labeled assembly) */
-  .system-hero {
-    display: grid;
-    grid-template-columns: minmax(260px, 340px) 1fr;
-    gap: 32px;
-    align-items: start;
-    margin-bottom: 0;
-  }
-  .system-hero .imgframe {
-    background: #fff;
-    align-self: start;
-    margin-top: 32px;
-  }
-  .system-hero .imgframe img {
-    width: 100%;
-    height: auto;
-    display: block;
-    background: #fff;
-  }
-  .system-hero .prose { max-width: none; }
-  .system-hero .bullets { max-width: none; }
-  .system-hero .sys-right {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
-  .system-hero .sys-right .mod-grid { margin-top: 0; }
-  @media (max-width: 900px) {
-    .system-hero { grid-template-columns: 1fr; gap: 24px; }
-    .system-hero .imgframe { max-width: 360px; }
-  }
-
   /* Pull quotes */
   .pq {
     border-left: 2px solid var(--accent); padding: 8px 0 8px 22px; margin: 18px 0;
@@ -552,39 +491,10 @@
     .two-col { grid-template-columns: 1fr; }
     .stat-band { grid-template-columns: repeat(2, 1fr); }
     .mod-grid { grid-template-columns: 1fr; }
-    .sub-row, .sub-row.flip { grid-template-columns: 1fr; gap: 20px; padding: 28px 0; }
+    .sub-row, .sub-row.flip { grid-template-columns: 1fr; gap: 24px; }
     .sub-row.flip .sub-img { order: 0; }
     .trade { grid-template-columns: 1fr; }
     .bom { grid-template-columns: 1fr 90px 90px; font-size: 13px; }
-  }
-  @media (max-width: 600px) {
-    .case-hero { padding: 24px clamp(16px, 5vw, 32px) 16px; }
-    .case-section { padding: 32px clamp(16px, 5vw, 32px); }
-    .case-meta { gap: 12px; margin-bottom: 16px; }
-    .case-meta > div { grid-column: span 12; }
-    .case-title { font-size: clamp(34px, 9vw, 56px); line-height: 0.95; margin-bottom: 12px; }
-    .case-title br { display: none; }
-    .case-pitch { padding-top: 12px; gap: 8px; }
-    .case-pitch .v { font-size: clamp(15px, 4.2vw, 18px); }
-    .cs-head { flex-direction: column; align-items: flex-start; gap: 6px; padding-bottom: 10px; margin-bottom: 20px; }
-    .stat-band { grid-template-columns: 1fr; }
-    .stat { padding: 16px 20px; }
-    .system-hero { grid-template-columns: 1fr !important; gap: 20px; margin-bottom: 20px; }
-    .system-hero .imgframe { max-width: 320px; margin-top: 0; }
-    .sub-row, .sub-row.flip { padding: 24px 0; gap: 16px; }
-    .sub-row .specs { grid-template-columns: 1fr; gap: 8px; }
-    .bom { grid-template-columns: 1fr 70px 70px; font-size: 12px; }
-    .mod { grid-template-columns: 36px 1fr; gap: 12px; padding: 18px; }
-    .trade .col { padding: 16px 18px; }
-    .foot-min {
-      padding: 14px 20px;
-      flex-direction: column;
-      gap: 6px;
-      align-items: flex-start;
-    }
-    .foot-min a { min-height: 44px; display: inline-flex; align-items: center; }
-    .nav a.brand { min-height: 44px; display: inline-flex; align-items: center; }
-    .imgframe .cap { font-size: 11px; padding: 5px 9px; }
   }
 </style>
 </head>
@@ -745,56 +655,53 @@
     <span>Four modules, one job: isolate the leaking node</span>
   </div>
 
-  <div class="system-hero">
-    <div class="imgframe">
-      <span class="cap">FIG. 02 · Labeled assembly</span>
-      <img src="assets/dell/labeled-assembly.png" alt="CAD render of the assembled prototype with the four modules labeled: Elevator Module (top), Frame (8020 aluminum structure), Water Circulation Module (manifold stack on left), and Actuator Module (rack-and-pinion housing at the QDs)." />
+  <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 56px; margin-bottom: 28px; align-items: start;">
+    <div class="prose" style="max-width: 72ch;">
+      <p>
+        The mechanism doesn't detect leaks&mdash;Dell's sensors already do that. It receives the leak-level signal, drives an <strong>actuator up the rack to that level</strong>, and physically pulls apart the two QDs feeding that server. Coolant flow to the leaking node stops. Coolant flow to every other node continues. The data center never sees an aisle drop.
+      </p>
+      <p>
+        It splits cleanly into four modules, each independently testable, each replaceable without taking the others apart.
+      </p>
     </div>
-    <div class="sys-right">
-      <div class="prose">
-        <p>
-          The mechanism doesn't detect leaks&mdash;Dell's sensors already do that. It receives the leak-level signal, drives an <strong>actuator up the rack to that level</strong>, and physically pulls apart the two QDs feeding that server. Coolant flow to the leaking node stops. Coolant flow to every other node continues. The data center never sees an aisle drop.
-        </p>
-      </div>
-      <ul class="bullets">
-        <li><strong>Four modules, one job</strong> &mdash; each independently testable, each replaceable without taking the others apart.</li>
-        <li><strong>Built inside an 8020 aluminum frame</strong> sized to a Dell rack column.</li>
-        <li><strong>Five-level test stand,</strong> not a full 42U tower &mdash; exercises every motion the production version would.</li>
-      </ul>
+    <div class="prose" style="max-width: 56ch;">
+      <p>
+        Everything sits inside an <strong>8020 aluminum frame</strong> built to the dimensions of a Dell rack column. We didn't build a full 42U-tall prototype; we built a five-level test stand that exercises every motion the production version would.
+      </p>
+    </div>
+  </div>
 
-      <div class="mod-grid">
-        <div class="mod">
-          <div class="num">01</div>
-          <div>
-            <h4>Actuator</h4>
-            <p>Servo-driven rack-and-pinion in a 3D-printed housing. Translates rotary motion into <em>two opposing linear pulls</em>, one rack each, disconnecting both supply and return QDs in a single stroke.</p>
-            <span class="tag">35 kg·cm servo · 3.4 N·m output</span>
-          </div>
-        </div>
-        <div class="mod">
-          <div class="num">02</div>
-          <div>
-            <h4>Elevator</h4>
-            <p>Lead-screw vertical stage carrying the actuator. Self-locking under load, zeroes itself against a limit switch on power-on, and lands within <em>6 mm of the target QD center</em> across all rack levels.</p>
-            <span class="tag">Stepper-driven · ±6 mm tolerance</span>
-          </div>
-        </div>
-        <div class="mod">
-          <div class="num">03</div>
-          <div>
-            <h4>Water circulation</h4>
-            <p>Closed-loop test rig that mimics a real rack manifold. Two manifolds (intake / outlet), five levels, rigid tubing through QDs. Flow meter on the intake confirms isolation when the actuator pulls a level.</p>
-            <span class="tag">5 levels · pump · flow meter</span>
-          </div>
-        </div>
-        <div class="mod">
-          <div class="num">04</div>
-          <div>
-            <h4>Controls</h4>
-            <p>ESP32 running a deterministic state machine. Limit-switch homing, preset positions per rack level, manual override, and an LCD that shows what the system is doing. No cloud round-trip&mdash;loss of network does not stop isolation.</p>
-            <span class="tag">ESP32 · stepper driver · servo PWM</span>
-          </div>
-        </div>
+  <div class="mod-grid">
+    <div class="mod">
+      <div class="num">01</div>
+      <div>
+        <h4>Actuator</h4>
+        <p>Servo-driven rack-and-pinion in a 3D-printed housing. Translates rotary motion into <em>two opposing linear pulls</em>, one rack each, disconnecting both supply and return QDs in a single stroke.</p>
+        <span class="tag">35 kg·cm servo · 3.4 N·m output</span>
+      </div>
+    </div>
+    <div class="mod">
+      <div class="num">02</div>
+      <div>
+        <h4>Elevator</h4>
+        <p>Lead-screw vertical stage carrying the actuator. Self-locking under load, zeroes itself against a limit switch on power-on, and lands within <em>6 mm of the target QD center</em> across all rack levels.</p>
+        <span class="tag">Stepper-driven · ±6 mm tolerance</span>
+      </div>
+    </div>
+    <div class="mod">
+      <div class="num">03</div>
+      <div>
+        <h4>Water circulation</h4>
+        <p>Closed-loop test rig that mimics a real rack manifold. Two manifolds (intake / outlet), five levels, rigid tubing through QDs. Flow meter on the intake confirms isolation when the actuator pulls a level.</p>
+        <span class="tag">5 levels · pump · flow meter</span>
+      </div>
+    </div>
+    <div class="mod">
+      <div class="num">04</div>
+      <div>
+        <h4>Controls</h4>
+        <p>ESP32 running a deterministic state machine. Limit-switch homing, preset positions per rack level, manual override, and an LCD that shows what the system is doing. No cloud round-trip&mdash;loss of network does not stop isolation.</p>
+        <span class="tag">ESP32 · stepper driver · servo PWM</span>
       </div>
     </div>
   </div>
@@ -811,21 +718,25 @@
   <div class="sub-row">
     <div class="sub-img">
       <div class="imgframe" style="aspect-ratio: 4/3;">
-        <span class="cap">FIG. 03 · Actuator subsystem</span>
-        <img src="assets/dell/actuator-cad.png" alt="CAD: rack-and-pinion actuator with 35kg servo, housing, and mounting bracket." style="object-fit: contain; padding: 12px;" />
+        <span class="cap">FIG. 02 · Actuator subsystem</span>
+        <img src="assets/dell/actuator-cad.png" alt="CAD: rack-and-pinion actuator with 35kg servo, housing, and mounting bracket." style="background: linear-gradient(180deg,#1d1d1f,#0e0e10); object-fit: contain; padding: 12px;" />
       </div>
     </div>
     <div>
       <div class="sub-num">▪ 03.1 — ACTUATOR</div>
       <h3>One pinion, two opposing racks.</h3>
       <p>
-        The first concept used <strong>two separate solenoids</strong>, one for each QD&mdash;two driver circuits, two timing windows, two failure modes, twice the wiring. After the first sketch I scrapped it.
+        The first concept used <strong>two separate solenoids</strong>, one for each QD. Two solenoids meant two driver circuits, two timing windows, two failure modes, and twice the housing volume. After the first sketch I scrapped it.
       </p>
-      <ul class="bullets">
-        <li><strong>Shipped design:</strong> single pinion driving two racks in opposite directions. One stroke disconnects both supply and return QDs simultaneously&mdash;half the parts, half the failure surface, a quarter of the wiring.</li>
-        <li><strong>Force margin:</strong> required 1.25 N·m to pop a QD; specified a 35 kg·cm hobby servo (3.4 N·m output) for <em>~3× the load</em>. After 50 cycles, no measurable gear wear.</li>
-        <li><strong>Housing:</strong> most complex part on the build. PETG, 80% infill, 6 mm walls&mdash;up from 50% / 2 mm after the first FEA pass showed too much deflection. Strong injection-mold candidate at scale.</li>
-      </ul>
+      <p>
+        The version we shipped uses a single pinion driving <strong>two racks moving in opposite directions</strong>, one for the supply line, one for the return. One actuator stroke disconnects both QDs simultaneously. Half the parts, half the failure surface, a quarter of the wiring.
+      </p>
+      <p>
+        Force calc said we needed <strong>1.25 N·m</strong> to pop a QD. I specified a 35 kg·cm hobby servo (3.4 N·m output) for the safety margin&mdash;<em>~3&times; the load</em>. After 50 consecutive cycles the gear teeth showed no measurable wear.
+      </p>
+      <p>
+        The housing is the most complex part on the build. It carries gear loads, holds the racks parallel, locates the servo, and clears the QD shafts. It&rsquo;s a strong injection-molding candidate at scale. For the prototype I printed it in PETG at <strong>80% infill, 6 mm walls</strong>&mdash;up from 50% / 2 mm after the first FEA pass showed too much deflection.
+      </p>
       <dl class="specs">
         <dt>Drive</dt><dd>35 kg·cm hobby servo</dd>
         <dt>Output torque</dt><dd>3.4 N·m</dd>
@@ -838,8 +749,8 @@
   <!-- Elevator -->
   <div class="sub-row flip">
   <div class="sub-img" style="align-self: stretch; display: flex; align-items: center; justify-content: center; min-height: 0;">
-    <div class="imgframe" style="aspect-ratio: auto; max-height: 100%; display: flex; align-items: center; justify-content: center;">
-      <span class="cap">FIG. 04 · Elevator</span>
+    <div class="imgframe" style="background: linear-gradient(180deg,#1d1d1f,#0e0e10); aspect-ratio: auto; max-height: 100%; display: flex; align-items: center; justify-content: center;">
+      <span class="cap">FIG. 03 · Elevator</span>
       <img src="assets/dell/Screw.jpg" alt="Lead-screw elevator CAD: linear rail, screw, stepper at base, mounting plate carrying the actuator." style="max-width: 100%; max-height: 100%; width: auto; height: auto; display: block; object-fit: contain;" />
     </div>
   </div>
@@ -847,14 +758,14 @@
     <div class="sub-num">▪ 03.2 — ELEVATOR</div>
     <h3>Belt drive looked elegant. Lead screw won.</h3>
     <p>
-      I trade-studied a <strong>belt-and-sprocket</strong> elevator first&mdash;faster, cheaper bearings, but it needed a <em>brake</em> to hold position under the actuator's reaction loads. That's another failure mode living above expensive hardware.
+      I trade-studied a <strong>belt-and-sprocket</strong> elevator first. Faster, cheaper bearings, but it needed a <em>brake</em> to hold position under the actuator&rsquo;s reaction loads. That&rsquo;s another failure mode living above expensive hardware.
     </p>
-    <ul class="bullets">
-      <li><strong>Lead screw is self-locking</strong> by geometry&mdash;cut the power, carriage stays put. Slower per turn, but cycle time is dominated by the QD pull, not the climb.</li>
-      <li><strong>Net cycle time: 10.2 s</strong>, well inside the 15 s spec.</li>
-      <li><strong>Limit-switch homing on every boot</strong>&mdash;without it, stepper drift compounds and the actuator starts hunting for QDs.</li>
-      <li><strong>Repeatability:</strong> landed within 6 mm of every target level across 50 consecutive runs.</li>
-    </ul>
+    <p>
+      A lead screw is <strong>self-locking</strong>&mdash;cut the power and the carriage stays where it is. It&rsquo;s slower per revolution, but the actuation cycle is dominated by the QD pull, not the climb. Net cycle time still hit 10.2 s, well inside the 15 s spec.
+    </p>
+    <p>
+      The carriage zeros itself against a limit switch at the bottom of travel every time it powers on. Without that, stepper drift compounds and the actuator starts hunting for QDs. With it, the system landed within <strong>6 mm of every target level</strong> across 50 consecutive runs.
+    </p>
     <dl class="specs">
       <dt>Drive</dt><dd>NEMA 17 stepper</dd>
       <dt>Mechanism</dt><dd>Lead screw, self-locking</dd>
@@ -868,22 +779,22 @@
   <div class="sub-row">
     <div class="sub-img">
       <div class="imgframe" style="aspect-ratio: 4/3;">
-        <span class="cap">FIG. 05 · Water circulation</span>
-        <img src="assets/dell/water-manifold-cad.png" alt="Two manifolds, five QDs each, hoses on the right side; modeled after a real Dell rack manifold." style="object-fit: contain; padding: 12px;" />
+        <span class="cap">FIG. 04 · Water circulation</span>
+        <img src="assets/dell/water-manifold-cad.png" alt="Two manifolds, five QDs each, hoses on the right side; modeled after a real Dell rack manifold." style="background: linear-gradient(180deg,#1d1d1f,#0e0e10); object-fit: contain; padding: 12px;" />
       </div>
     </div>
     <div>
       <div class="sub-num">▪ 03.3 — WATER CIRCULATION</div>
       <h3>The shaft-collar hack that saved the project.</h3>
       <p>
-        Stock Dell QDs are <strong>too narrow</strong> to grab with anything mechanical. Our first plan was to <strong>weld washers</strong> onto each one to give the actuator a flat face. The Fisher Engineering Design Center stopped us cold: welding heat <em>damages the internal ball bearing</em> that holds the QD's seal.
+        Stock Dell QDs are <strong>too narrow</strong> to grab with anything mechanical. Our first plan was to <strong>weld washers</strong> onto each one to give the actuator a flat face to push against. The Fisher Engineering Design Center stopped us cold: welding heat <em>damages the internal ball bearing</em> that holds the QD&rsquo;s seal.
       </p>
-      <ul class="bullets">
-        <li><strong>Redesigned around off-the-shelf shaft collars</strong> sized to slip over each QD body. Field-replaceable, no thermal damage, doesn't void the QD spec sheet.</li>
-        <li><strong>Flagged to Dell as a future-state change:</strong> integrate the collar geometry directly into the next-gen QD body.</li>
-        <li><strong>Test loop:</strong> two manifolds, five levels, rigid tubing, one pump, one shut-off valve, one bucket reservoir. Crude, but it answers the only question that matters.</li>
-        <li><strong>Acceptance signal:</strong> flow meter on the intake. Pull a level's QDs, watch the rate drop. Bucket on the floor stayed empty.</li>
-      </ul>
+      <p>
+        I redesigned around <strong>off-the-shelf shaft collars</strong> sized to slip over each QD body. They give the actuator the surface area it needs, they&rsquo;re field-replaceable, and they don&rsquo;t void the QD spec sheet. This is one of the items we flagged for Dell as a <em>future-state design change</em>: integrate the collar geometry directly into the next-gen QD body.
+      </p>
+      <p>
+        The closed loop runs water through both manifolds via rigid tubing. A flow meter on the intake confirms isolation: pull a level&rsquo;s QDs, watch the rate drop. Five levels, one pump, one shut-off valve, one bucket reservoir. Crude, but it answers the only question that matters: did we stop the flow.
+      </p>
       <dl class="specs">
         <dt>Manifolds</dt><dd>2 (intake / outlet)</dd>
         <dt>Levels</dt><dd>5</dd>
@@ -897,7 +808,7 @@
   <div class="sub-row flip">
     <div class="sub-img">
       <div class="imgframe" style="aspect-ratio: 8/5;">
-        <span class="cap">FIG. 06 · Controls schematic</span>
+        <span class="cap">FIG. 05 · Controls schematic</span>
         <img src="assets/dell/controls-schematic.png" alt="ESP32 controls schematic with stepper driver, servo, LCD, push buttons, limit switch, power supply." style="background: #fff;" />
       </div>
     </div>
@@ -907,11 +818,9 @@
       <p>
         The control loop is intentionally boring. <strong>ESP32</strong>, stepper driver, servo PWM line, limit switch, four buttons, 16&times;2 LCD, 24&nbsp;V brick. On boot, it homes the elevator. On a level command, it drives to the preset, fires the servo, watches a feedback line, and reports. The state machine fits on one whiteboard.
       </p>
-      <ul class="bullets">
-        <li><strong>No network in the loop.</strong> The brief allowed for a connected version; I argued against it. <em>If a leak event coincides with a network blip,</em> you do not want isolation waiting on a TCP retry.</li>
-        <li><strong>Each rack runs its own loop.</strong> Dashboard integration is a wire we left for Dell to terminate on their side.</li>
-        <li><strong>Manual override</strong> via push-button at the panel&mdash;operator can fire any level without the MCU.</li>
-      </ul>
+      <p>
+        The brief allowed for a network-connected version. I argued&mdash;and the team agreed&mdash;against it for the prototype. <em>If a leak event coincides with a network blip</em>, you do not want the isolation system waiting on a TCP retry. Each rack runs its own loop. The dashboard integration is a wire we left for Dell to terminate on their side.
+      </p>
       <dl class="specs">
         <dt>MCU</dt><dd>ESP32</dd>
         <dt>Power</dt><dd>24 V, &lt; 2 A</dd>
@@ -940,17 +849,17 @@
         </p>
       </div>
       <div class="imgframe" style="flex: 1; aspect-ratio: auto;">
-        <span class="cap">FIG. 07 · Assembled prototype</span>
+        <span class="cap">FIG. 06 · Assembled prototype</span>
         <img src="assets/dell/prototype-bench.jpg" alt="Real photo: the assembled prototype on a lab bench, with hoses, QDs, and the elevator column visible." style="width: 100%; height: 100%; object-fit: cover; display: block;" />
       </div>
     </div>
     <div style="display: flex; flex-direction: column; gap: var(--grid-gap);">
       <div class="imgframe" style="aspect-ratio: 1/1;">
-        <span class="cap">FIG. 08 · Rack &amp; pinion, in place</span>
+        <span class="cap">FIG. 07 · Rack &amp; pinion, in place</span>
         <img src="assets/dell/rack-pinion-photo.png" alt="Close-up of the steel rack and 3D-printed pinion housing installed against the manifolds." />
       </div>
       <div class="imgframe" style="aspect-ratio: 1/1;">
-        <span class="cap">FIG. 09 · 8020 frame, junction</span>
+        <span class="cap">FIG. 08 · 8020 frame, junction</span>
         <img src="assets/dell/frame-photo.jpg" alt="Photo of the 8020 aluminum frame corner, showing T-slotted gussets and assembled hardware." />
       </div>
     </div>
@@ -1119,14 +1028,8 @@
 
       <h3 style="font-size: clamp(22px, 2vw, 28px); font-weight: 600; letter-spacing: -0.02em; margin: 28px 0 12px;">Where else this lives</h3>
       <p>
-        The core idea&mdash;<em>vertical-travel actuator that disconnects fluid lines on demand</em>&mdash;isn&rsquo;t specific to data centers. The patent embodiments cover that surface area deliberately.
+        The core idea&mdash;<em>vertical-travel actuator that disconnects fluid lines on demand</em>&mdash;isn&rsquo;t specific to data centers. It applies anywhere QDs are common: <strong>HVAC plant rooms, automotive assembly lines, aerospace fuel-line testing, dialysis and other medical fluidic equipment</strong>. The patent embodiments cover that surface area deliberately.
       </p>
-      <ul class="bullets">
-        <li><strong>HVAC plant rooms</strong> &mdash; chiller-line maintenance without dropping the loop.</li>
-        <li><strong>Automotive assembly lines</strong> &mdash; coolant and fuel-line stations.</li>
-        <li><strong>Aerospace fuel-line testing</strong> &mdash; leak isolation under bench conditions.</li>
-        <li><strong>Medical fluidics</strong> &mdash; dialysis and other patient-loop equipment.</li>
-      </ul>
 
       <h3 style="font-size: clamp(22px, 2vw, 28px); font-weight: 600; letter-spacing: -0.02em; margin: 28px 0 12px;">What it changes for the operator</h3>
       <p>

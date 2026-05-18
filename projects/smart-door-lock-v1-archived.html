@@ -3,38 +3,38 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>P/002 · Smart Electronic Door Lock — Adit Sanghani</title>
+<title>P/001 · Smart Electronic Door Lock — Adit Sanghani</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../styles.css" />
 <style>
   .case-hero {
-    padding: 32px clamp(24px, 6vw, 96px) 20px;
+    padding: 40px var(--pad-x) 24px;
   }
   .case-meta {
     display: grid; grid-template-columns: repeat(12, 1fr); gap: var(--grid-gap);
     font-family: "JetBrains Mono", monospace; font-size: 11px;
     text-transform: uppercase; letter-spacing: 0.08em;
-    color: var(--fg-mute); margin-bottom: 20px;
+    color: var(--fg-mute); margin-bottom: 28px;
   }
   .case-meta > div { grid-column: span 3; }
   .case-meta strong { color: var(--fg); font-weight: 500; display: block; margin-top: 4px; font-size: 13px; letter-spacing: 0.02em; }
   .case-title {
     font-family: "Inter Tight", sans-serif;
     font-weight: 700;
-    font-size: clamp(40px, 7vw, 112px);
-    line-height: 0.9;
+    font-size: clamp(48px, 8vw, 128px);
+    line-height: 0.88;
     letter-spacing: -0.035em;
-    margin: 0 0 16px;
+    margin: 0 0 20px;
     text-wrap: balance;
   }
   .case-pitch {
     display: grid; grid-template-columns: repeat(12, 1fr); gap: var(--grid-gap);
-    border-top: 1px solid var(--rule); padding-top: 16px;
+    border-top: 1px solid var(--rule); padding-top: 18px;
   }
   .case-pitch .k { grid-column: span 3; font-family: "JetBrains Mono", monospace; font-size: 11px; color: var(--fg-mute); text-transform: uppercase; letter-spacing: 0.08em; }
-  .case-pitch .v { grid-column: span 9; font-size: clamp(17px, 1.7vw, 24px); line-height: 1.35; text-wrap: pretty; font-weight: 400; }
+  .case-pitch .v { grid-column: span 9; font-size: clamp(19px, 1.9vw, 26px); line-height: 1.35; text-wrap: pretty; font-weight: 400; }
   .case-pitch .v em { font-style: normal; background: var(--accent); color: var(--accent-ink); padding: 0 4px; }
 
   /* Demo lock */
@@ -297,97 +297,6 @@
   }
   .backlink:hover { color: var(--fg); border-color: var(--fg); }
 
-  /* Image placeholders — striped, monospace caption, tells you what to drop in */
-  .placeholder {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    background:
-      repeating-linear-gradient(
-        45deg,
-        rgba(255,255,255,0.018) 0px, rgba(255,255,255,0.018) 1px,
-        transparent 1px, transparent 14px
-      ),
-      var(--bg-2);
-    border: 1px dashed var(--rule);
-    padding: 36px 28px;
-    text-align: center;
-    min-height: 280px;
-  }
-  .placeholder.tall { min-height: 380px; }
-  .placeholder.short { min-height: 200px; }
-  .placeholder .ph-tag {
-    font-family: "JetBrains Mono", monospace;
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.18em;
-    color: var(--accent);
-    border: 1px solid var(--accent);
-    padding: 5px 9px;
-  }
-  .placeholder .ph-desc {
-    font-family: "JetBrains Mono", monospace;
-    font-size: 13px;
-    color: var(--fg);
-    max-width: 42ch;
-    line-height: 1.55;
-    margin: 0;
-  }
-  .placeholder .ph-spec {
-    font-family: "JetBrains Mono", monospace;
-    font-size: 10.5px;
-    color: var(--fg-mute);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin: 0;
-  }
-
-  /* Hero image */
-  .hero-shot {
-    border-top: 1px solid var(--rule);
-    border-bottom: 1px solid var(--rule);
-    margin-top: 0;
-  }
-  .hero-shot .placeholder { min-height: 280px; border: none; }
-
-  /* PCB section layout */
-  .pcb-grid {
-    display: grid;
-    grid-template-columns: 5fr 4fr;
-    gap: var(--grid-gap) 36px;
-    align-items: start;
-  }
-  .pcb-grid .pcb-img { display: flex; flex-direction: column; gap: 14px; }
-  .pcb-grid .pcb-stats {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1px;
-    background: var(--rule);
-    border-top: 1px solid var(--rule);
-    border-bottom: 1px solid var(--rule);
-    margin-top: 12px;
-  }
-  .pcb-grid .pcb-stats .cell {
-    background: var(--bg);
-    padding: 14px 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-  .pcb-grid .pcb-stats .cell .k {
-    font-family: "JetBrains Mono", monospace; font-size: 10px;
-    text-transform: uppercase; letter-spacing: 0.1em; color: var(--fg-mute);
-  }
-  .pcb-grid .pcb-stats .cell .v {
-    font-family: "JetBrains Mono", monospace; font-size: 13px; color: var(--fg);
-  }
-  @media (max-width: 900px) {
-    .pcb-grid { grid-template-columns: 1fr; gap: 24px; }
-  }
-
   @media (max-width: 900px) {
     .case-meta > div { grid-column: span 6; }
     .case-pitch .k, .case-pitch .v { grid-column: span 12; }
@@ -402,47 +311,6 @@
     .tl-row { grid-template-columns: 1fr; }
     .tl-dot { display: none; }
   }
-  @media (max-width: 600px) {
-    .case-hero { padding: 24px clamp(16px, 5vw, 32px) 16px; }
-    .case-meta { gap: 12px; margin-bottom: 16px; }
-    .case-meta > div { grid-column: span 12; }
-    .case-title { font-size: clamp(34px, 9vw, 56px); line-height: 0.95; margin-bottom: 12px; }
-    .case-title br { display: none; }
-    .case-pitch { padding-top: 12px; gap: 8px; }
-    .case-pitch .v { font-size: clamp(15px, 4.2vw, 18px); }
-    .stats { grid-template-columns: 1fr; }
-    .stat { padding: 16px 20px; }
-    .stat:nth-child(3) { border-bottom: 1px solid var(--rule); }
-    .demo { padding: 24px clamp(16px, 5vw, 32px); gap: 20px; }
-    .demo .caption h3 { font-size: clamp(22px, 5.5vw, 30px); }
-    .lock-app .placeholder { min-height: 380px !important; }
-    .placeholder { padding: 24px 18px; min-height: 220px; }
-    .placeholder.tall { min-height: 240px; }
-    .placeholder.short { min-height: 180px; }
-    .hero-shot .placeholder { min-height: 220px; }
-    .arch-node { padding: 16px 18px; }
-    .bom { font-size: 13px; }
-    .bom th, .bom td { padding: 10px 10px; }
-    .tl-row { padding: 12px 0; gap: 8px; }
-    .tl-when { font-size: 11px; }
-    .tl-what { font-size: 15px; }
-    .tl-what .sub { font-size: 12.5px; }
-    .pcb-grid .pcb-stats { grid-template-columns: 1fr; }
-    .copy-col .body ul { padding-left: 16px; }
-    .copy-col .body { font-size: 16px; }
-    .foot {
-      padding: 14px 20px;
-      flex-direction: column;
-      gap: 6px;
-      align-items: flex-start;
-    }
-    .foot a, .backlink {
-      min-height: 44px;
-      display: inline-flex;
-      align-items: center;
-    }
-    .nav a.brand { min-height: 44px; display: inline-flex; align-items: center; }
-  }
 </style>
 </head>
 <body>
@@ -451,9 +319,9 @@
 <nav class="nav">
   <div class="nav-inner">
     <div class="nav-left">
-      <a class="brand" href="../index.html" style="text-decoration:none; color:inherit;">ADIT SANGHANI</a>
+      <span class="brand">AS / ADIT SANGHANI</span>
+      <span style="color: var(--fg-mute);">— P/001 · SMART DOOR LOCK</span>
     </div>
-    <div></div>
     <div class="nav-right">
       <a class="navlink" href="../index.html">← Back</a>
       <a class="navlink" href="../index.html#skills">Skills</a>
@@ -465,11 +333,13 @@
 
 <!-- HERO -->
 <header class="case-hero">
+  <a href="../index.html" class="backlink">← Back to index</a>
+
   <div class="case-meta">
-    <div>▪ INDEX<strong>P/002</strong></div>
-    <div>▪ TIMEFRAME<strong>Feb 2026 — present</strong></div>
-    <div>▪ CONTEXT<strong>Personal project · home automation</strong></div>
-    <div>▪ STATUS<strong><span style="color:var(--accent);">●</span> In progress · battery life testing</strong></div>
+    <div>▪ PROJECT<strong>P/001</strong></div>
+    <div>▪ STATUS<strong><span style="color:var(--accent);">●</span> In progress · firmware phase</strong></div>
+    <div>▪ TIMELINE<strong>Feb 2026 — present</strong></div>
+    <div>▪ OPENNESS<strong>Open source · MIT (docs CC-BY)</strong></div>
   </div>
 
   <h1 class="case-title">Smart&nbsp;electronic<br/>door&nbsp;lock.</h1>
@@ -482,47 +352,43 @@
   </div>
 </header>
 
-<!-- HERO SHOT -->
-<section class="hero-shot">
-  <div class="placeholder tall">
-    <span class="ph-tag">▪ Photo needed · P-01</span>
-    <p class="ph-desc">Hero shot of the assembled door unit installed on a real door &mdash; or a CAD render of the full enclosure with the latch mechanism visible. Landscape framing, 16:9 or wider.</p>
-    <p class="ph-spec">Recommended: 2400 × 1350 px · .jpg or .png</p>
-  </div>
-</section>
-
 <!-- STATS -->
 <section class="section" style="padding-top: 0; border-top: none;">
   <div class="stats">
-    <div class="stat"><div class="num">~ 10 µA</div><div class="lbl">deep-sleep current</div></div>
-    <div class="stat"><div class="num">~ 1 mA</div><div class="lbl">avg idle (LoRa RX)</div></div>
-    <div class="stat"><div class="num">~ 100 d</div><div class="lbl">est. battery (4×AA)</div></div>
+    <div class="stat"><div class="num">&lt; 40 mA</div><div class="lbl">peak current, door unit</div></div>
+    <div class="stat"><div class="num">~ 6 mo</div><div class="lbl">est. battery life (4×AA)</div></div>
+    <div class="stat"><div class="num">20 kg·cm</div><div class="lbl">servo torque</div></div>
     <div class="stat"><div class="num">~ $62</div><div class="lbl">total BOM</div></div>
   </div>
 </section>
 
-<!-- WEB APP -->
+<!-- INTERACTIVE DEMO -->
 <section class="demo">
   <div class="caption">
-    <div class="mono" style="font-size:11px;color:var(--fg-mute);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;">▪ CONTROL APP · WEB / PWA</div>
-    <h3>The control surface is a web app I host myself.</h3>
+    <div class="mono" style="font-size:11px;color:var(--fg-mute);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;">▪ DEMO · WEB APP UI</div>
+    <h3>Try the lock interface.</h3>
     <p>
-      Mobile-first HTML/CSS/JS that talks straight to my MQTT broker over WebSockets. No app store, no account, no vendor lock-in &mdash; pin it to the phone home screen and it behaves like a native app.
+      This is a faithful copy of the actual control panel &mdash; same state machine, same auto-lock countdown, same activity log. Tap it. Wait a few seconds. Tap again.
     </p>
-    <ul style="list-style: none; padding: 0; margin: 0 0 14px; font-size: 14px; color: var(--fg-dim); line-height: 1.7;">
-      <li><span style="color: var(--accent);">▪</span> Big lock/unlock button with animated state ring</li>
-      <li><span style="color: var(--accent);">▪</span> Auto-lock countdown + progress bar after each unlock</li>
-      <li><span style="color: var(--accent);">▪</span> Live activity log of every MQTT message in/out</li>
-      <li><span style="color: var(--accent);">▪</span> Settings panel pushes JSON config to the door over MQTT</li>
-      <li><span style="color: var(--accent);">▪</span> Connection panel for broker, port, auth, topic names</li>
-    </ul>
-    <p class="hint">↳ mqtt.js over WSS · TLS · dm mono throughout</p>
+    <p class="hint">↳ the &ldquo;servo motion&rdquo; delay simulates real LoRa round-trip</p>
   </div>
   <div class="lock-app">
-    <div class="placeholder" style="width: 100%; max-width: 380px; min-height: 580px;">
-      <span class="ph-tag">▪ Screenshot needed · APP-01</span>
-      <p class="ph-desc">Screenshot of the actual web app on a phone (or in a narrow browser window). Show the locked state with the activity log visible. Dark theme, large lock button centered.</p>
-      <p class="ph-spec">Phone-portrait: 750 × 1334 px PNG · status bar OK</p>
+    <div class="lock-panel" id="lockPanel">
+      <div class="lock-status-bar">
+        <span>▪ FRONT DOOR</span>
+        <span class="lock-state-indicator"><span class="lock-state-dot"></span>MQTT ONLINE</span>
+      </div>
+      <div class="lock-label">STATUS</div>
+      <div class="lock-big" id="lockBig">LOCKED</div>
+      <button class="lock-btn" id="lockBtn" onclick="toggleLock()">UNLOCK</button>
+      <div class="lock-timer" id="lockTimer" style="display:none;">
+        <span>▪ AUTO-LOCK</span>
+        <span id="lockTimerNum">30s</span>
+      </div>
+      <div class="lock-log" id="lockLog">
+        <div class="entry"><span class="t">14:22:03</span> &nbsp;mqtt connect · hivemq cloud</div>
+        <div class="entry"><span class="t">14:22:04</span> &nbsp;door unit ack · rssi -84</div>
+      </div>
     </div>
   </div>
 </section>
@@ -609,87 +475,32 @@
     <div class="meta">Why each part earned its place</div>
   </div>
 
-  <div class="placeholder" style="margin-bottom: 28px;">
-    <span class="ph-tag">▪ Image needed · MECH-01</span>
-    <p class="ph-desc">CAD screenshot of the door-unit mechanical assembly &mdash; servo, bevel-gear shaft, and the two limit switches positioned at the lock/unlock end-stops. Iso view, components visible, no enclosure or with enclosure cut away.</p>
-    <p class="ph-spec">Export from Onshape/SolidWorks: 2000 × 1100 px PNG · isometric view</p>
-  </div>
-
   <div class="copy-col">
     <div class="label">— POWER BUDGET</div>
     <div class="body">
-      <ul>
-        <li>ESP32 spends <strong>&gt;99% of its life in deep sleep</strong> (~10 µA), wakes on a GPIO interrupt from the LoRa module's DIO pin.</li>
-        <li>Servo is gated by a low-side <em>N-channel MOSFET (IRLZ44N)</em> &mdash; zero power between moves, no quiescent draw from a regulator.</li>
-        <li>The MOSFET is the <strong>definitive cutoff</strong>: independent of the servo library, independent of PWM state, immune to firmware bugs.</li>
-      </ul>
+      <p>The door unit had to live on four AAs for months, so everything revolves around <strong>sleeping hard</strong>. The ESP32 spends &gt;99% of its life in deep sleep (~10 μA) and wakes on a GPIO interrupt from the LoRa module&rsquo;s DIO pin.</p>
+      <p>The servo is the greedy one — a few hundred mA while moving. So I gate its 5 V rail with a <em>logic-level P-channel MOSFET</em>: the servo has zero power between moves and there&rsquo;s no quiescent draw from a regulator.</p>
     </div>
   </div>
 
   <div class="copy-col" style="margin-top: 20px;">
     <div class="label">— RADIO CHOICE</div>
     <div class="body">
-      <ul>
-        <li>BLE needs a phone in radio range; WiFi on the door means keeping the radio hot &mdash; not viable on batteries.</li>
-        <li>LoRa lets the door <strong>wake, receive, ACK, and sleep</strong> again inside a milliwatt-second budget.</li>
-        <li>Cross-chip link working: <em>SX1262 (Heltec wall unit) ⇄ SX1276 (door unit)</em> with matched syncword and modem params. RSSI ~−63 dBm at room scale.</li>
-      </ul>
+      <p>BLE would have been simpler but needs a phone in radio range. WiFi on the door means keeping the radio hot &mdash; not viable on batteries. LoRa lets the door unit wake, receive, ACK, and sleep again inside a budget of milliwatt-seconds.</p>
+      <p>Open problem: the wall unit uses an <em>SX1262</em> (whatever Heltec shipped) and the door unit uses an <em>SX1276</em>. Both are LoRa-compatible in theory, but the syncword and modem parameters need to match exactly. This is the current bug I&rsquo;m chasing.</p>
     </div>
   </div>
 
   <div class="copy-col" style="margin-top: 20px;">
     <div class="label">— FAIL-SAFE BEHAVIOR</div>
     <div class="body">
+      <p>Three independent things confirm the lock state before the app shows &ldquo;locked&rdquo;:</p>
       <ul>
-        <li><strong>Firmware state</strong> &mdash; what the door <em>thinks</em> it did.</li>
-        <li><strong>Limit-switch voltage</strong> &mdash; read <em>after</em> the servo finishes moving.</li>
-        <li><strong>Round-trip ACK</strong> &mdash; door confirms back up the chain before the UI shows “locked”.</li>
-        <li>If any disagree, the UI goes yellow &ldquo;unknown&rdquo; and refuses to auto-lock.</li>
-        <li>Deadbolt is always hand-turnable &mdash; the servo is back-drivable at rest.</li>
+        <li>Firmware internal state (what it <em>thinks</em> it did)</li>
+        <li>Limit-switch voltage read <em>after</em> the servo finishes</li>
+        <li>A round-trip ACK back up the chain</li>
       </ul>
-    </div>
-  </div>
-</section>
-
-<!-- PCB -->
-<section class="section">
-  <div class="section-head">
-    <div class="idx">§ 04</div>
-    <div class="label">Custom PCB</div>
-    <div class="meta">From perfboard to a board I can hand to JLCPCB</div>
-  </div>
-
-  <div class="pcb-grid">
-    <div class="pcb-img">
-      <div class="placeholder">
-        <span class="ph-tag">▪ Image needed · PCB-01</span>
-        <p class="ph-desc">EasyEDA 3D-render screenshot of the door-unit PCB (top view, components placed). Black soldermask preferred for contrast on this page.</p>
-        <p class="ph-spec">Export: 1600 × 1200 px PNG · white background OK</p>
-      </div>
-      <div class="placeholder short">
-        <span class="ph-tag">▪ Image needed · PCB-02</span>
-        <p class="ph-desc">2D layout screenshot — top-layer signal traces visible, bottom-layer GND pour. Or a photo of the populated board once it ships from JLCPCB.</p>
-        <p class="ph-spec">Export: 1600 × 900 px PNG</p>
-      </div>
-    </div>
-
-    <div>
-      <div class="copy-col" style="display:block;">
-        <div class="label" style="margin-bottom: 10px;">— WHY A PCB</div>
-        <div class="body" style="font-size: 17px;">
-          <p>Perfboard worked for the prototype but the door unit carries ten signal lines plus a power loop with servo current spikes. Trace placement matters — a noisy ground at the wrong moment resets the ESP32 mid-actuation. A real PCB collapses that whole class of bugs.</p>
-          <p>Designed in <strong>EasyEDA</strong>, fabricated through <strong>JLCPCB</strong>. Two-layer board, signal traces on top, solid GND pour on bottom.</p>
-        </div>
-      </div>
-
-      <div class="pcb-stats">
-        <div class="cell"><span class="k">▪ Layers</span><span class="v">2 (signal / GND pour)</span></div>
-        <div class="cell"><span class="k">▪ Power traces</span><span class="v">1–2 mm</span></div>
-        <div class="cell"><span class="k">▪ Signal traces</span><span class="v">0.25 mm</span></div>
-        <div class="cell"><span class="k">▪ Battery conn</span><span class="v">JST-PH, keyed</span></div>
-        <div class="cell"><span class="k">▪ Servo conn</span><span class="v">3-pin 2.54 mm header</span></div>
-        <div class="cell"><span class="k">▪ Servo bulk cap</span><span class="v">1000 µF (absorbs inrush)</span></div>
-      </div>
+      <p>If any disagree, the UI goes yellow &ldquo;unknown&rdquo; and refuses to auto-lock. The deadbolt can still be turned by hand — the servo is back-drivable at rest.</p>
     </div>
   </div>
 </section>
@@ -697,9 +508,9 @@
 <!-- BOM -->
 <section class="section">
   <div class="section-head">
-    <div class="idx">§ 05</div>
+    <div class="idx">§ 04</div>
     <div class="label">Bill of Materials</div>
-    <div class="meta">Everything that goes into one</div>
+    <div class="meta">Everything you need to build one</div>
   </div>
 
   <table class="bom">
@@ -744,9 +555,9 @@
       </tr>
       <tr>
         <td class="qty">1</td>
-        <td class="part"><strong>Logic-level N-ch MOSFET</strong><span>IRLZ44N · LOW-SIDE GATE</span></td>
-        <td>Cuts servo power between moves</td>
-        <td class="price">$0.80</td>
+        <td class="part"><strong>Logic-level P-ch MOSFET</strong><span>AO3401A or similar · SOT-23</span></td>
+        <td>Gates servo 5 V rail</td>
+        <td class="price">$0.30</td>
       </tr>
       <tr>
         <td class="qty">1</td>
@@ -756,13 +567,13 @@
       </tr>
       <tr>
         <td class="qty">1</td>
-        <td class="part"><strong>3D-printed housing · door + wall</strong><span>PETG · CUSTOM ENCLOSURE</span></td>
+        <td class="part"><strong>3D-printed housing · door + wall</strong><span>PETG · SEE STL PACK</span></td>
         <td>Everything mechanical</td>
         <td class="price">~$4.00</td>
       </tr>
       <tr>
         <td class="qty">—</td>
-        <td class="part"><strong>Screws, wires, headers</strong><span>M3 fasteners · jumper wire · misc</span></td>
+        <td class="part"><strong>Screws, wires, perfboard, caps</strong><span>0.1 µF bypass, 470 µF bulk, M3 × various</span></td>
         <td>Glue</td>
         <td class="price">~$2.00</td>
       </tr>
@@ -774,6 +585,66 @@
       </tr>
     </tfoot>
   </table>
+</section>
+
+<!-- DOWNLOADS -->
+<section class="section">
+  <div class="section-head">
+    <div class="idx">§ 05</div>
+    <div class="label">Downloads · Replicate It</div>
+    <div class="meta">Everything you&rsquo;d need, MIT / CC-BY</div>
+  </div>
+
+  <div class="dl-grid">
+    <div class="dl" onclick="alert('Repo goes up when LoRa compat lands. Ping me for early access.')">
+      <div>
+        <div class="dl-type">◇ GITHUB</div>
+        <h4>Firmware — door &amp; wall units</h4>
+        <div class="dl-meta">Arduino-ESP32 · 2 sketches · ~1.2k LOC</div>
+      </div>
+      <div class="dl-arr"><span>smart-door-lock /firmware</span><span>→</span></div>
+    </div>
+    <div class="dl" onclick="alert('Repo goes up when LoRa compat lands.')">
+      <div>
+        <div class="dl-type">◇ GITHUB</div>
+        <h4>Web app (hosted HTML)</h4>
+        <div class="dl-meta">Vanilla JS · MQTT over WSS · PWA-ready</div>
+      </div>
+      <div class="dl-arr"><span>smart-door-lock /app</span><span>→</span></div>
+    </div>
+    <div class="dl" onclick="alert('STEP/STL pack ships with repo.')">
+      <div>
+        <div class="dl-type">◇ CAD</div>
+        <h4>Housings — STEP &amp; STL</h4>
+        <div class="dl-meta">Onshape source · PETG-tuned · FDM-printable</div>
+      </div>
+      <div class="dl-arr"><span>smart-door-lock /cad</span><span>→</span></div>
+    </div>
+    <div class="dl" onclick="alert('PDF schematic ships with repo.')">
+      <div>
+        <div class="dl-type">◇ PDF</div>
+        <h4>Schematic &amp; wiring diagram</h4>
+        <div class="dl-meta">KiCad source + printable PDF · 2 pages</div>
+      </div>
+      <div class="dl-arr"><span>smart-door-lock /docs/schematic.pdf</span><span>→</span></div>
+    </div>
+    <div class="dl" onclick="alert('Build log PDF coming with the v1 release.')">
+      <div>
+        <div class="dl-type">◇ PDF</div>
+        <h4>Build log · photo walkthrough</h4>
+        <div class="dl-meta">~20 pages · assembly, tuning, debug notes</div>
+      </div>
+      <div class="dl-arr"><span>smart-door-lock /docs/build-log.pdf</span><span>→</span></div>
+    </div>
+    <div class="dl" onclick="alert('BOM CSV is in the repo under /docs/.')">
+      <div>
+        <div class="dl-type">◇ CSV</div>
+        <h4>Full BOM + sourcing links</h4>
+        <div class="dl-meta">CSV · 18 rows · US sellers</div>
+      </div>
+      <div class="dl-arr"><span>smart-door-lock /docs/bom.csv</span><span>→</span></div>
+    </div>
+  </div>
 </section>
 
 <!-- TIMELINE -->
@@ -788,27 +659,32 @@
     <div class="tl-row done">
       <div class="tl-when">Feb 2026</div>
       <div class="tl-dot"><div class="sq"></div></div>
-      <div class="tl-what">Mechanical prototype + power gating<span class="sub">Servo drives the deadbolt; limit switches detect both end-states. MOSFET cutoff + deep-sleep verified: ~10 µA sleep, ~1 mA average with LoRa listening.</span></div>
+      <div class="tl-what">Mechanical prototype on a test door<span class="sub">Servo drives the deadbolt; limit switches detect both end-states. Housing v1 printed in PETG.</span></div>
+    </div>
+    <div class="tl-row done">
+      <div class="tl-when">Mar 2026</div>
+      <div class="tl-dot"><div class="sq"></div></div>
+      <div class="tl-what">MOSFET power gating + deep-sleep<span class="sub">Measured &lt; 40 mA peak and ~10 μA sleep. Battery budget math suggests ~6 months on 4×AA at typical usage.</span></div>
     </div>
     <div class="tl-row done">
       <div class="tl-when">Mar 2026</div>
       <div class="tl-dot"><div class="sq"></div></div>
       <div class="tl-what">Web app + MQTT over WebSockets<span class="sub">App ↔ HiveMQ ↔ wall unit fully working. Auto-lock, activity log, settings panel, connection credentials all live.</span></div>
     </div>
-    <div class="tl-row done">
-      <div class="tl-when">Mar 2026</div>
-      <div class="tl-dot"><div class="sq"></div></div>
-      <div class="tl-what">Cross-chip LoRa link<span class="sub">SX1262 (wall) ⇄ SX1276 (door) working end-to-end. Matched syncword + modem params. RSSI ~−63 dBm at room scale.</span></div>
-    </div>
-    <div class="tl-row done">
-      <div class="tl-when">Mar 2026</div>
-      <div class="tl-dot"><div class="sq"></div></div>
-      <div class="tl-what">Custom PCB — EasyEDA → JLCPCB<span class="sub">Two-layer board, signal on top, GND pour on bottom. JST-PH battery connector, 1000 µF bulk cap adjacent to the servo connector. Replaces the perfboard prototype.</span></div>
-    </div>
     <div class="tl-row active">
       <div class="tl-when">Apr 2026 · NOW</div>
       <div class="tl-dot"><div class="sq"></div></div>
-      <div class="tl-what">Battery life evaluation<span class="sub">On the bench with a fresh set of AAs, logging average current draw over real lock/unlock cycles. Targeting confirmation of the ~100-day projection.</span></div>
+      <div class="tl-what">Cross-chip LoRa compatibility<span class="sub">SX1262 (wall) ⇄ SX1276 (door). Matching syncword, modem params, and header mode. Current blocker.</span></div>
+    </div>
+    <div class="tl-row todo">
+      <div class="tl-when">May 2026</div>
+      <div class="tl-dot"><div class="sq"></div></div>
+      <div class="tl-what">OTA firmware + pairing flow<span class="sub">Wall unit pushes signed updates; door unit wakes on a scheduled window to apply.</span></div>
+    </div>
+    <div class="tl-row todo">
+      <div class="tl-when">Jun 2026</div>
+      <div class="tl-dot"><div class="sq"></div></div>
+      <div class="tl-what">v1 public release<span class="sub">Repo, BOM, STL pack, build log PDF. Open-source, MIT / CC-BY.</span></div>
     </div>
   </div>
 </section>
@@ -823,24 +699,100 @@
   <div class="copy-col">
     <div class="label">— IN HINDSIGHT</div>
     <div class="body">
-      <p>Pick both radios from the <em>same silicon family</em> up front. Heltec was convenient for the wall unit but the SX1262/SX1276 mismatch cost me a week of firmware debugging before the link came up.</p>
+      <p>Pick both radios from the <em>same silicon family</em> up front. Heltec was convenient for the wall unit but the SX1262/SX1276 mismatch cost me a week of oscilloscope time.</p>
       <p>Do the <em>power measurements before</em> the mechanical design. I moved the battery holder twice because my first sleep-current numbers were wrong by an order of magnitude.</p>
-      <p>Design the <em>mechanical override first</em>, before any electronics. A smart lock that can&rsquo;t be opened by hand is just an expensive paperweight the first time firmware crashes.</p>
+      <p>Ship the <em>mechanical override</em> even before ship. A smart lock that can&rsquo;t be opened by hand is just an expensive paperweight the first time firmware crashes.</p>
     </div>
   </div>
 
   <div style="margin-top: 30px;">
     <a href="../index.html#projects" class="backlink" style="border-color: var(--fg);">← All projects</a>
-    <a href="../index.html#contact" class="backlink" style="border-color: var(--accent); color: var(--accent); margin-left: 10px;">Questions? → Get in touch</a>
+    <a href="../index.html#contact" class="backlink" style="border-color: var(--accent); color: var(--accent); margin-left: 10px;">Want one? → Get in touch</a>
   </div>
 </section>
 
 <!-- FOOT -->
 <footer class="foot">
   <div class="c1">© 2026 A. Sanghani</div>
-  <div class="c2">— P/002 · Smart electronic door lock —</div>
-  <div class="c3">rev. 2026.05</div>
+  <div class="c2">— P/001 · Smart electronic door lock · open source when released —</div>
+  <div class="c3">rev. 2026.04</div>
 </footer>
+
+<script>
+/* ——— Lock demo state machine ——— */
+const Lock = (() => {
+  let state = 'locked'; // locked | unlocking | unlocked | locking
+  let autoLockTimer = null;
+  let autoLockInterval = null;
+  let countdown = 30;
+
+  const big = () => document.getElementById('lockBig');
+  const btn = () => document.getElementById('lockBtn');
+  const timer = () => document.getElementById('lockTimer');
+  const timerNum = () => document.getElementById('lockTimerNum');
+  const log = () => document.getElementById('lockLog');
+
+  function stamp() {
+    const d = new Date();
+    return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
+  }
+  function addLog(msg) {
+    const el = document.createElement('div');
+    el.className = 'entry';
+    el.innerHTML = `<span class="t">${stamp()}</span> &nbsp;${msg}`;
+    log().prepend(el);
+    while (log().children.length > 12) log().removeChild(log().lastChild);
+  }
+
+  function render() {
+    big().textContent = state.toUpperCase();
+    big().classList.toggle('unlocked', state === 'unlocked' || state === 'unlocking');
+    if (state === 'locked') { btn().textContent = 'UNLOCK'; btn().classList.remove('working'); timer().style.display = 'none'; }
+    if (state === 'unlocked') { btn().textContent = 'LOCK NOW'; btn().classList.remove('working'); timer().style.display = 'flex'; }
+    if (state === 'unlocking') { btn().textContent = '…SERVO MOVING'; btn().classList.add('working'); timer().style.display = 'none'; }
+    if (state === 'locking') { btn().textContent = '…SERVO MOVING'; btn().classList.add('working'); timer().style.display = 'none'; }
+  }
+  function clearAuto() {
+    clearTimeout(autoLockTimer); autoLockTimer = null;
+    clearInterval(autoLockInterval); autoLockInterval = null;
+  }
+  function startAuto() {
+    clearAuto();
+    countdown = 30; timerNum().textContent = countdown + 's';
+    autoLockInterval = setInterval(() => {
+      countdown--;
+      timerNum().textContent = countdown + 's';
+      if (countdown <= 0) {
+        clearAuto();
+        window.toggleLock(true);
+      }
+    }, 1000);
+  }
+
+  window.toggleLock = function(auto) {
+    if (state === 'unlocking' || state === 'locking') return;
+    if (state === 'locked') {
+      state = 'unlocking'; render();
+      addLog('tx · CMD_UNLOCK → lora · rssi -84');
+      setTimeout(() => {
+        addLog('rx · ACK · limit_a=HIGH');
+        state = 'unlocked'; render();
+        startAuto();
+      }, 1400);
+    } else if (state === 'unlocked') {
+      clearAuto();
+      state = 'locking'; render();
+      addLog(auto ? 'auto-lock · CMD_LOCK → lora' : 'tx · CMD_LOCK → lora · rssi -82');
+      setTimeout(() => {
+        addLog('rx · ACK · limit_b=HIGH');
+        state = 'locked'; render();
+      }, 1400);
+    }
+  };
+  render();
+  return { toggleLock: window.toggleLock };
+})();
+</script>
 
 </body>
 </html>

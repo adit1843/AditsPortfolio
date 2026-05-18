@@ -178,6 +178,51 @@
   }
   .proj-card:hover .pc-media { filter: brightness(1.1); }
 
+  /* Disabled — coming soon */
+  .proj-card.disabled {
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+  .proj-card.disabled .pc-arr { color: var(--fg-mute); }
+  .pc-cs-stamp {
+    position: absolute;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(11,11,12,0.82);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    color: var(--fg);
+    border: 1px solid var(--accent);
+    padding: 14px 22px 12px;
+    z-index: 4;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    text-align: center;
+  }
+  .pc-cs-stamp .cs-tag {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--accent);
+  }
+  .pc-cs-stamp .cs-headline {
+    font-family: "Inter Tight", sans-serif;
+    font-weight: 600;
+    font-size: clamp(17px, 1.8vw, 22px);
+    letter-spacing: -0.01em;
+    line-height: 1;
+  }
+  .pc-cs-stamp .cs-line {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--fg-mute);
+    text-transform: uppercase;
+  }
+
   .pc-media {
     aspect-ratio: 4 / 3;
     background: var(--bg-2);
@@ -319,7 +364,8 @@
     grid-template-columns: repeat(3, 1fr);
     gap: 1px;
     background: var(--rule);
-    padding: 0 clamp(40px, 10vw, 160px);
+    padding: 0;
+    border-top: 1px solid var(--rule);
     border-bottom: 1px solid var(--rule);
   }
   .other-tile {
@@ -340,6 +386,12 @@
     align-items: center;
     justify-content: center;
   }
+  .ot-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
   .ot-mark {
     position: relative;
     font-family: "Inter Tight", sans-serif;
@@ -348,6 +400,45 @@
     letter-spacing: -0.03em;
     color: var(--fg);
     opacity: 0.85;
+  }
+  /* Coming-soon stamp for the Others tiles (smaller than the project cards') */
+  .ot-cs-stamp {
+    position: absolute;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(11,11,12,0.82);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    color: var(--fg);
+    border: 1px solid var(--accent);
+    padding: 10px 16px 9px;
+    z-index: 4;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    text-align: center;
+  }
+  .ot-cs-stamp .cs-tag {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--accent);
+  }
+  .ot-cs-stamp .cs-headline {
+    font-family: "Inter Tight", sans-serif;
+    font-weight: 600;
+    font-size: clamp(14px, 1.4vw, 17px);
+    letter-spacing: -0.01em;
+    line-height: 1;
+  }
+  .ot-cs-stamp .cs-line {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    color: var(--fg-mute);
+    text-transform: uppercase;
   }
   .ot-label {
     padding: 12px 16px 4px;
@@ -713,6 +804,25 @@
     transition: transform 160ms, opacity 160ms;
   }
   .contact-form .cf-send:hover { transform: translateX(4px); }
+  .contact-form .cf-send:disabled { opacity: 0.6; cursor: default; transform: none; }
+  .contact-form .cf-status {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+    padding: 14px 0 0;
+    margin: 0;
+    text-transform: none;
+  }
+  .contact-form .cf-status.error { color: #ff8a73; }
+  .contact-form .cf-status .status-line {
+    display: block;
+    color: var(--fg);
+    font-family: "Inter Tight", sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    margin-top: 4px;
+  }
   .contact-rows-wrap {
     padding: 28px 0 28px 32px;
     display: flex;
@@ -801,6 +911,114 @@
     .sk-row { grid-template-columns: 1fr; }
     .contact-direct { gap: 16px 28px; margin: -8px 0 28px; }
   }
+
+  /* —— Phone polish (≤ 600 px) ———————————— */
+  @media (max-width: 600px) {
+    /* (1) Hero — tighter, portrait scaled down */
+    .hero-min {
+      min-height: auto;
+      padding: 24px 20px 28px;
+      gap: 16px;
+    }
+    .hero-portrait { max-width: 220px; margin-bottom: 16px; }
+    .hero-name-min {
+      font-size: clamp(56px, 16vw, 80px);
+      line-height: 0.92;
+      margin-bottom: 8px;
+    }
+    .hero-bio-wrap { margin-top: 16px; }
+    .hero-bio { font-size: 15.5px; line-height: 1.55; margin-bottom: 12px; }
+
+    /* (2) Others — single column on phone */
+    .others-grid { grid-template-columns: 1fr; }
+    .ot-thumb { aspect-ratio: 16 / 10; }
+
+    /* (3) Bigger tap targets — meta items stack vertically */
+    .hero-meta {
+      grid-template-columns: 1fr;
+      gap: 6px;
+      padding-top: 8px;
+      border-top: 1px solid var(--rule);
+      margin-top: 12px;
+    }
+    .hero-meta .sep { display: none; }
+    .hero-meta .meta-item {
+      width: 100%;
+      min-height: 44px;
+      padding: 4px 0;
+      box-sizing: border-box;
+      gap: 12px;
+    }
+    .hero-meta a.meta-item {
+      border-bottom: 1px solid var(--rule);
+      padding: 10px 4px;
+    }
+    .hero-meta a.meta-item:last-of-type { border-bottom: none; }
+    .hero-meta .meta-item .v { font-size: 14px; }
+
+    /* Contact direct row — stack & enlarge */
+    .contact-direct {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 6px;
+      margin: 0 0 24px;
+    }
+    .contact-direct > span {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 48px;
+      border-bottom: 1px solid var(--rule);
+      padding: 6px 0;
+    }
+    .contact-direct a {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 0;
+    }
+    .contact-direct .li-pill {
+      width: 100%;
+      justify-content: space-between;
+      min-height: 48px;
+      padding: 12px 16px;
+      box-sizing: border-box;
+    }
+
+    /* Big LinkedIn / contact buttons */
+    .li-button { min-height: 56px; padding: 16px 18px; font-size: 15px; }
+
+    /* Project rows */
+    .proj-row {
+      grid-template-columns: 1fr;
+      gap: 6px;
+      padding: 20px var(--pad-x);
+    }
+    .proj-row:hover { padding-left: var(--pad-x); }
+    .pr-meta, .pr-num { font-size: 11px; }
+
+    /* (4) Type scaling — project cards & sections */
+    .pc-title { font-size: clamp(22px, 6vw, 28px); }
+    .pc-tag { font-size: 14px; }
+    .pc-foot { font-size: 11px; }
+    .sh { padding-top: 36px; }
+    .sh .lbl { font-size: 13px; }
+    .sh .num { font-size: 10px; }
+    .ot-label { font-size: 15px; padding: 12px 14px 4px; }
+    .ot-meta { padding: 0 14px 14px; }
+
+    /* Contact section title */
+    .contact-min { padding: 48px 20px 32px; }
+    .contact-min h2 {
+      font-size: clamp(40px, 11vw, 64px);
+      line-height: 0.95;
+      margin-bottom: 24px;
+    }
+    .cf-send { width: 100%; text-align: center; min-height: 52px; }
+
+    /* (5) Footer chips — already collapse via styles.css, just tighten type */
+    .foot .c1, .foot .c2, .foot .c3 { font-size: 11px; }
+  }
 </style>
 </head>
 <body>
@@ -848,7 +1066,7 @@
     <div class="meta-item"><span class="k">▪</span><span class="v">College Station, TX</span></div>
     <span class="sep"></span>
     <a class="meta-item" href="tel:+14407713203"><span class="k">☎</span><span class="v">(440) 771-3203</span></a>
-    <a class="meta-item" href="mailto:aditsanghani@gmail.com"><span class="k">✉</span><span class="v">Email</span></a>
+    <a class="meta-item" href="mailto:aditsanghani@gmail.com"><span class="k">✉</span><span class="v">aditsanghani@gmail.com</span></a>
     <a class="meta-item" href="https://linkedin.com/in/aditsa" target="_blank" rel="noopener"><span class="k">in</span><span class="v">LinkedIn</span></a>
   </div>
 </header>
@@ -881,7 +1099,7 @@
   <a class="proj-card" href="projects/smart-door-lock.html">
     <div class="pc-media">
       <div class="pc-stripes"></div>
-      <div class="pc-tag-tl">P/002 · OPEN SOURCE</div>
+      <div class="pc-tag-tl">P/002 · IN PROGRESS</div>
       <div class="pc-placeholder">[ RENDER · DOOR + WALL UNIT ]</div>
     </div>
     <div class="pc-meta">
@@ -894,37 +1112,45 @@
     </div>
   </a>
 
-  <a class="proj-card" href="projects/glance.html">
+  <div class="proj-card disabled" aria-disabled="true">
     <div class="pc-media">
       <div class="pc-stripes"></div>
-      <div class="pc-tag-tl">P/003 · IN PROGRESS</div>
-      <div class="pc-placeholder">[ RENDER · DESK DISPLAY · PHONE TETHER ]</div>
+      <div class="pc-tag-tl">P/003</div>
+      <div class="pc-cs-stamp">
+        <span class="cs-tag">▪ Status</span>
+        <span class="cs-headline">Coming Soon</span>
+        <span class="cs-line">Project in progress</span>
+      </div>
     </div>
     <div class="pc-meta">
       <h3 class="pc-title">Glance</h3>
       <p class="pc-tag">Desk display that mirrors your phone—so the phone stays away</p>
       <div class="pc-foot">
         <span class="pc-stamp">2026 · Personal</span>
-        <span class="pc-arr">Read More →</span>
+        <span class="pc-arr">Coming Soon</span>
       </div>
     </div>
-  </a>
+  </div>
 
-  <a class="proj-card" href="projects/ice-cream-dispenser.html">
+  <div class="proj-card disabled" aria-disabled="true">
     <div class="pc-media">
       <div class="pc-stripes"></div>
-      <div class="pc-tag-tl">P/004 · IN PROGRESS</div>
-      <div class="pc-placeholder">[ RENDER · SCOOP DISPENSER MECH ]</div>
+      <div class="pc-tag-tl">P/004</div>
+      <div class="pc-cs-stamp">
+        <span class="cs-tag">▪ Status</span>
+        <span class="cs-headline">Coming Soon</span>
+        <span class="cs-line">Project in progress</span>
+      </div>
     </div>
     <div class="pc-meta">
       <h3 class="pc-title">Ice Cream Scoop Dispenser</h3>
       <p class="pc-tag">Back-of-house dispenser for consistent, fast portions in shops</p>
       <div class="pc-foot">
         <span class="pc-stamp">2026 · Personal</span>
-        <span class="pc-arr">Read More →</span>
+        <span class="pc-arr">Coming Soon</span>
       </div>
     </div>
-  </a>
+  </div>
 
 </div>
 </section>
@@ -937,32 +1163,46 @@
 </div>
 <div class="others-grid">
   <div class="other-tile">
-    <div class="ot-thumb"><div class="pc-stripes"></div><div class="ot-mark">$344K/yr</div></div>
-    <div class="ot-label">Tesla · AGV adaptive support</div>
+    <div class="ot-thumb"><img src="assets/others/tesla-agv-guides.jpg" alt="Red and white powder-coated AGV guide rails staged next to a seat-carrier conveyor on the Tesla assembly line." style="object-position: center bottom;" /></div>
+    <div class="ot-label">Tesla · AGV Guides</div>
     <div class="ot-meta">2024 · NDA</div>
   </div>
   <div class="other-tile">
-    <div class="ot-thumb"><div class="pc-stripes"></div><div class="ot-mark">×6</div></div>
+    <div class="ot-thumb"><img src="assets/others/tesla-conveyor.png" alt="Steel-and-red roller conveyor built to transfer pallets between forklifts and AGVs, photographed in the build bay." /></div>
     <div class="ot-label">Tesla · Forklift ⇌ AGV conveyor</div>
     <div class="ot-meta">2023–24 · NDA</div>
   </div>
   <div class="other-tile">
-    <div class="ot-thumb"><div class="pc-stripes"></div><div class="ot-mark">~$200K/yr</div></div>
+    <div class="ot-thumb">
+      <div class="pc-stripes"></div>
+      <div class="ot-cs-stamp">
+        <span class="cs-tag">▪ Status</span>
+        <span class="cs-headline">Coming Soon</span>
+        <span class="cs-line">Project in progress</span>
+      </div>
+    </div>
     <div class="ot-label">Nucor · Pneumatic retrofit</div>
     <div class="ot-meta">2025 · NDA</div>
   </div>
   <div class="other-tile">
-    <div class="ot-thumb"><div class="pc-stripes"></div><div class="ot-mark">+30%</div></div>
+    <div class="ot-thumb">
+      <div class="pc-stripes"></div>
+      <div class="ot-cs-stamp">
+        <span class="cs-tag">▪ Status</span>
+        <span class="cs-headline">Coming Soon</span>
+        <span class="cs-line">Project in progress</span>
+      </div>
+    </div>
     <div class="ot-label">Nucor · CV metrology station</div>
     <div class="ot-meta">2025 · NDA</div>
   </div>
   <a class="other-tile" href="https://advanced.onlinelibrary.wiley.com/doi/full/10.1002/admt.202300213" target="_blank" rel="noopener">
-    <div class="ot-thumb"><div class="pc-stripes"></div><div class="ot-mark">PAPER</div></div>
+    <div class="ot-thumb"><img src="assets/others/electroadhesion.png" alt="Electroadhesion droplet rig on an optical table: syringe pump, high-speed camera, light source, and touch-screen substrate." /></div>
     <div class="ot-label">Electroadhesion droplet rig</div>
     <div class="ot-meta">2022–23 · Adv. Mat. Tech.</div>
   </a>
   <div class="other-tile">
-    <div class="ot-thumb"><div class="pc-stripes"></div><div class="ot-mark">OCT</div></div>
+    <div class="ot-thumb"><img src="assets/others/oct-rig.png" alt="OCT fingertip rig: a 3D-printed cradle holding a tactile sample under an optical coherence tomography microscope." /></div>
     <div class="ot-label">INVENT Lab · OCT fingertip rig</div>
     <div class="ot-meta">2023–25 · Research</div>
   </div>
@@ -1030,12 +1270,15 @@
   </div>
 
   <div class="contact-grid">
-    <form class="contact-form" id="contact-form" onsubmit="return sendContact(event)">
+    <form class="contact-form" id="contact-form" action="https://formspree.io/f/xykvyrwo" method="POST" onsubmit="return sendContact(event)">
       <div class="cf-head">§ Send a note</div>
       <input type="text" name="name" placeholder="Your name" required />
       <input type="email" name="email" placeholder="Your email" required />
       <textarea name="message" placeholder="A few words about why you’re reaching out." required></textarea>
+      <input type="hidden" name="_subject" value="Portfolio inquiry" />
+      <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;opacity:0;height:0;width:0;" aria-hidden="true" />
       <button type="submit" class="cf-send">Send →</button>
+      <div class="cf-status" id="cf-status" role="status" aria-live="polite" hidden></div>
     </form>
 
     <aside class="currently">
@@ -1075,15 +1318,52 @@
     });
   })();
 
-  function sendContact(e) {
+  async function sendContact(e) {
     e.preventDefault();
     const f = e.target;
-    const name = encodeURIComponent(f.name.value || '');
-    const email = f.email.value || '';
-    const msg = f.message.value || '';
-    const subject = encodeURIComponent('Portfolio inquiry from ' + (f.name.value || ''));
-    const body = encodeURIComponent(msg + '\n\n— ' + (f.name.value || '') + '\n' + email);
-    window.location.href = 'mailto:aditsanghani@gmail.com?subject=' + subject + '&body=' + body;
+    const btn = f.querySelector('.cf-send');
+    const status = f.querySelector('#cf-status');
+
+    // Honeypot — if filled, silently bail
+    if (f._gotcha && f._gotcha.value) return false;
+
+    btn.disabled = true;
+    const origLabel = btn.textContent;
+    btn.textContent = 'Sending…';
+    status.hidden = true;
+    status.classList.remove('error');
+    status.textContent = '';
+
+    try {
+      const formData = new FormData(f);
+      formData.set('_subject', 'Portfolio inquiry from ' + (f.name.value || 'Anonymous'));
+
+      const res = await fetch(f.action, {
+        method: 'POST',
+        body: formData,
+        headers: { Accept: 'application/json' },
+      });
+
+      if (res.ok) {
+        status.innerHTML = '✓ Sent.<span class="status-line">Thanks for reaching out — I\'ll get back to you shortly.</span>';
+        status.hidden = false;
+        f.querySelectorAll('input[name], textarea[name]').forEach(el => { if (el.type !== 'hidden') el.value = ''; });
+        btn.textContent = 'Sent ✓';
+        return false;
+      }
+
+      const data = await res.json().catch(() => ({}));
+      const errMsg = data && data.errors && data.errors.length
+        ? data.errors.map(er => er.message).join(' · ')
+        : 'Submission failed (HTTP ' + res.status + ').';
+      throw new Error(errMsg);
+    } catch (err) {
+      status.innerHTML = '✕ Couldn\'t send.<span class="status-line">' + (err.message || 'Network error.') + ' Try emailing <a href="mailto:aditsanghani@gmail.com" style="color:inherit;text-decoration:underline;">aditsanghani@gmail.com</a> directly.</span>';
+      status.classList.add('error');
+      status.hidden = false;
+      btn.disabled = false;
+      btn.textContent = origLabel;
+    }
     return false;
   }
 
