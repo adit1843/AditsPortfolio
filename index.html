@@ -1067,7 +1067,7 @@
     <div class="meta-item"><span class="k">▪</span><span class="v">College Station, TX</span></div>
     <span class="sep"></span>
     <a class="meta-item" href="tel:+14407713203"><span class="k">☎</span><span class="v">(440) 771-3203</span></a>
-    <a class="meta-item" href="/cdn-cgi/l/email-protection#f594919c8186949b929d949b9cb59298949c99db969a98"><span class="k">✉</span><span class="v"><span class="__cf_email__" data-cfemail="86e7e2eff2f5e7e8e1eee7e8efc6e1ebe7efeaa8e5e9eb">[email&#160;protected]</span></span></a>
+    <a class="meta-item" href="/cdn-cgi/l/email-protection#2b4a4f425f584a454c434a45426b4c464a424705484446"><span class="k">✉</span><span class="v">aditsanghani@gmail.com</span></a>
     <a class="meta-item" href="https://linkedin.com/in/aditsa" target="_blank" rel="noopener"><span class="k">in</span><span class="v">LinkedIn</span></a>
   </div>
 </header>
@@ -1265,7 +1265,7 @@
   <h2>Let&rsquo;s build <em>something</em>.</h2>
 
   <div class="contact-direct">
-    <span><span class="cd-k">Email</span><a href="/cdn-cgi/l/email-protection#5435303d2027353a333c353a3d143339353d387a373b39"><span class="__cf_email__" data-cfemail="ff9e9b968b8c9e9198979e9196bf98929e9693d19c9092">[email&#160;protected]</span></a></span>
+    <span><span class="cd-k">Email</span><a href="/cdn-cgi/l/email-protection#0d6c6964797e6c636a656c63644d6a606c6461236e6260">aditsanghani@gmail.com</a></span>
     <span><span class="cd-k">Phone</span><a href="tel:+14407713203">(440) 771-3203</a></span>
     <a class="li-pill" href="https://linkedin.com/in/aditsa" target="_blank" rel="noopener">LinkedIn ↗</a>
   </div>
@@ -1359,7 +1359,8 @@
         : 'Submission failed (HTTP ' + res.status + ').';
       throw new Error(errMsg);
     } catch (err) {
-      status.innerHTML = '✕ Couldn\'t send.<span class="status-line">' + (err.message || 'Network error.') + ' Try emailing <a href="mailto:aditsanghani@gmail.com" style="color:inherit;text-decoration:underline;">aditsanghani@gmail.com</a> directly.</span>';
+      const fallbackEmail = ['aditsanghani', 'gmail.com'].join('@');
+      status.innerHTML = '✕ Couldn\'t send.<span class="status-line">' + (err.message || 'Network error.') + ' Try emailing <a href="mailto:' + fallbackEmail + '" style="color:inherit;text-decoration:underline;">' + fallbackEmail + '</a> directly.</span>';
       status.classList.add('error');
       status.hidden = false;
       btn.disabled = false;
