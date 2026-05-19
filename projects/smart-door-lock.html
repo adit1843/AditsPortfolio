@@ -9,8 +9,19 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../styles.css" />
 <style>
+  /* Page-scoped overrides: tighter, more centered.
+     `--pad-x` climbs higher on wide viewports so content pulls toward
+     the center; `--pad-y` trims overall vertical rhythm. */
+  :root {
+    --pad-x: clamp(16px, 6vw, 144px);
+    --pad-y: clamp(18px, 2.4vw, 32px);
+    --grid-gap: 20px;
+  }
+  .nav-inner { padding: 12px var(--pad-x); }
+  .foot { padding: 16px var(--pad-x); }
+
   .case-hero {
-    padding: 32px clamp(24px, 6vw, 96px) 20px;
+    padding: 28px var(--pad-x) 16px;
   }
   .case-meta {
     display: grid; grid-template-columns: repeat(12, 1fr); gap: var(--grid-gap);
@@ -41,7 +52,7 @@
   .demo {
     border-top: 1px solid var(--rule);
     border-bottom: 1px solid var(--rule);
-    padding: 40px var(--pad-x);
+    padding: var(--pad-y) var(--pad-x);
     display: grid;
     grid-template-columns: repeat(12, 1fr);
     gap: var(--grid-gap);
@@ -349,9 +360,9 @@
   .fig-pair {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 16px;
+    gap: 20px;
     margin: 0 auto 28px;
-    max-width: 780px;
+    max-width: 960px;
   }
   .fig-pair .fig {
     position: relative;
@@ -550,7 +561,7 @@
     .stats { grid-template-columns: 1fr; }
     .stat { padding: 16px 20px; }
     .stat:nth-child(3) { border-bottom: 1px solid var(--rule); }
-    .demo { padding: 24px clamp(16px, 5vw, 32px); gap: 20px; }
+    .demo { padding: 20px clamp(14px, 5vw, 28px); gap: 18px; }
     .demo .caption h3 { font-size: clamp(22px, 5.5vw, 30px); }
     .lock-app .placeholder { min-height: 380px !important; }
     .placeholder { padding: 24px 18px; min-height: 220px; }
