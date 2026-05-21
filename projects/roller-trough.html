@@ -76,8 +76,8 @@
     text-transform: uppercase; letter-spacing: 0.12em;
     color: var(--fg-mute); margin-bottom: 10px;
   }
-  .cmp.bad .tag::before { content: "▪ PREVIOUS  "; color: var(--fg-mute); }
-  .cmp.good .tag::before { content: "▪ REDESIGN  "; color: var(--accent); }
+  .cmp.bad .tag::before { content: "▪ THE PROBLEM  "; color: var(--fg-mute); }
+  .cmp.good .tag::before { content: "▪ THE FIX  "; color: var(--accent); }
   .cmp h3 { font-size: clamp(22px, 2vw, 28px); font-weight: 600; letter-spacing: -0.02em; margin: 0 0 12px; }
   .cmp .row {
     display: grid; grid-template-columns: 100px 1fr;
@@ -172,14 +172,14 @@
 
 <!-- HERO IMAGE -->
 <div style="margin: 0; height: 520px; overflow: hidden; border-bottom: 1px solid var(--rule);">
-  <img src="../assets/roller-trough-hero.jpg" alt="Water-cooled roller trough assembly on a hot mill line, with red-hot steel bar glowing mid-transit through the gap between the two trough sections." style="width:100%; height:100%; object-fit:cover; object-position: center 80%; display:block;" />
+  <img src="../assets/roller-trough-hero.jpg" alt="Water-cooled roller trough assembly on a hot mill line, with red-hot steel bar glowing mid-transit through the gap between the two trough sections." style="width:100%; height:100%; object-fit:cover; object-position: center 90%; display:block;" />
 </div>
 
 <!-- COMPARE -->
 <div class="compare">
   <div class="cmp bad">
     <div class="tag">Fixed wear plates</div>
-    <h3>High-impact sliding contact. Short service life.</h3>
+    <h3>The plates wear out before the job is done.</h3>
     <div class="row"><strong>Sliding</strong><span>full bar impact on stationary plate every pass</span></div>
     <div class="row"><strong>No cooling</strong><span>wear plate absorbs all radiant and contact heat</span></div>
     <div class="row"><strong>Early exit</strong><span>plates worn before campaign end, forced changeout</span></div>
@@ -187,7 +187,7 @@
   </div>
   <div class="cmp good">
     <div class="tag">Water-cooled rolls</div>
-    <h3>Rolling contact. Continuous heat extraction. Campaign-length life.</h3>
+    <h3>Runs the full campaign. No unplanned stops.</h3>
     <div class="row"><strong>Rolling</strong><span>impact converted to rotation — wear distributed over full roll face</span></div>
     <div class="row"><strong>Cooled</strong><span>internal water circuit extracts heat continuously from each roll</span></div>
     <div class="row"><strong>Full life</strong><span>designed to run a complete campaign without intervention</span></div>
