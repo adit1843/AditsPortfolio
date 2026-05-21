@@ -203,149 +203,69 @@
   <div class="stat"><div class="v" style="font-size: clamp(22px, 2.5vw, 36px); line-height: 1.1;">1-hook lift</div><div class="k">▪ Crane-liftable for fast line changeovers</div></div>
 </div>
 
-<!-- OVERVIEW -->
+<!-- § 01 OPERATING ENV -->
 <section class="case-section">
   <div class="cs-head">
-    <span><span class="lbl">§ 01</span> · Overview</span>
-    <span>The machine, the problem, and what was at stake</span>
-  </div>
-  <div class="two-col">
-    <div>
-      <h3>The operating environment</h3>
-      <p>
-        A roller trough sits between rolling stands on a hot mill line. Its job is to channel red-hot steel bar — traveling at rolling speed, at temperatures around 1,600–2,000°F — from one pass of the mill to the next without the bar derailing, buckling, or cobbling.
-      </p>
-      <p>
-        A cobble is when a moving bar jams, folds back on itself, and creates a tangled mass of glowing steel. It can shut down production for hours, scrap tons of in-process material, and in the worst case put operators near molten steel. <strong>Everything about the design is a response to preventing that.</strong>
-      </p>
-    </div>
-    <div>
-      <h3>Why the previous design failed</h3>
-      <p>
-        The original trough used fixed wear plates at the entry, center, and exit positions. Every time a bar arrived it slammed into a stationary surface — repeated high-energy impacts, each one delivering both thermal shock and mechanical pounding to the same spot on the plate.
-      </p>
-      <p>
-        The plates wore rapidly and had to be replaced before the campaign ended, which meant taking the line down on an unscheduled basis. The redesign was tasked with eliminating that failure mode.
-      </p>
-    </div>
-  </div>
-</section>
-
-<!-- GEOMETRY SECTION -->
-<section class="case-section alt">
-  <div class="cs-head">
-    <span><span class="lbl">§ 02</span> · Geometry &amp; structure</span>
-    <span>Why it's shaped the way it is</span>
-  </div>
-  <div class="two-col">
-    <div>
-      <h3>V-channel self-centering</h3>
-      <p>
-        The walls are angled inward to form a trapezoidal channel. This self-centers the bar as it travels, correcting minor misalignments from the previous stand without operator intervention. A bar that arrives slightly off-line is guided back to center rather than slamming into a flat wall.
-      </p>
-      <h3>Lift eyes for crane changeout</h3>
-      <p>
-        The lift eyes welded to the top frame allow the entire assembly to be craned in and out as a single unit during line changeovers. Rolling schedules change frequently; downtime during a trough swap is measured in dollars per second, so single-pick changeout is a hard requirement, not a convenience.
-      </p>
-    </div>
-    <div>
-      <h3>Differential thermal expansion</h3>
-      <p>
-        The discoloration on the trough walls — blue paint at the base, scaled and oxidized near the top lip — tells the thermal story. The upper lip sees direct radiant heat from every passing bar; the base stays cooler, shielded by the mill floor and nearby cooling water.
-      </p>
-      <p>
-        The geometry accounts for this gradient. Get differential thermal expansion wrong and the trough warps itself out of alignment within weeks, which defeats the purpose of the self-centering channel.
-      </p>
-      <h3>Structural sizing for worst-case cobble</h3>
-      <p>
-        The ribs and gusseted base are not sized for the static weight of the trough. They're sized to absorb the impact of a bar arriving off-line at rolling speed, the thermal cycling of repeated heat cycles, and — critically — a cobble, where a multi-ton mass of folded hot steel piles up inside the structure. After a cobble, the trough has to come back out of the line undistorted and ready to reinstall.
-      </p>
-    </div>
-  </div>
-
-  <div class="img-grid">
-    <div class="img-placeholder">[ DETAIL · TROUGH CROSS-SECTION / V-CHANNEL GEOMETRY ]</div>
-    <div class="img-placeholder">[ DETAIL · LIFT EYE AND BASE GUSSET WELD ]</div>
-  </div>
-</section>
-
-<!-- KEY INNOVATION -->
-<section class="case-section">
-  <div class="cs-head">
-    <span><span class="lbl">§ 03</span> · Key innovation — water-cooled rolls</span>
-    <span>A small geometry change with a large operational consequence</span>
-  </div>
-
-  <div class="arch-grid">
-    <div class="arch-node">
-      <span class="stamp">▪ ENTRY ROLL</span>
-      <h4>Bar arrival</h4>
-      <p>First contact point as the bar enters the trough from the upstream stand. Converts the entry impact from a stationary plate strike into a rolling event. Internally water-cooled to handle the thermal pulse of each bar arrival.</p>
-    </div>
-    <div class="arch-arrow">→</div>
-    <div class="arch-node">
-      <span class="stamp">▪ CENTER ROLL</span>
-      <h4>Mid-transit support</h4>
-      <p>Supports the bar through the transition zone between the two trough halves. The gap visible in the photo is where this roll sits. Handles both the bar's weight and any vertical oscillation at speed.</p>
-    </div>
-    <div class="arch-arrow">→</div>
-    <div class="arch-node">
-      <span class="stamp">▪ EXIT ROLL</span>
-      <h4>Downstream handoff</h4>
-      <p>Controls the bar's departure angle into the next stand. Exit geometry determines whether the bar enters the next pass cleanly or arrives with a kink. Roll height and angle are set precisely to match the downstream entry guide.</p>
-    </div>
-  </div>
-
-  <div class="two-col" style="margin-top: 32px;">
-    <div>
-      <h3>Why rolling contact changes everything</h3>
-      <p>
-        Swapping the fixed wear plates for rotating, internally water-cooled rolls converts what was a high-energy sliding impact into a rolling contact. The difference is significant on two axes.
-      </p>
-      <p>
-        <strong>Wear:</strong> sliding impact focuses energy on the same spot every time. Rolling distributes it across the entire roll face and, critically, keeps that face moving so no single area accumulates damage at the same rate.
-      </p>
-      <p>
-        <strong>Heat:</strong> the water circuit inside each roll extracts heat continuously, keeping the roll body below the temperature range where steel softens and loses its surface hardness. A fixed plate has no equivalent; it just gets hotter until it fails.
-      </p>
-    </div>
-    <div>
-      <h3>Alignment precision at the roll</h3>
-      <p>
-        The trough geometry around each roll has to feed the bar in at exactly the right height and angle every time. A bar that lands cocked even a few degrees off-axis can deflect off the roll face, mark the bar surface, or accelerate wear unevenly across the roll — which defeats the purpose of the redesign.
-      </p>
-      <p>
-        This is a deceptively small geometric tolerance on a structure that lives in an environment of constant water spray, scale impact, and thermal shock. It's the kind of detail that doesn't appear on a general arrangement drawing but determines whether the trough runs a full campaign or has to come out of the line early.
-      </p>
-    </div>
-  </div>
-
-  <div class="img-placeholder">[ DETAIL · WATER-COOLED ROLL ASSEMBLY — ENTRY / CENTER / EXIT POSITIONS ]</div>
-</section>
-
-<!-- MATERIAL & ENVIRONMENT -->
-<section class="case-section alt">
-  <div class="cs-head">
-    <span><span class="lbl">§ 04</span> · Materials &amp; environment</span>
+    <span><span class="lbl">§ 01</span> · Operating environment</span>
     <span>What the trough actually lives in</span>
   </div>
   <div class="two-col">
     <div>
-      <h3>Wear surface material</h3>
+      <h3>Heat, scale, and water — all at once</h3>
       <p>
-        The upper wear surfaces need to resist two simultaneous attack modes: abrasion from scale — the hard, glassy iron oxide that flakes off hot steel and travels with the bar — and the softening that happens when carbon steel is repeatedly heated above its tempering range.
-      </p>
-      <p>
-        The base structure can be a more standard structural grade because it stays cooler, but specifying the same material throughout would either be wasteful or would compromise one zone's performance. Material selection is zoned to match the thermal gradient.
+        The trough sits in a continuous stream of radiant heat from bars passing at 1,600–2,000°F, descale spray that hits the structure every cycle, and iron-oxide scale — a hard, glassy flake that sheds off the bar at speed and sandblasts anything in its path. The structure has to survive all three simultaneously for months between planned rebuilds.
       </p>
     </div>
     <div>
-      <h3>Water management</h3>
+      <h3>Impact loads beyond the static math</h3>
       <p>
-        Around the trough: descale spray, cooling water, and the channels that carry it all away along with the scale the bar sheds in transit. The trough has to live in constant water spray, constant scale impact, and constant thermal shock for months between rebuilds.
+        The design loads aren't the weight of the trough or even the weight of the bar — they're the force of a bar arriving slightly off-line at rolling speed, and the worst-case cobble: a multi-ton mass of folded hot steel piling up inside the structure. The trough has to absorb that without permanent deformation so it can go straight back into the line.
       </p>
+    </div>
+  </div>
+  <div class="img-placeholder">[ CAD · OVERALL ASSEMBLY ]</div>
+</section>
+
+<!-- § 02 ROLLS VS PLATES -->
+<section class="case-section alt">
+  <div class="cs-head">
+    <span><span class="lbl">§ 02</span> · Rolls instead of plates</span>
+    <span>Why the contact geometry matters</span>
+  </div>
+  <div class="two-col">
+    <div>
+      <h3>The problem with fixed plates</h3>
       <p>
-        This is why the welds, the wear plate thicknesses, and the mounting points are specified well beyond what static load calculations alone would suggest. <strong>The design loads are not the static loads</strong> — they're the worst cobble the mill can produce on its worst day.
+        A fixed wear plate takes the full impact of the bar at the same spot every single pass — thousands of times a day. The energy doesn't distribute; it concentrates. The plate heats up, the contact zone work-hardens and erodes, and eventually the plate wears through before the campaign ends, forcing an unplanned shutdown.
+      </p>
+    </div>
+    <div>
+      <h3>What a roll does differently</h3>
+      <p>
+        A rotating roll converts that stationary impact into rolling contact. The bar still lands on it — but instead of one spot absorbing everything, the load spreads across the entire roll face as it turns. No single area accumulates damage at the same rate. The same energy input produces dramatically less wear per unit of surface area.
+      </p>
+    </div>
+  </div>
+  <div class="img-placeholder">[ CAD · ROLL POSITION DETAIL — ENTRY / CENTER / EXIT ]</div>
+</section>
+
+<!-- § 03 WATER COOLING -->
+<section class="case-section">
+  <div class="cs-head">
+    <span><span class="lbl">§ 03</span> · Why the rolls need water</span>
+    <span>The thermal problem rolling contact alone doesn't solve</span>
+  </div>
+  <div class="two-col">
+    <div>
+      <h3>Steel softens when it gets hot enough</h3>
+      <p>
+        Rolling contact reduces wear, but it doesn't eliminate heat. Each bar deposits a thermal pulse into the roll on contact — and if the roll body climbs above its tempering range, the surface steel softens, loses its hardness, and wears rapidly anyway. You've solved the mechanical problem and created a thermal one.
+      </p>
+    </div>
+    <div>
+      <h3>Internal water flow as a heat sink</h3>
+      <p>
+        Running cooling water through the core of each roll extracts that heat continuously, keeping the roll body well below the temperature where its mechanical properties degrade. The roll stays hard, the contact geometry stays consistent, and the assembly runs the full campaign without the failure mode that made the original plates unacceptable.
       </p>
     </div>
   </div>
