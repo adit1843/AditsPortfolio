@@ -123,6 +123,22 @@
     text-transform: uppercase; letter-spacing: 0.1em; color: var(--fg-mute);
   }
 
+  /* Image frames with figure labels (matches Dell page convention) */
+  .imgframe { overflow: hidden; position: relative; }
+  .imgframe img { display: block; width: 100%; height: auto; }
+  .imgframe .cap {
+    position: absolute; top: 12px; left: 12px;
+    font-family: "JetBrains Mono", monospace; font-size: 13px;
+    text-transform: uppercase; letter-spacing: 0.14em;
+    color: var(--fg);
+    border: 1px solid var(--rule); padding: 6px 13px;
+    background: rgba(11,11,12,0.88); backdrop-filter: blur(6px);
+    z-index: 2;
+  }
+  @media (max-width: 720px) {
+    .imgframe .cap { font-size: 11px; padding: 5px 9px; }
+  }
+
   @media (max-width: 900px) {
     .case-meta > div { grid-column: span 6; }
     .case-pitch .k, .case-pitch .v { grid-column: span 12; }
@@ -171,7 +187,8 @@
 </header>
 
 <!-- HERO IMAGE -->
-<div style="margin: 0; height: 520px; overflow: hidden; border-bottom: 1px solid var(--rule);">
+<div class="imgframe" style="margin: 0; height: 520px; overflow: hidden; border-bottom: 1px solid var(--rule);">
+  <span class="cap">FIG. 01 · The trough in service</span>
   <img src="../assets/roller-trough-hero.jpg" alt="Water-cooled roller trough assembly on a hot mill line, with red-hot steel bar glowing mid-transit through the gap between the two trough sections." style="width:100%; height:100%; object-fit:cover; object-position: center 65%; display:block;" />
 </div>
 
@@ -223,10 +240,10 @@
       </p>
     </div>
   </div>
-  <figure style="margin: 24px auto 0; max-width: 640px;">
-    <img src="../assets/roller-trough-cad.png" alt="CAD isometric view of the roller trough assembly showing the two trough sections with integrated lifting lugs and the central transition piece that houses the water-cooled rolls." style="width:100%; height:auto; display:block; border: 1px solid var(--rule); background: var(--bg-2);" />
-    <figcaption style="font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--fg-mute); margin-top: 10px;">▪ Fig. 01 · Overall assembly · isometric view</figcaption>
-  </figure>
+  <div class="imgframe" style="margin: 24px auto 0; max-width: 640px; border: 1px solid var(--rule); background: var(--bg-2);">
+    <span class="cap">FIG. 02 · Overall assembly</span>
+    <img src="../assets/roller-trough-cad.png" alt="CAD isometric view of the roller trough assembly showing the two trough sections with integrated lifting lugs and the central transition piece that houses the water-cooled rolls." style="width:100%; height:auto; display:block;" />
+  </div>
 </section>
 
 <!-- § 02 ROLLS VS PLATES -->
