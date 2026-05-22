@@ -242,6 +242,16 @@
     z-index: 1;
     background: #000;
   }
+  .pc-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+    z-index: 1;
+    background: #F2F0EA;
+  }
   .pc-stripes {
     position: absolute; inset: 0;
     background-image: repeating-linear-gradient(
@@ -1099,9 +1109,8 @@
 
   <a class="proj-card" href="projects/smart-door-lock.html">
     <div class="pc-media">
-      <div class="pc-stripes"></div>
-      <div class="pc-tag-tl">P/002 · IN PROGRESS</div>
-      <div class="pc-placeholder">[ RENDER · DOOR + WALL UNIT ]</div>
+      <img class="pc-img" src="projects/assets/smart-door-lock/mech-01-exterior.png" alt="Iso CAD render of the smart door lock unit — clamshell enclosure with the lever-arm output on the front face and a recessed PCB window on the side." />
+      <div class="pc-tag-tl" style="z-index:3;">P/002 · IN PROGRESS</div>
     </div>
     <div class="pc-meta">
       <h3 class="pc-title">Smart Door Lock</h3>
