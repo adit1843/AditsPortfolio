@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Adit Sanghani</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  .case-hero { padding: 40px var(--pad-x) 24px; }
+
+  .case-meta {
+    display: grid; grid-template-columns: repeat(12, 1fr); gap: var(--grid-gap);
+    font-family: "JetBrains Mono", monospace; font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--fg-mute); margin-bottom: 28px;
+  }
+  .case-meta > div { grid-column: span 3; }
+  .case-meta strong { color: var(--fg); font-weight: 500; display: block; margin-top: 4px; font-size: 13px; letter-spacing: 0.02em; }
+  .case-title {
+    font-family: "Inter Tight", sans-serif; font-weight: 700;
+    font-size: clamp(48px, 8vw, 128px); line-height: 0.88;
+    letter-spacing: -0.035em; margin: 0 0 20px; text-wrap: balance;
+  }
+  .case-pitch {
+    display: grid; grid-template-columns: repeat(12, 1fr); gap: var(--grid-gap);
+    border-top: 1px solid var(--rule); padding-top: 18px;
+  }
+  .case-pitch .k { grid-column: span 3; font-family: "JetBrains Mono", monospace; font-size: 11px; color: var(--fg-mute); text-transform: uppercase; letter-spacing: 0.08em; }
+  .case-pitch .v { grid-column: span 9; font-size: clamp(19px, 1.9vw, 26px); line-height: 1.35; text-wrap: pretty; }
+  .case-pitch .v em { font-style: normal; background: var(--accent); color: var(--accent-ink); padding: 0 4px; }
+
+  .case-section { padding: 56px var(--pad-x); border-top: 1px solid var(--rule); }
+  .case-section.alt { background: var(--bg-2); }
+  .cs-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    border-bottom: 1px solid var(--rule); padding-bottom: 14px; margin-bottom: 32px;
+    font-family: "JetBrains Mono", monospace; font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.1em; color: var(--fg-mute);
+  }
+  .cs-head .lbl { color: var(--fg); font-weight: 500; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: var(--grid-gap) 48px; }
+  .two-col h3 {
+    font-size: clamp(22px, 2vw, 28px); font-weight: 600;
+    letter-spacing: -0.02em; margin: 0 0 12px; text-wrap: balance;
+  }
+  .two-col p { color: var(--fg-dim); line-height: 1.55; margin: 0 0 12px; max-width: 56ch; }
+  .two-col p strong { color: var(--fg); font-weight: 500; }
+  .two-col ul { margin: 0; padding: 0; list-style: none; color: var(--fg-dim); font-size: 14.5px; line-height: 1.55; }
+  .two-col ul li { padding: 8px 0; border-bottom: 1px solid var(--rule); display: grid; grid-template-columns: 18px 1fr; gap: 8px; }
+  .two-col ul li::before { content: "▪"; color: var(--accent); }
+
+  /* Stats */
+  .stat-band {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+    background: var(--rule);
+    border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
+  }
+  .stat { background: var(--bg); padding: 28px var(--pad-x); display: flex; flex-direction: column; justify-content: space-between; min-height: 130px; }
+  .stat .v { font-family: "Inter Tight", sans-serif; font-weight: 700; font-size: clamp(36px, 4vw, 56px); letter-spacing: -0.03em; }
+  .stat .k { font-family: "JetBrains Mono", monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--fg-mute); margin-top: auto; padding-top: 10px; }
+
+  /* Comparison */
+  .compare {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
+    background: var(--rule);
+    border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
+  }
+  .cmp { background: var(--bg); padding: 32px var(--pad-x); }
+  .cmp.bad { background: var(--bg-2); }
+  .cmp .tag {
+    font-family: "JetBrains Mono", monospace; font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--fg-mute); margin-bottom: 10px;
+  }
+  .cmp.bad .tag::before { content: "▪ THE PROBLEM  "; color: var(--accent); }
+  .cmp.good .tag::before { content: "▪ THE FIX  "; color: var(--accent); }
+  .cmp h3 { font-size: clamp(22px, 2vw, 28px); font-weight: 600; letter-spacing: -0.02em; margin: 0 0 12px; }
+  .cmp .row {
+    display: grid; grid-template-columns: 100px 1fr;
+    gap: 12px; padding: 8px 0;
+    border-bottom: 1px solid var(--rule);
+    font-size: 14px; color: var(--fg-dim);
+  }
+  .cmp .row strong { color: var(--fg); font-family: "JetBrains Mono", monospace; font-size: 13px; font-weight: 500; }
+
+  /* Architecture */
+  .arch-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 12px; margin: 24px 0 12px; }
+  .arch-node {
+    grid-column: span 4; border: 1px solid var(--rule); padding: 18px;
+    display: flex; flex-direction: column; gap: 6px; background: var(--bg);
+  }
+  .arch-node h4 { margin: 0; font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
+  .arch-node p { margin: 0; color: var(--fg-dim); font-size: 12.5px; line-height: 1.45; }
+  .arch-node .stamp { font-family: "JetBrains Mono", monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); }
+  .arch-arrow {
+    grid-column: span 1; display: flex; align-items: center; justify-content: center;
+    color: var(--fg-mute); font-family: "JetBrains Mono", monospace; font-size: 18px;
+  }
+
+  /* Image placeholder */
+  .img-placeholder {
+    width: 100%; aspect-ratio: 16/9;
+    background: var(--bg-2);
+    border: 1px dashed var(--rule);
+    display: flex; align-items: center; justify-content: center;
+    font-family: "JetBrains Mono", monospace; font-size: 12px;
+    text-transform: uppercase; letter-spacing: 0.1em; color: var(--fg-mute);
+    margin: 24px 0;
+  }
+  .img-placeholder.wide { aspect-ratio: 21/9; }
+
+  .img-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--grid-gap); margin: 24px 0; }
+  .img-grid .img-placeholder { margin: 0; }
+
+  .foot-min {
+    padding: 18px var(--pad-x); border-top: 1px solid var(--rule);
+    display: flex; justify-content: space-between;
+    font-family: "JetBrains Mono", monospace; font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.1em; color: var(--fg-mute);
+  }
+
+  /* Image frames with figure labels (matches Dell page convention) */
+  .imgframe { overflow: hidden; position: relative; }
+  .imgframe img { display: block; width: 100%; height: auto; }
+  .imgframe .cap {
+    position: absolute; top: 12px; left: 12px;
+    font-family: "JetBrains Mono", monospace; font-size: 13px;
+    text-transform: uppercase; letter-spacing: 0.14em;
+    color: var(--fg);
+    border: 1px solid var(--rule); padding: 6px 13px;
+    background: rgba(11,11,12,0.88); backdrop-filter: blur(6px);
+    z-index: 2;
+  }
+  @media (max-width: 720px) {
+    .imgframe .cap { font-size: 11px; padding: 5px 9px; }
+  }
+
+  @media (max-width: 900px) {
+    .case-meta > div { grid-column: span 6; }
+    .case-pitch .k, .case-pitch .v { grid-column: span 12; }
+    .two-col, .compare { grid-template-columns: 1fr; }
+    .stat-band { grid-template-columns: repeat(2, 1fr); }
+    .arch-node { grid-column: span 12; }
+    .arch-arrow { grid-column: span 12; transform: rotate(90deg); padding: 4px 0; }
+    .img-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-left">
+      <a class="brand" href="../index.html" style="text-decoration:none; color:inherit;">ADIT SANGHANI</a>
+    </div>
+    <div></div>
+    <div class="nav-right">
+      <a class="navlink" href="../index.html">← Back</a>
+      <a class="navlink" href="../index.html#skills">Skills</a>
+      <a class="navlink" href="../resume.html">Resume</a>
+      <a class="navlink" href="../index.html#contact">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="case-hero">
+  <div class="case-meta">
+    <div>▪ INDEX<strong>P/004</strong></div>
+    <div>▪ YEAR<strong>May 2026 · Delivered</strong></div>
+    <div>▪ CONTEXT<strong>Industry · Hot Mill</strong></div>
+    <div>▪ STATUS<strong>In Service</strong></div>
+  </div>
+  <h1 class="case-title">Hot Mill<br/>Roller Trough.</h1>
+
+  <div class="case-pitch">
+    <div class="k">▪ THE BRIEF</div>
+    <div class="v">
+      A steel mill shapes metal by squeezing red-hot bars through a series of rollers — like a pasta machine, but at 1,800°F and production pace. Between each pair of rollers, the bar travels through a guide channel called a trough. The old design used fixed steel plates where the bar first lands, and the bar hammered them thousands of times a day until they failed — <em>shutting the whole line down</em> before the production run was supposed to end. Redesign the trough so it lasts years without an unplanned stop.
+    </div>
+  </div>
+</header>
+
+<!-- HERO IMAGE -->
+<div class="imgframe" style="margin: 0; height: 520px; overflow: hidden; border-bottom: 1px solid var(--rule);">
+  <span class="cap">FIG. 01 · The trough in service</span>
+  <img src="../assets/roller-trough-hero.jpg" alt="Water-cooled roller trough assembly on a hot mill line, with red-hot steel bar glowing mid-transit through the gap between the two trough sections." style="width:100%; height:100%; object-fit:cover; object-position: center 65%; display:block;" />
+</div>
+
+<!-- COMPARE -->
+<div class="compare">
+  <div class="cmp bad">
+    <div class="tag"></div>
+    <h3>The plates wear out before the job is done.</h3>
+    <div class="row"><strong>Sliding</strong><span>full bar impact on stationary plate every pass</span></div>
+    <div class="row"><strong>No cooling</strong><span>wear plate absorbs all radiant and contact heat</span></div>
+    <div class="row"><strong>Early exit</strong><span>plates worn before campaign end, forced changeout</span></div>
+    <div class="row"><strong>Downtime</strong><span>each cobble risks permanent trough deformation</span></div>
+  </div>
+  <div class="cmp good">
+    <div class="tag"></div>
+    <h3>Runs the full campaign. No unplanned stops.</h3>
+    <div class="row"><strong>Rolling</strong><span>impact converted to rotation — wear distributed over full roll face</span></div>
+    <div class="row"><strong>Cooled</strong><span>internal water circuit extracts heat continuously from each roll</span></div>
+    <div class="row"><strong>Full life</strong><span>designed to run a complete campaign without intervention</span></div>
+    <div class="row"><strong>Survives cobble</strong><span>structure sized for multi-ton folded bar without permanent set</span></div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stat-band">
+  <div class="stat"><div class="v">3</div><div class="k">▪ Water-cooled rolls per trough</div></div>
+  <div class="stat"><div class="v">1,800<span style="font-size: 0.4em; color: var(--fg-mute);">°F</span></div><div class="k">▪ Approx. bar temp at transit</div></div>
+  <div class="stat"><div class="v" style="font-size: clamp(22px, 2.5vw, 36px); line-height: 1.1;">Longer lasting</div><div class="k">▪ Full campaign without unplanned maintenance stops</div></div>
+  <div class="stat"><div class="v" style="font-size: clamp(22px, 2.5vw, 36px); line-height: 1.1;">1-hook lift</div><div class="k">▪ Crane-liftable for fast line changeovers</div></div>
+</div>
+
+<!-- § 01 OPERATING ENV -->
+<section class="case-section">
+  <div class="cs-head">
+    <span><span class="lbl">§ 01</span> · Operating environment</span>
+    <span>What the trough actually lives in</span>
+  </div>
+  <div class="two-col" style="align-items: center;">
+    <div>
+      <h3>Heat, scale, and water — all at once</h3>
+      <p>
+        The trough sits in a continuous stream of radiant heat from bars passing at 1,600–2,000°F, descale spray that hits the structure every cycle, and iron-oxide scale — a hard, glassy flake that sheds off the bar at speed and sandblasts anything in its path. The structure has to survive all three simultaneously for years between planned rebuilds.
+      </p>
+      <h3>Impact loads beyond the static math</h3>
+      <p>
+        The design loads aren't the weight of the trough or even the weight of the bar — they're the force of a bar arriving slightly off-line at rolling speed, and the worst-case cobble: a multi-ton mass of folded hot steel piling up inside the structure. The trough has to absorb that without permanent deformation so it can go straight back into the line.
+      </p>
+    </div>
+    <div class="imgframe" style="border: 1px solid var(--rule); background: var(--bg-2); max-width: 600px; margin: 0 auto;">
+      <span class="cap">FIG. 02 · Overall assembly</span>
+      <img src="../assets/roller-trough-cad.png" alt="CAD isometric view of the roller trough assembly showing the two trough sections with integrated lifting lugs and the central transition piece that houses the water-cooled rolls." style="width:100%; height:auto; display:block;" />
+    </div>
+  </div>
+</section>
+
+<!-- § 02 ROLLS VS PLATES -->
+<section class="case-section alt">
+  <div class="cs-head">
+    <span><span class="lbl">§ 02</span> · Rolls instead of plates</span>
+    <span>Why the contact geometry matters</span>
+  </div>
+  <div class="two-col">
+    <div>
+      <h3>The problem with fixed plates</h3>
+      <p>
+        A fixed wear plate takes the full impact of the bar at the same spot every single pass — thousands of times a day. The energy doesn't distribute; it concentrates. The plate heats up, the contact zone work-hardens and erodes, and eventually the plate wears through before the campaign ends, forcing an unplanned shutdown.
+      </p>
+    </div>
+    <div>
+      <h3>What a roll does differently</h3>
+      <p>
+        A rotating roll converts that stationary impact into rolling contact. The bar still lands on it — but instead of one spot absorbing everything, the load spreads across the entire roll face as it turns. No single area accumulates damage at the same rate. The same energy input produces dramatically less wear per unit of surface area. And, rolls can easily be replaced upon wearing.
+      </p>
+    </div>
+  </div>
+  
+</section>
+
+<!-- § 03 WATER COOLING -->
+<section class="case-section">
+  <div class="cs-head">
+    <span><span class="lbl">§ 03</span> · Why the rolls need water</span>
+    <span>The thermal problem rolling contact alone doesn't solve</span>
+  </div>
+  <div class="two-col">
+    <div>
+      <h3>Steel softens when it gets hot enough</h3>
+      <p>
+        Rolling contact reduces wear, but it doesn't eliminate heat. Each bar deposits a thermal pulse into the roll on contact — and if the roll body climbs above its tempering range, the surface steel softens, loses its hardness, and wears rapidly anyway. You've solved the mechanical problem and created a thermal one.
+      </p>
+    </div>
+    <div>
+      <h3>Internal water flow as a heat sink</h3>
+      <p>
+        Running cooling water through the core of each roll extracts that heat continuously, keeping the roll body well below the temperature where its mechanical properties degrade. The roll stays hard, the contact geometry stays consistent, and the assembly runs the full campaign without the failure mode that made the original plates unacceptable.
+      </p>
+    </div>
+  </div>
+</section>
+
+<footer class="foot-min">
+  <div>© 2025 A. Sanghani · P/004</div>
+  <div><a href="../index.html" style="color: var(--fg-mute); text-decoration: none;">← Back to all projects</a></div>
+</footer>
+
+</body>
+</html>
