@@ -250,7 +250,7 @@
     object-fit: contain;
     pointer-events: none;
     z-index: 1;
-    background: #F2F0EA;
+    background: #0B0B0C;
   }
   .pc-stripes {
     position: absolute; inset: 0;
@@ -641,7 +641,8 @@
 
   /* CONTACT — minimal */
   .contact-min {
-    padding: 28px clamp(40px, 10vw, 160px) 60px;
+    padding: 80px clamp(40px, 12vw, 200px) 60px;
+    border-top: 1px solid var(--rule);
   }
   .contact-min h2 {
     font-family: "Inter Tight", sans-serif;
@@ -1141,20 +1142,25 @@
     </div>
   </div>
 
-  <a class="proj-card" href="projects/roller-trough.html">
+  <div class="proj-card disabled" aria-disabled="true">
     <div class="pc-media">
-      <img src="assets/roller-trough-hero.jpg" alt="Water-cooled roller trough assembly on a hot mill line, with red-hot steel bar mid-transit through the gap between the two trough sections." style="width:100%;height:100%;object-fit:cover;display:block;" />
-      <div class="pc-tag-tl" style="z-index:3;">P/004 · INDUSTRY</div>
-    </div>
-    <div class="pc-meta">
-      <h3 class="pc-title">Hot Mill Roller Trough</h3>
-      <p class="pc-tag">Eliminated unplanned shutdowns on a steel production line by redesigning the part that wears out first</p>
-      <div class="pc-foot">
-        <span class="pc-stamp">2025 · Industry</span>
-        <span class="pc-arr">Read More →</span>
+      <div class="pc-stripes"></div>
+      <div class="pc-tag-tl">P/004</div>
+      <div class="pc-cs-stamp">
+        <span class="cs-tag">▪ Status</span>
+        <span class="cs-headline">Coming Soon</span>
+        <span class="cs-line">Project in progress</span>
       </div>
     </div>
-  </a>
+    <div class="pc-meta">
+      <h3 class="pc-title">Ice Cream Scoop Dispenser</h3>
+      <p class="pc-tag">Back-of-house dispenser for consistent, fast portions in shops</p>
+      <div class="pc-foot">
+        <span class="pc-stamp">2026 · Personal</span>
+        <span class="pc-arr">Coming Soon</span>
+      </div>
+    </div>
+  </div>
 
 </div>
 </section>
@@ -1259,11 +1265,12 @@
 
 <!-- CONTACT -->
 <section class="page-sec" data-sec="contact">
-<div class="sh" id="contact">
-  <span class="lbl">Contact</span>
-  <span class="num"></span>
-</div>
-<section class="contact-min">
+<section class="contact-min" id="contact">
+  <div class="sh" style="margin: 0 calc(var(--pad-x) * -1) 24px; padding-top: 0; border-top: none;">
+    <span class="lbl">Contact</span>
+    <span class="num"></span>
+  </div>
+
   <h2>Let&rsquo;s build <em>something</em>.</h2>
 
   <div class="contact-direct">
