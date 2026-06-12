@@ -499,7 +499,46 @@
     border-bottom: 1px solid var(--rule);
     margin-top: 0;
   }
-  .hero-shot .placeholder { min-height: 280px; border: none; }
+  .hero-shot .hero-fig {
+    position: relative;
+    margin: 0;
+  }
+  .hero-shot .hero-fig img {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 620px;
+    object-fit: cover;
+  }
+  .hero-shot .hero-fig .fig-tag {
+    position: absolute;
+    top: 16px;
+    left: var(--pad-x);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 4px 8px;
+    background: rgba(11, 11, 12, 0.55);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+  .hero-shot .hero-fig .fig-cap {
+    position: absolute;
+    bottom: 16px;
+    left: var(--pad-x);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--fg-dim);
+    background: rgba(11, 11, 12, 0.55);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    padding: 4px 8px;
+  }
 
   /* PCB section layout */
   .pcb-grid {
@@ -632,11 +671,11 @@
 
 <!-- HERO SHOT -->
 <section class="hero-shot">
-  <div class="placeholder tall">
-    <span class="ph-tag">▪ Photo needed · P-01</span>
-    <p class="ph-desc">Hero shot of the assembled door unit installed on a real door &mdash; or a CAD render of the full enclosure with the latch mechanism visible. Landscape framing, 16:9 or wider.</p>
-    <p class="ph-spec">Recommended: 2400 × 1350 px · .jpg or .png</p>
-  </div>
+  <figure class="hero-fig">
+    <span class="fig-tag">▪ HERO-01</span>
+    <img src="assets/smart-door-lock/hero-01-installed.jpg" alt="Photo of the smart door lock installed on a real apartment door — slate-blue 3D-printed enclosure mounted between the deadbolt thumb-turn and the door handle, lever arm engaged on the latch and a hinged battery door on the right face." />
+    <figcaption class="fig-cap">Door unit · installed over the deadbolt · v1 enclosure</figcaption>
+  </figure>
 </section>
 
 <!-- STATS -->
