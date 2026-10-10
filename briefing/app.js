@@ -20,8 +20,12 @@ const state={
     markets:true,
     topicScores:{},
     contentTypeScores:{news:55,general_knowledge:50,deep_dive:50,history:50,science:50,business_case:50},
+    mixTargets:{news:45,general_knowledge:20,deep_dive:15,history:7,science:8,business_case:5},
     requestedTopics:[],
-    explanationBias:0
+    explanationBias:0,
+    languageDirectives:[],
+    editorialDirectives:[],
+    tuningHistory:[]
   },
   coverage:JSON.parse(localStorage.getItem("dailyBriefCoverage")||"[]"),
   api:{configured:false,model:null,loading:true,error:null},
@@ -93,7 +97,7 @@ function render(){
     app.innerHTML='<section class="hero"><div class="eyebrow">Briefline</div><h2>Loading your latest brief…</h2><p class="muted">Fetching the newest saved edition.</p></section>';
     return;
   }
-  ({today:renderToday,archive:renderArchive,explainers:renderExplainers,preferences:renderPreferences}[state.view]||renderToday)();
+  ({today:renderToday,archive:renderArchive,explainers:renderExplainers,tune:renderTune}[state.view]||renderToday)();
 }
 function escapeHtml(v=""){return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));}
 function sourceHtml(s){
@@ -340,11 +344,64 @@ function renderKnowledge(){
   app.innerHTML=`<section class="hero"><div class="eyebrow">What the system thinks you know</div><h2>Knowledge graph</h2><p>This is independent from your interest profile. You can care deeply about a topic while still wanting beginner-level explanations.</p></section><section class="panel">${state.knowledge.map(k=>`<div class="knowledge-row"><div><strong>${escapeHtml(k.topic)}</strong></div><div class="bar"><span style="width:${k.score}%"></span></div><div>${k.score}%</div></div>`).join("")}</section>`;
 }
 
-function renderPreferences(){
-  app.innerHTML=`<section class="hero"><div class="eyebrow">Interest profile</div><h2>Preferences</h2><p>These settings influence topic selection; explainer requests do not.</p></section><section class="panel"><div class="field"><label>General-news share</label><input id="generalNews" type="range" min="10" max="80" value="${state.prefs.generalNews}"><div class="muted"><span id="generalNewsVal">${state.prefs.generalNews}</span>% of the brief</div></div><div class="field"><label>Politics coverage</label><select id="politics"><option value="important-only">Only when important</option><option value="routine">Routine coverage</option><option value="minimal">Minimal</option></select></div><button class="primary" id="savePrefs">Save preferences</button></section>`;
-  document.querySelector("#politics").value=state.prefs.politics;
-  document.querySelector("#generalNews").addEventListener("input",e=>document.querySelector("#generalNewsVal").textContent=e.target.value);
-  document.querySelector("#savePrefs").addEventListener("click",()=>{state.prefs.generalNews=+document.querySelector("#generalNews").value;state.prefs.politics=document.querySelector("#politics").value;localStorage.setItem("dailyBriefPrefs",JSON.stringify(state.prefs));dbPost("preferences",{payload:state.prefs}).catch(()=>{});alert("Preferences saved.");});
+function renderTune(){
+  const history=(state.prefs.tuningHistory||[]).slice(-12);
+  const mix=state.prefs.mixTargets||{news:45,general_knowledge:20,deep_dive:15,history:7,science:8,business_case:5};
+  const labels={news:"News",general_knowledge:"General knowledge",deep_dive:"Deep dives",history:"History",science:"Science",business_case:"Business cases"};
+  app.innerHTML=`
+    <section class="hero">
+      <div class="eyebrow">Generation controls</div>
+      <h2>Tune Briefline</h2>
+      <p>Tell Briefline what you like, dislike, understand, want explained differently, or how you want the daily mix changed. It will translate that into the hidden interest and knowledge models.</p>
+    </section>
+    <section class="panel">
+      <div class="section-label">Current story mix</div>
+      <div class="mix-grid">
+        ${Object.entries(mix).map(([k,v])=>`<div class="knowledge-row"><div><strong>${escapeHtml(labels[k]||k)}</strong></div><div class="bar"><span style="width:${Number(v)||0}%"></span></div><div>${Number(v)||0}%</div></div>`).join("")}
+      </div>
+      <p class="muted">These are approximate targets. Briefline can still override them when a major story deserves coverage.</p>
+    </section>
+    <section class="panel">
+      <div class="section-label">Talk to Briefline</div>
+      <div id="tuneHistory">${history.length?history.map(x=>`
+        <div class="tune-message user"><strong>You</strong><p>${escapeHtml(x.user)}</p></div>
+        <div class="tune-message assistant"><strong>Briefline</strong><p>${escapeHtml(x.assistant)}</p></div>
+      `).join(""):'<p class="muted">Try: “Less market news, more science and history. I understand basic data-center cooling, but networking terms still lose me. Use less jargon in finance stories.”</p>'}</div>
+      <form id="tuneForm">
+        <div class="field"><label for="tuneInput">What should change?</label><textarea id="tuneInput" rows="5" placeholder="Tell Briefline what you want more or less of, what you already understand, or how explanations should feel."></textarea></div>
+        <button class="primary" id="tuneSubmit" type="submit">Update Briefline</button>
+        <span id="tuneStatus" class="muted"></span>
+      </form>
+    </section>`;
+
+  document.querySelector("#tuneForm").addEventListener("submit",async e=>{
+    e.preventDefault();
+    const input=document.querySelector("#tuneInput");
+    const btn=document.querySelector("#tuneSubmit");
+    const status=document.querySelector("#tuneStatus");
+    const message=input.value.trim();
+    if(!message) return;
+    btn.disabled=true;btn.textContent="Updating…";status.textContent=" Interpreting your preferences.";
+    try{
+      const r=await fetch("/api/tune-briefline",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({message,preferences:state.prefs,knowledge:state.knowledge})
+      });
+      const data=await r.json();
+      if(!r.ok) throw new Error(data.error||"Could not update Briefline");
+      state.prefs=data.preferences;
+      state.knowledge=data.knowledge;
+      localStorage.setItem("dailyBriefPrefs",JSON.stringify(state.prefs));
+      await Promise.all([
+        dbPost("preferences",{payload:state.prefs}),
+        dbPost("knowledge",{payload:state.knowledge})
+      ]);
+      renderTune();
+    }catch(err){
+      btn.disabled=false;btn.textContent="Update Briefline";status.textContent=" "+err.message;
+    }
+  });
 }
 
 function renderSurvey(){
