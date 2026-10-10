@@ -1,3 +1,4 @@
+const {buildBriefPrompt}=require("./_brief_prompt");
 const {isAuthed}=require("./_auth");
 const MODEL = process.env.OPENAI_MODEL || "gpt-6-luna";
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -106,52 +107,26 @@ module.exports = async function handler(req,res){
     const [prefsRows,knowledgeRows,coverageRows]=await Promise.all([
       sbGet("preferences"),sbGet("knowledge"),sbGet("coverage")
     ]);
-    const preferences=prefsRows[0]?.payload || {generalNews:40,technicalDepth:"medium-high",politics:"important-only",markets:true};
-    const knowledge=knowledgeRows[0]?.payload || [];
+    const preferences=prefsRows[0]?.payload || {
+      generalNews:40,
+      politics:"important-only",
+      markets:true,
+      topicScores:{},
+      contentTypeScores:{news:55,general_knowledge:50,deep_dive:50,history:50,science:50,business_case:50},
+      requestedTopics:[],
+      explanationBias:0
+    };
+    const knowledge=(knowledgeRows[0]?.payload && !Array.isArray(knowledgeRows[0].payload))
+      ? knowledgeRows[0].payload
+      : {concepts:{},seenEvents:{}};
     const coverage=coverageRows.map(x=>x.payload).slice(0,14);
 
-    const prompt=`
-Create today's personalized current-events Daily Brief for one reader.
-
-Today is ${new Date().toISOString().slice(0,10)}.
-
-Use web search to research current, important developments. Prefer primary sources and high-quality reporting. Do not invent facts, links, quotes, or publication details.
-
-Editorial goals:
-- About 5 to 7 stories.
-- Roughly a 15 to 20 minute read.
-- Mix personalized interests with important general news.
-- Avoid repeating background the reader already knows.
-- Use prior coverage naturally when useful, including "Yesterday we discussed..." only when supported.
-- Separate factual reporting from interpretation.
-- Explain why each story matters.
-- Favor novelty over repeated headlines.
-- Explainer requests must not affect story selection.
-
-Reader preferences:
-${JSON.stringify(preferences)}
-
-Knowledge estimates:
-${JSON.stringify(knowledge)}
-
-Recent coverage:
-${JSON.stringify(coverage)}
-
-Return ONLY valid JSON:
-{
-  "date":"Month D, YYYY",
-  "readTime":"~N min",
-  "intro":"2-3 sentence editorial introduction",
-  "stories":[{
-    "id":"short-kebab-case-id",
-    "category":"short category",
-    "title":"headline",
-    "summary":"1-2 sentence summary",
-    "body":"3-6 concise paragraphs as plain text separated by newline characters",
-    "sources":[{"name":"source name","url":"https://..."}]
-  }]
-}
-`;
+    const prompt=buildBriefPrompt({
+      date:new Date().toISOString().slice(0,10),
+      preferences,
+      knowledge,
+      coverage
+    });
 
     const response=await fetch("https://api.openai.com/v1/responses",{
       method:"POST",
