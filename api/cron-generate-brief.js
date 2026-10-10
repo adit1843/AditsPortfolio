@@ -19,6 +19,11 @@ function extractOutputText(data) {
   return parts.join("\n").trim();
 }
 
+function supabaseBase(){
+  if(!SUPABASE_URL) return "";
+  return SUPABASE_URL.replace(/\/+$/,"").replace(/\/rest\/v1$/,"");
+}
+
 function sbHeaders(){
   return {
     apikey: SUPABASE_SECRET_KEY,
@@ -29,14 +34,14 @@ function sbHeaders(){
 }
 
 async function sbGet(table){
-  const r=await fetch(`${SUPABASE_URL}/rest/v1/${table}?select=*&order=created_at.desc&limit=20`,{headers:sbHeaders()});
+  const r=await fetch(`${supabaseBase()}/rest/v1/${table}?select=*&order=created_at.desc&limit=20`,{headers:sbHeaders()});
   const data=await r.json();
   if(!r.ok) throw new Error(data?.message || `Failed to read ${table}`);
   return data;
 }
 
 async function sbInsert(table,payload){
-  const r=await fetch(`${SUPABASE_URL}/rest/v1/${table}`,{
+  const r=await fetch(`${supabaseBase()}/rest/v1/${table}`,{
     method:"POST",
     headers:sbHeaders(),
     body:JSON.stringify([payload])
@@ -181,6 +186,9 @@ Return ONLY valid JSON:
     const emailId=await sendDailyEmail(brief);
     return res.status(200).json({ok:true,date:brief.date,stories:brief.stories?.length||0,emailId});
   }catch(e){
-    return res.status(500).json({error:e instanceof Error?e.message:"Daily generation failed"});
+    return res.status(500).json({
+      error:e instanceof Error?e.message:"Daily generation failed",
+      hint:"Check Production env values for SUPABASE_URL, OPENAI_API_KEY/OPENAI_MODEL, RESEND_API_KEY, SURVEY_EMAIL_TO, and SITE_URL."
+    });
   }
 }
