@@ -1,3 +1,4 @@
+const {requireAuth}=require("./_auth");
 const MODEL = process.env.OPENAI_MODEL || "gpt-6-luna";
 
 function extractOutputText(data) {
