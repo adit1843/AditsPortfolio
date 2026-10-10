@@ -18,7 +18,9 @@ const state={
   ],
   prefs:JSON.parse(localStorage.getItem("dailyBriefPrefs")||"null")||{generalNews:40,technicalDepth:"medium-high",politics:"important-only",markets:true},
   coverage:JSON.parse(localStorage.getItem("dailyBriefCoverage")||"[]"),
-  api:{configured:false,model:null,loading:true,error:null}
+  api:{configured:false,model:null,loading:true,error:null},
+  hydrating:true,
+  dbError:null
 };
 
 
@@ -42,6 +44,7 @@ async function hydrateFromDatabase(){
     const params=new URLSearchParams(location.search);
     const requestedBrief=params.get("brief");
     const requestedDate=params.get("date");
+
     if(briefs.length){
       const match=requestedBrief
         ? briefs.find(x=>String(x.id)===String(requestedBrief))
@@ -49,15 +52,22 @@ async function hydrateFromDatabase(){
           ? briefs.find(x=>x.brief_date===requestedDate || x.payload?.date===requestedDate)
           : briefs[0];
       if(match?.payload) state.brief=match.payload;
+      else state.brief=briefs[0].payload;
+    }else{
+      state.brief=demoBrief;
     }
+
     if(explainers.length) state.explainers=explainers.map(x=>x.payload);
     if(preferences[0]?.payload) state.prefs=preferences[0].payload;
     if(knowledge[0]?.payload) state.knowledge=knowledge[0].payload;
     if(coverage.length) state.coverage=coverage.map(x=>x.payload);
+    state.dbError=null;
+  }catch(e){
+    state.dbError=e.message;
+  }finally{
+    state.hydrating=false;
     render();
     if(new URLSearchParams(location.search).get("survey")==="1") renderSurvey();
-  }catch(e){
-    console.warn("Database hydration skipped:",e.message);
   }
 }
 
@@ -65,7 +75,14 @@ const app=document.querySelector("#app");
 document.querySelectorAll(".nav-btn").forEach(btn=>btn.addEventListener("click",()=>{state.view=btn.dataset.view;render();}));
 
 function setActive(){document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===state.view));}
-function render(){setActive(); ({today:renderToday,archive:renderArchive,explainers:renderExplainers,knowledge:renderKnowledge,preferences:renderPreferences}[state.view]||renderToday)();}
+function render(){
+  setActive();
+  if(state.hydrating){
+    app.innerHTML='<section class="hero"><div class="eyebrow">Briefline</div><h2>Loading your latest brief…</h2><p class="muted">Fetching the newest saved edition.</p></section>';
+    return;
+  }
+  ({today:renderToday,archive:renderArchive,explainers:renderExplainers,knowledge:renderKnowledge,preferences:renderPreferences}[state.view]||renderToday)();
+}
 function escapeHtml(v=""){return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));}
 function sourceHtml(s){
   if(typeof s==="string") return `<span>${escapeHtml(s)}</span>`;
@@ -258,6 +275,6 @@ function renderSurvey(){
 }
 
 render();
-checkApi();
 hydrateFromDatabase();
+checkApi();
 
