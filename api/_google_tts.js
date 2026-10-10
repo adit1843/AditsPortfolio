@@ -4,6 +4,7 @@ const SUPABASE_URL=process.env.SUPABASE_URL;
 const SUPABASE_SECRET_KEY=process.env.SUPABASE_SECRET_KEY;
 const BUCKET=process.env.BRIEFLINE_AUDIO_BUCKET||"briefline-audio";
 const VOICE=process.env.GOOGLE_TTS_VOICE||"en-US-Chirp3-HD-Charon";
+const MONTHLY_CHAR_LIMIT=Number(process.env.BRIEFLINE_TTS_MONTHLY_CHAR_LIMIT||750000);
 
 let cachedToken=null;
 let cachedTokenExp=0;
@@ -142,6 +143,79 @@ async function upload(path,buffer){
     throw new Error(data?.message||"Could not store Briefline audio.");
   }
 }
+
+function monthKey(){
+  return new Date().toISOString().slice(0,7);
+}
+function usagePath(){
+  return `usage/${monthKey()}.json`;
+}
+async function readUsage(){
+  const path=usagePath();
+  const r=await fetch(`${supabaseBase()}/storage/v1/object/${BUCKET}/${path}`,{
+    headers:{
+      apikey:SUPABASE_SECRET_KEY,
+      Authorization:`Bearer ${SUPABASE_SECRET_KEY}`
+    }
+  });
+  if(r.status===404) return {month:monthKey(),characters:0,updatedAt:null};
+  if(!r.ok){
+    const data=await r.json().catch(()=>({}));
+    throw new Error(data?.message||"Could not read Briefline TTS usage.");
+  }
+  const data=await r.json();
+  return {
+    month:data?.month||monthKey(),
+    characters:Number(data?.characters)||0,
+    updatedAt:data?.updatedAt||null
+  };
+}
+async function writeUsage(usage){
+  const path=usagePath();
+  const body=Buffer.from(JSON.stringify(usage));
+  const r=await fetch(`${supabaseBase()}/storage/v1/object/${BUCKET}/${path}`,{
+    method:"POST",
+    headers:{
+      apikey:SUPABASE_SECRET_KEY,
+      Authorization:`Bearer ${SUPABASE_SECRET_KEY}`,
+      "Content-Type":"application/json",
+      "x-upsert":"true"
+    },
+    body
+  });
+  if(!r.ok){
+    const data=await r.json().catch(()=>({}));
+    throw new Error(data?.message||"Could not store Briefline TTS usage.");
+  }
+}
+async function reserveCharacters(characters){
+  const usage=await readUsage();
+  const requested=Math.max(0,Number(characters)||0);
+  if(usage.characters>=MONTHLY_CHAR_LIMIT || usage.characters+requested>MONTHLY_CHAR_LIMIT){
+    return {
+      allowed:false,
+      month:usage.month,
+      used:usage.characters,
+      requested,
+      limit:MONTHLY_CHAR_LIMIT,
+      remaining:Math.max(0,MONTHLY_CHAR_LIMIT-usage.characters)
+    };
+  }
+  const next={
+    month:usage.month,
+    characters:usage.characters+requested,
+    updatedAt:new Date().toISOString()
+  };
+  await writeUsage(next);
+  return {
+    allowed:true,
+    month:next.month,
+    used:next.characters,
+    requested,
+    limit:MONTHLY_CHAR_LIMIT,
+    remaining:Math.max(0,MONTHLY_CHAR_LIMIT-next.characters)
+  };
+}
 function spokenSections(brief){
   const sections=[{
     kind:"intro",
@@ -176,6 +250,19 @@ async function generateBriefAudio(brief,briefId){
       });
     });
   }
+  const totalCharacters=jobs.reduce((sum,job)=>sum+Array.from(job.text).length,0);
+  const usage=await reserveCharacters(totalCharacters);
+  if(!usage.allowed){
+    return {
+      configured:true,
+      skipped:true,
+      reason:"monthly_character_limit",
+      usage,
+      voice:VOICE,
+      segments:[]
+    };
+  }
+
   const synthesized=await Promise.all(jobs.map(async job=>({...job,audio:await synthesize(job.text)})));
   await Promise.all(synthesized.map(job=>{
     const path=`briefs/${briefId}/${String(job.index).padStart(3,"0")}.mp3`;
@@ -185,8 +272,9 @@ async function generateBriefAudio(brief,briefId){
   return {
     configured:true,
     voice:VOICE,
+    usage,
     segments:synthesized.map(({index,kind,storyId,label,path})=>({index,kind,storyId,label,path}))
   };
 }
 
-module.exports={generateBriefAudio,ttsConfigured,BUCKET};
+module.exports={generateBriefAudio,ttsConfigured,BUCKET,MONTHLY_CHAR_LIMIT};
