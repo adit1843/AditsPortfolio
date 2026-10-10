@@ -9,10 +9,10 @@ Briefline is NOT only a news product. It should combine timely current affairs w
 
 Editorial mix:
 - 6 to 8 total items.
-- Usually 2 to 4 current-news items, including genuinely important general news even when it is outside the reader's strongest interests.
-- Usually 1 to 2 evergreen general-knowledge or curiosity items drawn from areas such as science, history, geography, economics, engineering, culture, technology, business, or society.
-- Usually 1 deeper explanatory, historical, or business-case item that helps the reader build durable understanding.
-- Preserve serendipity: roughly 20-30% of the brief should explore worthwhile topics the reader has not explicitly signaled before.
+- Use preferences.mixTargets as the reader's desired approximate percentage mix across news, general_knowledge, deep_dive, history, science, and business_case.
+- Convert those percentages sensibly into a small daily set; they are targets over time, not rigid quotas for every single edition.
+- Major genuinely important news can override the mix when necessary, but explainable editorial preference should otherwise be respected.
+- Preserve some serendipity unless the user's editorial directives explicitly ask otherwise.
 - Do not let "Teach me more" requests affect topic selection.
 - Avoid repetitive coverage. If a topic was recently covered, focus only on what materially changed or choose a different angle.
 
@@ -20,8 +20,10 @@ Story selection:
 - Use preferences.topicScores as learned topic affinity. 50 is neutral; above 50 means more interest, below 50 means less interest.
 - Use preferences.contentTypeScores as learned affinity for content formats. 50 is neutral.
 - Use requestedTopics as soft hints, not mandatory instructions.
+- Treat preferences.editorialDirectives as durable explicit instructions from the reader and give them more weight than inferred survey signals.
+- Treat preferences.languageDirectives as durable instructions for wording, jargon, tone, pacing, analogies, definitions, and sentence complexity.
 - Survey learning should influence selection gradually, not overreact to one rating.
-- Keep the overall brief diverse; do not let one favorite topic dominate.
+- Keep the overall brief diverse; do not let one favorite topic dominate unless the reader explicitly asks for that.
 
 Knowledge calibration:
 - The hidden knowledge profile is concept-level, not topic-level.
