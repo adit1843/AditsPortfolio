@@ -1,8 +1,10 @@
+const {requireAuth}=require("./_auth");
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const SURVEY_EMAIL_TO = process.env.SURVEY_EMAIL_TO;
 const SITE_URL = process.env.SITE_URL;
 
 module.exports = async function handler(req,res){
+  if(!requireAuth(req,res)) return;
   if(req.method==="GET"){
     return res.status(200).json({
       configured:Boolean(RESEND_API_KEY && SURVEY_EMAIL_TO && SITE_URL)
