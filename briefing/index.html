@@ -5,8 +5,23 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Briefline</title>
   <link rel="stylesheet" href="./styles.css" />
-  <style>body{visibility:hidden}</style>
-  <script>(async()=>{try{const r=await fetch("/api/auth-session");const d=await r.json();if(!d.authenticated){location.replace("/briefing/login.html");return;}document.addEventListener("DOMContentLoaded",()=>document.body.style.visibility="visible");}catch{location.replace("/briefing/login.html");}})();</script>
+  <style>body.auth-pending{visibility:hidden}</style>
+  <script>
+    document.documentElement.classList.add("auth-pending");
+    (async()=>{
+      try{
+        const r=await fetch("/api/auth-session",{cache:"no-store"});
+        const d=await r.json();
+        if(!d.authenticated){
+          location.replace("/briefing/login.html");
+          return;
+        }
+        document.documentElement.classList.remove("auth-pending");
+      }catch(e){
+        location.replace("/briefing/login.html");
+      }
+    })();
+  </script>
 </head>
 <body>
   <header class="topbar">
