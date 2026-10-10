@@ -99,7 +99,7 @@ function renderToday(){
       <div class="section-label">After you finish</div>
       <h2>Help tomorrow's brief get better</h2>
       <p class="muted">The survey is intentionally separate from the reading experience.</p>
-      <button class="primary" id="surveyBtn">Take today's survey</button>
+      <button class="primary" id="surveyBtn">I'm finished — send survey email</button>
     </section>`;
 
   const holder=document.querySelector("#stories");
@@ -113,7 +113,7 @@ function renderToday(){
     node.querySelector(".teach-btn").addEventListener("click",()=>createExplainer(story));
     holder.appendChild(node);
   });
-  document.querySelector("#surveyBtn").addEventListener("click",renderSurvey);
+  document.querySelector("#surveyBtn").addEventListener("click",finishBrief);
   const generateBtn=document.querySelector("#generateBtn");
   if(generateBtn&&!generateBtn.disabled) generateBtn.addEventListener("click",generateLiveBrief);
 }
@@ -184,6 +184,28 @@ async function createExplainer(story){
   }
 }
 
+
+async function finishBrief(){
+  const btn=document.querySelector("#surveyBtn");
+  const original=btn.textContent;
+  btn.disabled=true;
+  btn.textContent="Sending survey email…";
+  try{
+    const r=await fetch("/api/send-survey-email",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({briefDate:state.brief.date})
+    });
+    const data=await r.json();
+    if(!r.ok) throw new Error(data.error||"Could not send survey email");
+    btn.textContent="Survey email sent";
+  }catch(e){
+    btn.disabled=false;
+    btn.textContent=original;
+    alert(e.message);
+  }
+}
+
 function renderArchive(){
   const current=`<div class="panel"><strong>${escapeHtml(state.brief.date)}</strong><p class="muted">Current brief · ${state.brief.stories.length} stories</p></div>`;
   const past=state.coverage.map(x=>`<div class="panel"><strong>${escapeHtml(x.date)}</strong><p class="muted">${x.stories.length} stories remembered for future continuity</p></div>`).join("");
@@ -226,3 +248,4 @@ function renderSurvey(){
 render();
 checkApi();
 hydrateFromDatabase();
+if(new URLSearchParams(location.search).get("survey")==="1") setTimeout(renderSurvey,250);
