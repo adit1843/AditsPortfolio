@@ -177,7 +177,7 @@ async function checkApi(){
   }catch(e){
     state.api={configured:false,model:null,loading:false,error:"Could not reach generation API."};
   }
-  if(state.view==="today") renderToday();
+  if(state.view==="today") render();
 }
 
 function renderToday(){
@@ -331,7 +331,7 @@ function renderExplainers(){
 window.markUnderstood=function(storyId,understood){
   const explainer=state.explainers.find(x=>String(x.storyId)===String(storyId));
   const concepts=explainer?.concepts||[];
-  const eventKey=`${state.briefDbId||state.brief.date}:${storyId}:explainer:${understood?"understood":"confused"}`;
+  const eventKey=`${state.briefDbId||state.brief.date}:${storyId}:explainer-feedback`;
   bumpKnowledge(concepts,understood?8:1,eventKey).catch(()=>{});
   alert(understood?"Got it — future explanations can assume a little more here.":"Got it — future explanations will start more gently on these concepts.");
 };
@@ -341,10 +341,10 @@ function renderKnowledge(){
 }
 
 function renderPreferences(){
-  app.innerHTML=`<section class="hero"><div class="eyebrow">Interest profile</div><h2>Preferences</h2><p>These settings influence topic selection; explainer requests do not.</p></section><section class="panel"><div class="field"><label>General-news share</label><input id="generalNews" type="range" min="10" max="80" value="${state.prefs.generalNews}"><div class="muted"><span id="generalNewsVal">${state.prefs.generalNews}</span>% of the brief</div></div><div class="field"><label>Technical depth</label><select id="depth"><option>medium</option><option>medium-high</option><option>high</option></select></div><div class="field"><label>Politics coverage</label><select id="politics"><option value="important-only">Only when important</option><option value="routine">Routine coverage</option><option value="minimal">Minimal</option></select></div><button class="primary" id="savePrefs">Save preferences</button></section>`;
-  document.querySelector("#depth").value=state.prefs.technicalDepth;document.querySelector("#politics").value=state.prefs.politics;
+  app.innerHTML=`<section class="hero"><div class="eyebrow">Interest profile</div><h2>Preferences</h2><p>These settings influence topic selection; explainer requests do not.</p></section><section class="panel"><div class="field"><label>General-news share</label><input id="generalNews" type="range" min="10" max="80" value="${state.prefs.generalNews}"><div class="muted"><span id="generalNewsVal">${state.prefs.generalNews}</span>% of the brief</div></div><div class="field"><label>Politics coverage</label><select id="politics"><option value="important-only">Only when important</option><option value="routine">Routine coverage</option><option value="minimal">Minimal</option></select></div><button class="primary" id="savePrefs">Save preferences</button></section>`;
+  document.querySelector("#politics").value=state.prefs.politics;
   document.querySelector("#generalNews").addEventListener("input",e=>document.querySelector("#generalNewsVal").textContent=e.target.value);
-  document.querySelector("#savePrefs").addEventListener("click",()=>{state.prefs.generalNews=+document.querySelector("#generalNews").value;state.prefs.technicalDepth=document.querySelector("#depth").value;state.prefs.politics=document.querySelector("#politics").value;localStorage.setItem("dailyBriefPrefs",JSON.stringify(state.prefs));dbPost("preferences",{payload:state.prefs}).catch(()=>{});alert("Preferences saved.");});
+  document.querySelector("#savePrefs").addEventListener("click",()=>{state.prefs.generalNews=+document.querySelector("#generalNews").value;state.prefs.politics=document.querySelector("#politics").value;localStorage.setItem("dailyBriefPrefs",JSON.stringify(state.prefs));dbPost("preferences",{payload:state.prefs}).catch(()=>{});alert("Preferences saved.");});
 }
 
 function renderSurvey(){
