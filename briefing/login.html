@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Briefline — Sign in</title>
+  <link rel="stylesheet" href="./styles.css">
+  <style>
+    body{min-height:100vh;display:grid;place-items:center;padding:24px}
+    .login-card{width:min(440px,100%);border:1px solid var(--rule);padding:32px;background:var(--bg)}
+    .login-card h1{margin:0 0 8px;font-size:42px}
+    .login-card p{color:var(--fg-dim);line-height:1.5}
+    .login-card label{display:block;margin:24px 0 8px;font-family:"JetBrains Mono",monospace;font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+    .login-card input{width:100%;box-sizing:border-box;padding:13px 14px;border:1px solid var(--rule);background:var(--bg-2);color:var(--fg);font:inherit}
+    .login-card button{margin-top:14px;width:100%}
+    .error{min-height:20px;color:#d66;margin-top:12px}
+  </style>
+</head>
+<body>
+  <main class="login-card">
+    <div class="eyebrow">Private briefing</div>
+    <h1>Briefline</h1>
+    <p>Your personalized daily briefing, context memory, explainers, and feedback loop.</p>
+    <form id="loginForm">
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" required autofocus>
+      <button class="primary" type="submit">Enter Briefline</button>
+      <div id="error" class="error" aria-live="polite"></div>
+    </form>
+  </main>
+  <script>
+    (async()=>{
+      try{
+        const r=await fetch("/api/auth-session");
+        const d=await r.json();
+        if(d.authenticated) location.replace("/briefing/");
+      }catch{}
+    })();
+    document.querySelector("#loginForm").addEventListener("submit",async e=>{
+      e.preventDefault();
+      const button=e.target.querySelector("button");
+      const error=document.querySelector("#error");
+      button.disabled=true;button.textContent="Signing in…";error.textContent="";
+      try{
+        const r=await fetch("/api/auth-login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:e.target.password.value})});
+        const d=await r.json();
+        if(!r.ok) throw new Error(d.error||"Sign-in failed");
+        location.replace("/briefing/");
+      }catch(err){
+        error.textContent=err.message;
+        button.disabled=false;button.textContent="Enter Briefline";
+      }
+    });
+  </script>
+</body>
+</html>
