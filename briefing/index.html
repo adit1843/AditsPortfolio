@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Daily Brief</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <div class="eyebrow">Personal briefing</div>
+      <h1>Daily Brief</h1>
+    </div>
+    <nav>
+      <button data-view="today" class="nav-btn active">Today</button>
+      <button data-view="archive" class="nav-btn">Archive</button>
+      <button data-view="explainers" class="nav-btn">Explainers</button>
+      <button data-view="knowledge" class="nav-btn">Knowledge</button>
+      <button data-view="preferences" class="nav-btn">Preferences</button>
+    </nav>
+  </header>
+
+  <main id="app" class="shell"></main>
+
+  <template id="story-template">
+    <article class="story-card">
+      <div class="story-meta"></div>
+      <h2 class="story-title"></h2>
+      <p class="story-summary"></p>
+      <div class="story-body"></div>
+      <div class="story-actions">
+        <button class="primary teach-btn">Teach me more</button>
+      </div>
+      <div class="story-sources"></div>
+    </article>
+  </template>
+
+  <script src="./app.js"></script>
+</body>
+</html>
