@@ -3,14 +3,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Daily Brief</title>
+  <title>Briefline</title>
   <link rel="stylesheet" href="./styles.css" />
+  <style>body{visibility:hidden}</style>
+  <script>(async()=>{try{const r=await fetch("/api/auth-session");const d=await r.json();if(!d.authenticated){location.replace("/briefing/login.html");return;}document.addEventListener("DOMContentLoaded",()=>document.body.style.visibility="visible");}catch{location.replace("/briefing/login.html");}})();</script>
 </head>
 <body>
   <header class="topbar">
     <div>
       <div class="eyebrow">Personal briefing</div>
-      <h1>Daily Brief</h1>
+      <h1>Briefline</h1>
     </div>
     <nav>
       <button data-view="today" class="nav-btn active">Today</button>
