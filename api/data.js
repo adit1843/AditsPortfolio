@@ -3,6 +3,10 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY;
 
 function ready(){return Boolean(SUPABASE_URL && SUPABASE_SECRET_KEY);}
+function supabaseBase(){
+  if(!SUPABASE_URL) return "";
+  return SUPABASE_URL.replace(/\/+$/,"").replace(/\/rest\/v1$/,"");
+}
 function headers(){return {
   "apikey": SUPABASE_SECRET_KEY,
   "Authorization": `Bearer ${SUPABASE_SECRET_KEY}`,
@@ -10,7 +14,7 @@ function headers(){return {
   "Prefer": "return=representation"
 };}
 async function call(path, options={}){
-  const r=await fetch(`${SUPABASE_URL}/rest/v1/${path}`,{...options,headers:{...headers(),...(options.headers||{})}});
+  const r=await fetch(`${supabaseBase()}/rest/v1/${path}`,{...options,headers:{...headers(),...(options.headers||{})}});
   const text=await r.text();
   let data=null; try{data=text?JSON.parse(text):null;}catch{data=text;}
   if(!r.ok) throw new Error(typeof data==="object"?(data.message||JSON.stringify(data)):String(data||r.statusText));
