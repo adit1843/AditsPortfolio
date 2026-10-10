@@ -1,3 +1,4 @@
+const {requireAuth}=require("./_auth");
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY;
 
@@ -17,6 +18,7 @@ async function call(path, options={}){
 }
 
 module.exports = async function handler(req,res){
+  if(!requireAuth(req,res)) return;
   if(!ready()) return res.status(503).json({error:"Supabase is not configured."});
   const {resource}=req.query||{};
   const allowed=new Set(["briefs","explainers","preferences","knowledge","coverage","surveys"]);
