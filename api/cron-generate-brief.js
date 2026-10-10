@@ -113,8 +113,12 @@ module.exports = async function handler(req,res){
       markets:true,
       topicScores:{},
       contentTypeScores:{news:55,general_knowledge:50,deep_dive:50,history:50,science:50,business_case:50},
+      mixTargets:{news:45,general_knowledge:20,deep_dive:15,history:7,science:8,business_case:5},
       requestedTopics:[],
-      explanationBias:0
+      explanationBias:0,
+      languageDirectives:[],
+      editorialDirectives:[],
+      tuningHistory:[]
     };
     const knowledge=(knowledgeRows[0]?.payload && !Array.isArray(knowledgeRows[0].payload))
       ? knowledgeRows[0].payload
