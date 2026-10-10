@@ -52,13 +52,13 @@ async function sbInsert(table,payload){
 }
 
 
-async function sendDailyEmail(brief){
+async function sendDailyEmail(brief,briefId){
   if(!RESEND_API_KEY || !SURVEY_EMAIL_TO || !SITE_URL) {
     throw new Error("Daily email is not fully configured.");
   }
   const base=SITE_URL.replace(/\/$/,"");
-  const briefUrl=`${base}/briefing/?date=${encodeURIComponent(brief.date)}`;
-  const surveyUrl=`${base}/briefing/?survey=1&date=${encodeURIComponent(brief.date)}`;
+  const briefUrl=`${base}/briefing/?brief=${encodeURIComponent(briefId)}`;
+  const surveyUrl=`${base}/briefing/?survey=1&brief=${encodeURIComponent(briefId)}`;
   const html=`
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:28px;color:#171717">
       <p style="text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:#777">Daily Brief</p>
@@ -182,9 +182,11 @@ Return ONLY valid JSON:
       });
     }
 
-    await sbInsert("briefs",{brief_date:brief.date,payload:brief});
-    const emailId=await sendDailyEmail(brief);
-    return res.status(200).json({ok:true,date:brief.date,stories:brief.stories?.length||0,emailId});
+    const inserted=await sbInsert("briefs",{brief_date:brief.date,payload:brief});
+    const briefId=inserted?.[0]?.id;
+    if(!briefId) throw new Error("Brief saved but no database ID was returned.");
+    const emailId=await sendDailyEmail(brief,briefId);
+    return res.status(200).json({ok:true,date:brief.date,briefId,stories:brief.stories?.length||0,emailId});
   }catch(e){
     return res.status(500).json({
       error:e instanceof Error?e.message:"Daily generation failed",
