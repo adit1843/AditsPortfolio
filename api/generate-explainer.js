@@ -35,8 +35,15 @@ Create a personalized 5-minute-read explainer for the reader about this story.
 Story:
 ${JSON.stringify(story, null, 2)}
 
-Reader knowledge estimates:
-${JSON.stringify(knowledge, null, 2)}
+Hidden concept-level knowledge profile:
+${JSON.stringify(knowledge?.concepts||{}, null, 2)}
+
+Knowledge score semantics:
+- Missing concept = 0/100.
+- 0-20: explain from first principles with plain-language definitions and analogies.
+- 21-50: assume limited familiarity; give foundational context before intermediate detail.
+- 51-75: assume foundations and focus on mechanisms/tradeoffs.
+- 76-100: skip basics and focus on nuance, implications, and edge cases.
 
 Rules:
 - This explainer is on-demand learning only. It must not suggest or imply that requesting it should affect future story selection.
@@ -51,6 +58,7 @@ Rules:
   "title": "5-minute explainer: ...",
   "body": "plain text with paragraph breaks",
   "takeaway": "1-2 sentence takeaway",
+  "conceptsCovered": ["specific concept 1","specific concept 2"],
   "sources": [{"name":"source","url":"https://..."}]
 }
 `;
