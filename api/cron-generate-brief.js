@@ -71,6 +71,7 @@ async function sendDailyEmail(brief,briefId){
   const base=SITE_URL.replace(/\/$/,"");
   const briefUrl=`${base}/briefing/?brief=${encodeURIComponent(briefId)}`;
   const surveyUrl=`${base}/briefing/?survey=1&brief=${encodeURIComponent(briefId)}`;
+  const listenUrl=`${base}/briefing/?brief=${encodeURIComponent(briefId)}#audioBrief`;
   const html=`
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:28px;color:#171717">
       <p style="text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:#777">Daily Brief</p>
@@ -79,6 +80,7 @@ async function sendDailyEmail(brief,briefId){
       <p>${brief.intro || "Your personalized current-events briefing is ready."}</p>
       <p style="margin:28px 0">
         <a href="${briefUrl}" style="display:inline-block;background:#171717;color:white;text-decoration:none;padding:12px 18px;border-radius:999px;margin-right:8px">Read today's brief</a>
+        ${brief.audio?.segments?.length?`<a href="${listenUrl}" style="display:inline-block;background:#444;color:white;text-decoration:none;padding:12px 18px;border-radius:999px;margin-right:8px">Listen</a>`:""}
         <a href="${surveyUrl}" style="display:inline-block;border:1px solid #171717;color:#171717;text-decoration:none;padding:11px 18px;border-radius:999px">Take today's survey</a>
       </p>
       <p style="font-size:13px;color:#777">The survey tunes future briefs. “Teach me more” remains separate and does not affect topic selection.</p>
