@@ -1,3 +1,4 @@
+const {generateBriefAudio}=require("./_google_tts");
 const {buildBriefPrompt}=require("./_brief_prompt");
 const {isAuthed}=require("./_auth");
 const MODEL = process.env.OPENAI_MODEL || "gpt-6-luna";
@@ -49,6 +50,16 @@ async function sbInsert(table,payload){
   });
   const data=await r.json();
   if(!r.ok) throw new Error(data?.message || `Failed to write ${table}`);
+  return data;
+}
+async function sbUpdateBrief(id,brief){
+  const r=await fetch(`${supabaseBase()}/rest/v1/briefs?id=eq.${encodeURIComponent(id)}`,{
+    method:"PATCH",
+    headers:sbHeaders(),
+    body:JSON.stringify({payload:brief})
+  });
+  const data=await r.json();
+  if(!r.ok) throw new Error(data?.message || "Failed to update brief audio metadata");
   return data;
 }
 
@@ -164,8 +175,29 @@ module.exports = async function handler(req,res){
     const inserted=await sbInsert("briefs",{brief_date:brief.date,payload:brief});
     const briefId=inserted?.[0]?.id;
     if(!briefId) throw new Error("Brief saved but no database ID was returned.");
+    let audio=null;
+    let audioError=null;
+    try{
+      audio=await generateBriefAudio(brief,briefId);
+      if(audio?.configured&&audio?.segments?.length){
+        brief.audio=audio;
+        await sbUpdateBrief(briefId,brief);
+      }
+    }catch(err){
+      audioError=err instanceof Error?err.message:"Audio generation failed";
+    }
+
     const emailId=await sendDailyEmail(brief,briefId);
-    return res.status(200).json({ok:true,date:brief.date,briefId,stories:brief.stories?.length||0,emailId});
+    return res.status(200).json({
+      ok:true,
+      date:brief.date,
+      briefId,
+      stories:brief.stories?.length||0,
+      audioSegments:audio?.segments?.length||0,
+      audioConfigured:Boolean(audio?.configured),
+      audioError,
+      emailId
+    });
   }catch(e){
     return res.status(500).json({
       error:e instanceof Error?e.message:"Daily generation failed",
