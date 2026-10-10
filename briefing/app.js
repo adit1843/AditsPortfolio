@@ -39,12 +39,19 @@ async function hydrateFromDatabase(){
     const [briefs,explainers,preferences,knowledge,coverage]=await Promise.all([
       dbGet("briefs"),dbGet("explainers"),dbGet("preferences"),dbGet("knowledge"),dbGet("coverage")
     ]);
-    if(briefs[0]?.payload) state.brief=briefs[0].payload;
+    const requestedDate=new URLSearchParams(location.search).get("date");
+    if(briefs.length){
+      const match=requestedDate
+        ? briefs.find(x=>x.brief_date===requestedDate || x.payload?.date===requestedDate)
+        : briefs[0];
+      if(match?.payload) state.brief=match.payload;
+    }
     if(explainers.length) state.explainers=explainers.map(x=>x.payload);
     if(preferences[0]?.payload) state.prefs=preferences[0].payload;
     if(knowledge[0]?.payload) state.knowledge=knowledge[0].payload;
     if(coverage.length) state.coverage=coverage.map(x=>x.payload);
     render();
+    if(new URLSearchParams(location.search).get("survey")==="1") renderSurvey();
   }catch(e){
     console.warn("Database hydration skipped:",e.message);
   }
@@ -249,4 +256,4 @@ function renderSurvey(){
 render();
 checkApi();
 hydrateFromDatabase();
-if(new URLSearchParams(location.search).get("survey")==="1") setTimeout(renderSurvey,250);
+
