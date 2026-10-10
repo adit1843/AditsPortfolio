@@ -21,6 +21,35 @@ const state={
   api:{configured:false,model:null,loading:true,error:null}
 };
 
+
+async function dbGet(resource){
+  const r=await fetch(`/api/data?resource=${encodeURIComponent(resource)}`);
+  const data=await r.json();
+  if(!r.ok) throw new Error(data.error||"Database read failed");
+  return data.data||[];
+}
+async function dbPost(resource,payload){
+  const r=await fetch(`/api/data?resource=${encodeURIComponent(resource)}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+  const data=await r.json();
+  if(!r.ok) throw new Error(data.error||"Database write failed");
+  return data.data;
+}
+async function hydrateFromDatabase(){
+  try{
+    const [briefs,explainers,preferences,knowledge,coverage]=await Promise.all([
+      dbGet("briefs"),dbGet("explainers"),dbGet("preferences"),dbGet("knowledge"),dbGet("coverage")
+    ]);
+    if(briefs[0]?.payload) state.brief=briefs[0].payload;
+    if(explainers.length) state.explainers=explainers.map(x=>x.payload);
+    if(preferences[0]?.payload) state.prefs=preferences[0].payload;
+    if(knowledge[0]?.payload) state.knowledge=knowledge[0].payload;
+    if(coverage.length) state.coverage=coverage.map(x=>x.payload);
+    render();
+  }catch(e){
+    console.warn("Database hydration skipped:",e.message);
+  }
+}
+
 const app=document.querySelector("#app");
 document.querySelectorAll(".nav-btn").forEach(btn=>btn.addEventListener("click",()=>{state.view=btn.dataset.view;render();}));
 
@@ -109,10 +138,12 @@ async function generateLiveBrief(){
       });
       state.coverage=state.coverage.slice(0,14);
       localStorage.setItem("dailyBriefCoverage",JSON.stringify(state.coverage));
+      dbPost("coverage",{payload:state.coverage[0]}).catch(()=>{});
     }
 
     state.brief=data.brief;
     localStorage.setItem("dailyBriefCurrent",JSON.stringify(state.brief));
+    dbPost("briefs",{brief_date:state.brief.date,payload:state.brief}).catch(()=>{});
     renderToday();
   }catch(e){
     btn.disabled=false; btn.textContent="Generate today's live brief";
@@ -144,6 +175,7 @@ async function createExplainer(story){
     };
     state.explainers.unshift(explainer);
     localStorage.setItem("dailyBriefExplainers",JSON.stringify(state.explainers));
+    dbPost("explainers",{story_id:story.id,payload:explainer}).catch(()=>{});
     state.view="explainers";
     render();
   }catch(e){
@@ -168,6 +200,7 @@ window.markUnderstood=function(storyId,understood){
   if(!k){k={topic,score:35};state.knowledge.push(k);}
   k.score=Math.max(0,Math.min(100,k.score+(understood?6:-5)));
   localStorage.setItem("dailyBriefKnowledge",JSON.stringify(state.knowledge));
+  dbPost("knowledge",{payload:state.knowledge}).catch(()=>{});
   alert(understood?"Knowledge confidence updated.":"Got it — confidence lowered so future explanations can start earlier.");
 };
 
@@ -179,7 +212,7 @@ function renderPreferences(){
   app.innerHTML=`<section class="hero"><div class="eyebrow">Interest profile</div><h2>Preferences</h2><p>These settings influence topic selection; explainer requests do not.</p></section><section class="panel"><div class="field"><label>General-news share</label><input id="generalNews" type="range" min="10" max="80" value="${state.prefs.generalNews}"><div class="muted"><span id="generalNewsVal">${state.prefs.generalNews}</span>% of the brief</div></div><div class="field"><label>Technical depth</label><select id="depth"><option>medium</option><option>medium-high</option><option>high</option></select></div><div class="field"><label>Politics coverage</label><select id="politics"><option value="important-only">Only when important</option><option value="routine">Routine coverage</option><option value="minimal">Minimal</option></select></div><button class="primary" id="savePrefs">Save preferences</button></section>`;
   document.querySelector("#depth").value=state.prefs.technicalDepth;document.querySelector("#politics").value=state.prefs.politics;
   document.querySelector("#generalNews").addEventListener("input",e=>document.querySelector("#generalNewsVal").textContent=e.target.value);
-  document.querySelector("#savePrefs").addEventListener("click",()=>{state.prefs.generalNews=+document.querySelector("#generalNews").value;state.prefs.technicalDepth=document.querySelector("#depth").value;state.prefs.politics=document.querySelector("#politics").value;localStorage.setItem("dailyBriefPrefs",JSON.stringify(state.prefs));alert("Preferences saved.");});
+  document.querySelector("#savePrefs").addEventListener("click",()=>{state.prefs.generalNews=+document.querySelector("#generalNews").value;state.prefs.technicalDepth=document.querySelector("#depth").value;state.prefs.politics=document.querySelector("#politics").value;localStorage.setItem("dailyBriefPrefs",JSON.stringify(state.prefs));dbPost("preferences",{payload:state.prefs}).catch(()=>{});alert("Preferences saved.");});
 }
 
 function renderSurvey(){
@@ -187,8 +220,9 @@ function renderSurvey(){
   app.innerHTML=`<a class="back-link" href="#" id="backToday">← Back to brief</a><section class="hero"><div class="eyebrow">Post-brief survey</div><h2>How was today's brief?</h2><p>Your answers tune future story selection slowly so one bad story doesn't erase an entire topic.</p></section><form id="surveyForm" class="panel">${state.brief.stories.map((s,i)=>`<div class="survey-row"><strong>${i+1}. ${escapeHtml(s.title)}</strong><div class="ratings" data-story="${s.id}">${[1,2,3,4,5].map(n=>`<button type="button" class="rating-btn" data-rating="${n}">${n}</button>`).join("")}</div></div>`).join("")}<div class="field"><label>Overall depth</label><select name="depth"><option>Too shallow</option><option selected>About right</option><option>Too detailed</option></select></div><div class="field"><label>Did anything feel repetitive?</label><textarea name="repeat" rows="3"></textarea></div><div class="field"><label>What did you wish was covered?</label><textarea name="missing" rows="3"></textarea></div><button class="primary" type="submit">Submit feedback</button></form>`;
   document.querySelector("#backToday").addEventListener("click",e=>{e.preventDefault();state.view="today";render();});
   document.querySelectorAll(".rating-btn").forEach(btn=>btn.addEventListener("click",()=>{btn.parentElement.querySelectorAll(".rating-btn").forEach(x=>x.classList.remove("selected"));btn.classList.add("selected");}));
-  document.querySelector("#surveyForm").addEventListener("submit",e=>{e.preventDefault();localStorage.setItem("dailyBriefLastSurvey",new Date().toISOString());e.target.innerHTML='<div class="success"><strong>Thanks.</strong><p>Your feedback was saved locally in this prototype.</p></div>';});
+  document.querySelector("#surveyForm").addEventListener("submit",e=>{e.preventDefault();localStorage.setItem("dailyBriefLastSurvey",new Date().toISOString());const ratings={};document.querySelectorAll(".ratings[data-story]").forEach(g=>{const selected=g.querySelector(".rating-btn.selected");if(selected)ratings[g.dataset.story]=Number(selected.dataset.rating);});dbPost("surveys",{brief_date:state.brief.date,payload:{ratings,depth:e.target.depth.value,repeat:e.target.repeat.value,missing:e.target.missing.value}}).catch(()=>{});e.target.innerHTML='<div class="success"><strong>Thanks.</strong><p>Your feedback was saved locally in this prototype.</p></div>';});
 }
 
 render();
 checkApi();
+hydrateFromDatabase();
