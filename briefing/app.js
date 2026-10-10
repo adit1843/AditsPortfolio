@@ -39,11 +39,15 @@ async function hydrateFromDatabase(){
     const [briefs,explainers,preferences,knowledge,coverage]=await Promise.all([
       dbGet("briefs"),dbGet("explainers"),dbGet("preferences"),dbGet("knowledge"),dbGet("coverage")
     ]);
-    const requestedDate=new URLSearchParams(location.search).get("date");
+    const params=new URLSearchParams(location.search);
+    const requestedBrief=params.get("brief");
+    const requestedDate=params.get("date");
     if(briefs.length){
-      const match=requestedDate
-        ? briefs.find(x=>x.brief_date===requestedDate || x.payload?.date===requestedDate)
-        : briefs[0];
+      const match=requestedBrief
+        ? briefs.find(x=>String(x.id)===String(requestedBrief))
+        : requestedDate
+          ? briefs.find(x=>x.brief_date===requestedDate || x.payload?.date===requestedDate)
+          : briefs[0];
       if(match?.payload) state.brief=match.payload;
     }
     if(explainers.length) state.explainers=explainers.map(x=>x.payload);
