@@ -96,10 +96,9 @@ function renderToday(){
     </section>
     <div id="stories"></div>
     <section class="panel">
-      <div class="section-label">After you finish</div>
-      <h2>Help tomorrow's brief get better</h2>
-      <p class="muted">The survey is intentionally separate from the reading experience.</p>
-      <button class="primary" id="surveyBtn">I'm finished — send survey email</button>
+      <div class="section-label">Feedback</div>
+      <h2>Tomorrow's brief learns from today's survey</h2>
+      <p class="muted">Your morning email includes the survey link, so there is nothing you need to trigger from this page.</p>
     </section>`;
 
   const holder=document.querySelector("#stories");
@@ -113,7 +112,6 @@ function renderToday(){
     node.querySelector(".teach-btn").addEventListener("click",()=>createExplainer(story));
     holder.appendChild(node);
   });
-  document.querySelector("#surveyBtn").addEventListener("click",finishBrief);
   const generateBtn=document.querySelector("#generateBtn");
   if(generateBtn&&!generateBtn.disabled) generateBtn.addEventListener("click",generateLiveBrief);
 }
