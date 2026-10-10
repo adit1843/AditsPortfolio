@@ -173,6 +173,54 @@ function learnFromSurvey(ratings,depth,missing){
   return dbPost("preferences",{payload:state.prefs});
 }
 
+
+function audioPanelHtml(){
+  const segments=state.brief?.audio?.segments||[];
+  if(!segments.length) return "";
+  return `
+    <section class="panel" id="audioBrief">
+      <div class="eyebrow">Audio edition</div>
+      <h2>Listen to today's Briefline</h2>
+      <p class="muted" id="audioNow">Ready · ${segments.length} audio segments</p>
+      <audio id="briefAudio" controls preload="metadata" style="width:100%"></audio>
+      <div class="field" style="max-width:180px;margin-top:12px">
+        <label for="audioSpeed">Playback speed</label>
+        <select id="audioSpeed">
+          <option value="1">1×</option>
+          <option value="1.25">1.25×</option>
+          <option value="1.5">1.5×</option>
+          <option value="1.75">1.75×</option>
+          <option value="2">2×</option>
+        </select>
+      </div>
+    </section>`;
+}
+function setupBriefAudio(){
+  const audio=document.querySelector("#briefAudio");
+  if(!audio) return;
+  const segments=state.brief?.audio?.segments||[];
+  let index=0;
+  const now=document.querySelector("#audioNow");
+  const speed=document.querySelector("#audioSpeed");
+  const load=i=>{
+    index=Math.max(0,Math.min(segments.length-1,i));
+    const seg=segments[index];
+    audio.src=`/api/brief-audio?path=${encodeURIComponent(seg.path)}`;
+    audio.playbackRate=Number(speed?.value||1);
+    if(now) now.textContent=`Now playing ${index+1} of ${segments.length} · ${seg.label||"Briefline"}`;
+  };
+  load(0);
+  audio.addEventListener("ended",()=>{
+    if(index<segments.length-1){
+      load(index+1);
+      audio.play().catch(()=>{});
+    }else if(now){
+      now.textContent="Finished today's Briefline.";
+    }
+  });
+  if(speed) speed.addEventListener("change",()=>{audio.playbackRate=Number(speed.value||1);});
+}
+
 async function checkApi(){
   try{
     const r=await fetch("/api/generate-brief");
@@ -197,6 +245,7 @@ function renderToday(){
       <h2>What matters today.</h2>
       <p>${escapeHtml(state.brief.intro)}</p>
     </section>
+    ${audioPanelHtml()}
     <section class="panel">
       <div class="eyebrow">Generation status</div>
       <h2>${state.api.configured?"Live briefing is connected":"Prototype is in demo mode"}</h2>
@@ -230,6 +279,7 @@ function renderToday(){
   const surveyBtn=document.querySelector("#surveyBtn");
   if(surveyBtn) surveyBtn.addEventListener("click",renderSurvey);
   setupStoryReadTracking();
+  setupBriefAudio();
 }
 
 async function generateLiveBrief(){
