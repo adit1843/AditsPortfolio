@@ -13,14 +13,21 @@ const state={
   view:"today",
   brief:JSON.parse(localStorage.getItem("dailyBriefCurrent")||"null")||demoBrief,
   explainers:JSON.parse(localStorage.getItem("dailyBriefExplainers")||"[]"),
-  knowledge:JSON.parse(localStorage.getItem("dailyBriefKnowledge")||"null")||[
-    {topic:"AI infrastructure",score:82},{topic:"Data-center cooling",score:88},{topic:"Networking",score:58},{topic:"Treasury markets",score:42},{topic:"Federal Reserve",score:67},{topic:"Robotics commercialization",score:73}
-  ],
-  prefs:JSON.parse(localStorage.getItem("dailyBriefPrefs")||"null")||{generalNews:40,technicalDepth:"medium-high",politics:"important-only",markets:true},
+  knowledge:{concepts:{},seenEvents:{}},
+  prefs:JSON.parse(localStorage.getItem("dailyBriefPrefs")||"null")||{
+    generalNews:40,
+    politics:"important-only",
+    markets:true,
+    topicScores:{},
+    contentTypeScores:{news:55,general_knowledge:50,deep_dive:50,history:50,science:50,business_case:50},
+    requestedTopics:[],
+    explanationBias:0
+  },
   coverage:JSON.parse(localStorage.getItem("dailyBriefCoverage")||"[]"),
   api:{configured:false,model:null,loading:true,error:null},
   hydrating:true,
-  dbError:null
+  dbError:null,
+  briefDbId:null
 };
 
 
@@ -51,15 +58,20 @@ async function hydrateFromDatabase(){
         : requestedDate
           ? briefs.find(x=>x.brief_date===requestedDate || x.payload?.date===requestedDate)
           : briefs[0];
-      if(match?.payload) state.brief=match.payload;
-      else state.brief=briefs[0].payload;
+      if(match?.payload){state.brief=match.payload;state.briefDbId=match.id;}
+      else {state.brief=briefs[0].payload;state.briefDbId=briefs[0].id;}
     }else{
       state.brief=demoBrief;
     }
 
     if(explainers.length) state.explainers=explainers.map(x=>x.payload);
     if(preferences[0]?.payload) state.prefs=preferences[0].payload;
-    if(knowledge[0]?.payload) state.knowledge=knowledge[0].payload;
+    if(knowledge[0]?.payload && !Array.isArray(knowledge[0].payload)){
+      state.knowledge={
+        concepts:knowledge[0].payload.concepts||{},
+        seenEvents:knowledge[0].payload.seenEvents||{}
+      };
+    }
     if(coverage.length) state.coverage=coverage.map(x=>x.payload);
     state.dbError=null;
   }catch(e){
@@ -81,7 +93,7 @@ function render(){
     app.innerHTML='<section class="hero"><div class="eyebrow">Briefline</div><h2>Loading your latest brief…</h2><p class="muted">Fetching the newest saved edition.</p></section>';
     return;
   }
-  ({today:renderToday,archive:renderArchive,explainers:renderExplainers,knowledge:renderKnowledge,preferences:renderPreferences}[state.view]||renderToday)();
+  ({today:renderToday,archive:renderArchive,explainers:renderExplainers,preferences:renderPreferences}[state.view]||renderToday)();
 }
 function escapeHtml(v=""){return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));}
 function sourceHtml(s){
@@ -90,6 +102,72 @@ function sourceHtml(s){
   return `<span>${escapeHtml(s?.name||"Source")}</span>`;
 }
 function bodyHtml(text=""){return escapeHtml(text).split(/\n\s*\n|\n/).filter(Boolean).map(p=>`<p>${p}</p>`).join("");}
+
+
+function clamp(n,min=0,max=100){return Math.max(min,Math.min(max,n));}
+function canonicalConcept(name=""){return String(name).trim().toLowerCase().replace(/\s+/g," ");}
+function conceptNames(story){return [...new Set([...(story.concepts||[]),...(story.topics||[])].filter(Boolean))];}
+async function bumpKnowledge(concepts,delta,eventKey){
+  if(!eventKey || state.knowledge.seenEvents[eventKey]) return;
+  const names=[...new Set((concepts||[]).map(x=>String(x).trim()).filter(Boolean))];
+  if(!names.length) return;
+  for(const label of names){
+    const key=canonicalConcept(label);
+    const current=state.knowledge.concepts[key]||{label,score:0,exposures:0};
+    current.label=current.label||label;
+    current.score=clamp((Number(current.score)||0)+delta);
+    current.exposures=(Number(current.exposures)||0)+1;
+    current.lastSeen=new Date().toISOString();
+    state.knowledge.concepts[key]=current;
+  }
+  state.knowledge.seenEvents[eventKey]=new Date().toISOString();
+  await dbPost("knowledge",{payload:state.knowledge});
+}
+function setupStoryReadTracking(){
+  if(!state.briefDbId || !("IntersectionObserver" in window)) return;
+  const timers=new Map();
+  const observer=new IntersectionObserver(entries=>{
+    for(const entry of entries){
+      const id=entry.target.dataset.storyId;
+      if(entry.isIntersecting && entry.intersectionRatio>=0.6){
+        if(!timers.has(id)){
+          timers.set(id,setTimeout(()=>{
+            const story=state.brief.stories.find(s=>String(s.id)===String(id));
+            if(story) bumpKnowledge(conceptNames(story),3,`${state.briefDbId}:${id}:story-read`).catch(()=>{});
+            observer.unobserve(entry.target);
+            timers.delete(id);
+          },7000));
+        }
+      }else if(timers.has(id)){
+        clearTimeout(timers.get(id));
+        timers.delete(id);
+      }
+    }
+  },{threshold:[0.6]});
+  document.querySelectorAll(".story-card[data-story-id]").forEach(el=>observer.observe(el));
+}
+function learnFromSurvey(ratings,depth,missing){
+  state.prefs.topicScores=state.prefs.topicScores||{};
+  state.prefs.contentTypeScores=state.prefs.contentTypeScores||{};
+  for(const story of state.brief.stories){
+    const rating=Number(ratings[story.id]);
+    if(!rating) continue;
+    const delta=(rating-3)*4;
+    for(const topic of (story.topics||[story.category]).filter(Boolean)){
+      const key=String(topic).trim();
+      state.prefs.topicScores[key]=clamp((state.prefs.topicScores[key]??50)+delta);
+    }
+    const type=story.contentType||"news";
+    state.prefs.contentTypeScores[type]=clamp((state.prefs.contentTypeScores[type]??50)+delta);
+  }
+  if(depth==="Too shallow") state.prefs.explanationBias=clamp((state.prefs.explanationBias||0)+3,-20,20);
+  if(depth==="Too detailed") state.prefs.explanationBias=clamp((state.prefs.explanationBias||0)-3,-20,20);
+  if(missing?.trim()){
+    state.prefs.requestedTopics=[missing.trim(),...(state.prefs.requestedTopics||[])].slice(0,10);
+  }
+  localStorage.setItem("dailyBriefPrefs",JSON.stringify(state.prefs));
+  return dbPost("preferences",{payload:state.prefs});
+}
 
 async function checkApi(){
   try{
@@ -133,18 +211,21 @@ function renderToday(){
   const holder=document.querySelector("#stories");
   state.brief.stories.forEach((story,i)=>{
     const node=document.querySelector("#story-template").content.cloneNode(true);
-    node.querySelector(".story-meta").textContent=`${story.category} · ${i+1} of ${state.brief.stories.length}`;
+    node.querySelector(".story-meta").textContent=`${story.contentType?story.contentType.replace(/_/g," ")+" · ":""}${story.category} · ${i+1} of ${state.brief.stories.length}`;
     node.querySelector(".story-title").textContent=story.title;
     node.querySelector(".story-summary").textContent=story.summary;
     node.querySelector(".story-body").innerHTML=bodyHtml(story.body);
     node.querySelector(".story-sources").innerHTML="Sources: "+(story.sources||[]).map(sourceHtml).join(" · ");
     node.querySelector(".teach-btn").addEventListener("click",()=>createExplainer(story));
+    const article=node.querySelector(".story-card");
+    article.dataset.storyId=story.id;
     holder.appendChild(node);
   });
   const generateBtn=document.querySelector("#generateBtn");
   if(generateBtn&&!generateBtn.disabled) generateBtn.addEventListener("click",generateLiveBrief);
   const surveyBtn=document.querySelector("#surveyBtn");
   if(surveyBtn) surveyBtn.addEventListener("click",renderSurvey);
+  setupStoryReadTracking();
 }
 
 async function generateLiveBrief(){
@@ -172,7 +253,8 @@ async function generateLiveBrief(){
 
     state.brief=data.brief;
     localStorage.setItem("dailyBriefCurrent",JSON.stringify(state.brief));
-    dbPost("briefs",{brief_date:state.brief.date,payload:state.brief}).catch(()=>{});
+    const saved=await dbPost("briefs",{brief_date:state.brief.date,payload:state.brief});
+    state.briefDbId=saved?.[0]?.id||null;
     renderToday();
   }catch(e){
     btn.disabled=false; btn.textContent="Generate today's live brief";
@@ -200,7 +282,8 @@ async function createExplainer(story){
       created:new Date().toLocaleDateString(),
       body:data.explainer.body,
       takeaway:data.explainer.takeaway,
-      sources:data.explainer.sources||[]
+      sources:data.explainer.sources||[],
+      concepts:data.explainer.conceptsCovered||conceptNames(story)
     };
     state.explainers.unshift(explainer);
     localStorage.setItem("dailyBriefExplainers",JSON.stringify(state.explainers));
@@ -246,13 +329,11 @@ function renderExplainers(){
 }
 
 window.markUnderstood=function(storyId,understood){
-  const topic=state.brief.stories.find(s=>s.id===storyId)?.category;
-  let k=state.knowledge.find(x=>x.topic===topic);
-  if(!k){k={topic,score:35};state.knowledge.push(k);}
-  k.score=Math.max(0,Math.min(100,k.score+(understood?6:-5)));
-  localStorage.setItem("dailyBriefKnowledge",JSON.stringify(state.knowledge));
-  dbPost("knowledge",{payload:state.knowledge}).catch(()=>{});
-  alert(understood?"Knowledge confidence updated.":"Got it — confidence lowered so future explanations can start earlier.");
+  const explainer=state.explainers.find(x=>String(x.storyId)===String(storyId));
+  const concepts=explainer?.concepts||[];
+  const eventKey=`${state.briefDbId||state.brief.date}:${storyId}:explainer:${understood?"understood":"confused"}`;
+  bumpKnowledge(concepts,understood?8:1,eventKey).catch(()=>{});
+  alert(understood?"Got it — future explanations can assume a little more here.":"Got it — future explanations will start more gently on these concepts.");
 };
 
 function renderKnowledge(){
@@ -271,7 +352,7 @@ function renderSurvey(){
   app.innerHTML=`<a class="back-link" href="#" id="backToday">← Back to brief</a><section class="hero"><div class="eyebrow">Post-brief survey</div><h2>How was today's brief?</h2><p>Your answers tune future story selection slowly so one bad story doesn't erase an entire topic.</p></section><form id="surveyForm" class="panel">${state.brief.stories.map((s,i)=>`<div class="survey-row"><strong>${i+1}. ${escapeHtml(s.title)}</strong><div class="ratings" data-story="${s.id}">${[1,2,3,4,5].map(n=>`<button type="button" class="rating-btn" data-rating="${n}">${n}</button>`).join("")}</div></div>`).join("")}<div class="field"><label>Overall depth</label><select name="depth"><option>Too shallow</option><option selected>About right</option><option>Too detailed</option></select></div><div class="field"><label>Did anything feel repetitive?</label><textarea name="repeat" rows="3"></textarea></div><div class="field"><label>What did you wish was covered?</label><textarea name="missing" rows="3"></textarea></div><button class="primary" type="submit">Submit feedback</button></form>`;
   document.querySelector("#backToday").addEventListener("click",e=>{e.preventDefault();state.view="today";render();});
   document.querySelectorAll(".rating-btn").forEach(btn=>btn.addEventListener("click",()=>{btn.parentElement.querySelectorAll(".rating-btn").forEach(x=>x.classList.remove("selected"));btn.classList.add("selected");}));
-  document.querySelector("#surveyForm").addEventListener("submit",e=>{e.preventDefault();localStorage.setItem("dailyBriefLastSurvey",new Date().toISOString());const ratings={};document.querySelectorAll(".ratings[data-story]").forEach(g=>{const selected=g.querySelector(".rating-btn.selected");if(selected)ratings[g.dataset.story]=Number(selected.dataset.rating);});dbPost("surveys",{brief_date:state.brief.date,payload:{ratings,depth:e.target.depth.value,repeat:e.target.repeat.value,missing:e.target.missing.value}}).catch(()=>{});e.target.innerHTML='<div class="success"><strong>Thanks.</strong><p>Your feedback was saved locally in this prototype.</p></div>';});
+  document.querySelector("#surveyForm").addEventListener("submit",e=>{e.preventDefault();localStorage.setItem("dailyBriefLastSurvey",new Date().toISOString());const ratings={};document.querySelectorAll(".ratings[data-story]").forEach(g=>{const selected=g.querySelector(".rating-btn.selected");if(selected)ratings[g.dataset.story]=Number(selected.dataset.rating);});const payload={ratings,depth:e.target.depth.value,repeat:e.target.repeat.value,missing:e.target.missing.value};dbPost("surveys",{brief_date:state.brief.date,payload}).catch(()=>{});learnFromSurvey(ratings,payload.depth,payload.missing).catch(()=>{});e.target.innerHTML='<div class="success"><strong>Thanks.</strong><p>Your feedback will shape future topic and content selection.</p></div>';});
 }
 
 render();
