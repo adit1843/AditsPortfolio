@@ -15,7 +15,7 @@ function cleanJson(text) {
   return text.replace(/^\s*```(?:json)?/i, "").replace(/```\s*$/i, "").trim();
 }
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method === "GET") {
     return res.status(200).json({
       configured: Boolean(process.env.OPENAI_API_KEY),
