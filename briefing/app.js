@@ -120,14 +120,36 @@ async function generateLiveBrief(){
   }
 }
 
-function createExplainer(story){
+async function createExplainer(story){
   const existing=state.explainers.find(x=>x.storyId===story.id);
-  if(!existing){
-    const knowledge=state.knowledge.find(k=>story.category.toLowerCase().includes(k.topic.toLowerCase())||k.topic.toLowerCase().includes(story.category.toLowerCase()));
-    const explainer={id:Date.now(),storyId:story.id,title:`5-minute explainer: ${story.title}`,created:new Date().toLocaleDateString(),body:`You already have ${knowledge?"some":"limited"} background in this area, so this explainer skips generic definitions and focuses on the missing links. Start with the core mechanism behind today's story, then connect it to the practical consequence. The goal is not to influence tomorrow's story selection; it only updates the knowledge model after you tell us whether the explanation made sense.`};
-    state.explainers.unshift(explainer); localStorage.setItem("dailyBriefExplainers",JSON.stringify(state.explainers));
+  if(existing){state.view="explainers";render();return;}
+  const button=[...document.querySelectorAll(".teach-btn")].find(b=>b.closest(".story-card")?.querySelector(".story-title")?.textContent===story.title);
+  if(button){button.disabled=true;button.textContent="Creating explainer…";}
+  try{
+    const r=await fetch("/api/generate-explainer",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({story,knowledge:state.knowledge})
+    });
+    const data=await r.json();
+    if(!r.ok) throw new Error(data.error||"Explainer generation failed");
+    const explainer={
+      id:Date.now(),
+      storyId:story.id,
+      title:data.explainer.title,
+      created:new Date().toLocaleDateString(),
+      body:data.explainer.body,
+      takeaway:data.explainer.takeaway,
+      sources:data.explainer.sources||[]
+    };
+    state.explainers.unshift(explainer);
+    localStorage.setItem("dailyBriefExplainers",JSON.stringify(state.explainers));
+    state.view="explainers";
+    render();
+  }catch(e){
+    if(button){button.disabled=false;button.textContent="Teach me more";}
+    alert(e.message);
   }
-  state.view="explainers";render();
 }
 
 function renderArchive(){
@@ -137,7 +159,7 @@ function renderArchive(){
 }
 
 function renderExplainers(){
-  app.innerHTML=`<section class="hero"><div class="eyebrow">On-demand learning</div><h2>Explainers</h2><p>These are separate from story selection. Asking to learn more never pushes a topic into tomorrow's briefing.</p></section>`+(state.explainers.length?state.explainers.map(x=>`<article class="panel"><div class="eyebrow">${escapeHtml(x.created)}</div><h2>${escapeHtml(x.title)}</h2><p>${escapeHtml(x.body)}</p><div class="ratings"><button class="ghost" onclick="markUnderstood('${x.storyId}',true)">That made sense</button><button class="ghost" onclick="markUnderstood('${x.storyId}',false)">Still confused</button></div></article>`).join(""):`<div class="panel"><p class="muted">No explainers yet. Open Today and choose “Teach me more.”</p></div>`);
+  app.innerHTML=`<section class="hero"><div class="eyebrow">On-demand learning</div><h2>Explainers</h2><p>These are separate from story selection. Asking to learn more never pushes a topic into tomorrow's briefing.</p></section>`+(state.explainers.length?state.explainers.map(x=>`<article class="panel"><div class="eyebrow">${escapeHtml(x.created)}</div><h2>${escapeHtml(x.title)}</h2><div class="story-body">${bodyHtml(x.body)}</div>${x.takeaway?`<div class="panel"><strong>Key takeaway</strong><p>${escapeHtml(x.takeaway)}</p></div>`:""}${x.sources?.length?`<div class="story-sources">Sources: ${x.sources.map(sourceHtml).join(" · ")}</div>`:""}<div class="ratings"><button class="ghost" onclick="markUnderstood('${x.storyId}',true)">That made sense</button><button class="ghost" onclick="markUnderstood('${x.storyId}',false)">Still confused</button></div></article>`).join(""):`<div class="panel"><p class="muted">No explainers yet. Open Today and choose “Teach me more.”</p></div>`);
 }
 
 window.markUnderstood=function(storyId,understood){
