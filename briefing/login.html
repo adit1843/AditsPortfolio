@@ -33,7 +33,7 @@
       try{
         const r=await fetch("/api/auth-session");
         const d=await r.json();
-        if(d.authenticated) location.replace("/briefing/");
+        if(d.authenticated){const next=new URLSearchParams(location.search).get("next")||"/briefing/";location.replace(next);}
       }catch{}
     })();
     document.querySelector("#loginForm").addEventListener("submit",async e=>{
@@ -45,7 +45,7 @@
         const r=await fetch("/api/auth-login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:e.target.password.value})});
         const d=await r.json();
         if(!r.ok) throw new Error(d.error||"Sign-in failed");
-        location.replace("/briefing/");
+        const next=new URLSearchParams(location.search).get("next")||"/briefing/";location.replace(next);
       }catch(err){
         error.textContent=err.message;
         button.disabled=false;button.textContent="Enter Briefline";
