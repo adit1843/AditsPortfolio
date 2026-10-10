@@ -97,8 +97,9 @@ function renderToday(){
     <div id="stories"></div>
     <section class="panel">
       <div class="section-label">Feedback</div>
-      <h2>Tomorrow's brief learns from today's survey</h2>
-      <p class="muted">Your morning email includes the survey link, so there is nothing you need to trigger from this page.</p>
+      <h2>Help tomorrow's brief get better</h2>
+      <p class="muted">You can take today's survey here or use the survey link in your morning email.</p>
+      <button class="primary" id="surveyBtn">Take today's survey</button>
     </section>`;
 
   const holder=document.querySelector("#stories");
@@ -114,6 +115,8 @@ function renderToday(){
   });
   const generateBtn=document.querySelector("#generateBtn");
   if(generateBtn&&!generateBtn.disabled) generateBtn.addEventListener("click",generateLiveBrief);
+  const surveyBtn=document.querySelector("#surveyBtn");
+  if(surveyBtn) surveyBtn.addEventListener("click",renderSurvey);
 }
 
 async function generateLiveBrief(){
