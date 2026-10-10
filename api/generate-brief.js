@@ -1,3 +1,4 @@
+const {buildBriefPrompt}=require("./_brief_prompt");
 const {requireAuth}=require("./_auth");
 const MODEL = process.env.OPENAI_MODEL || "gpt-6-luna";
 
@@ -39,52 +40,12 @@ module.exports = async function handler(req, res) {
   const knowledge = req.body?.knowledge || [];
   const coverage = req.body?.coverage || [];
 
-  const prompt = `
-Create today's personalized current-events Daily Brief for one reader.
-
-Today is ${new Date().toISOString().slice(0, 10)}.
-
-Use web search to research current, important developments. Prefer primary sources and high-quality reporting. Do not invent facts, links, quotes, or publication details.
-
-Editorial goals:
-- About 5 to 7 stories.
-- Enough total detail for roughly a 15 to 20 minute read.
-- Mix personalized interests with important general news.
-- Avoid repeating background the reader already knows.
-- When genuinely useful, connect to prior coverage with natural wording like "Yesterday we discussed..." but only when the supplied coverage supports it.
-- Separate factual reporting from interpretation.
-- Explain why each story matters.
-- Do not let explainer requests influence story selection.
-- Favor novelty: if something is merely another version of a previously covered story, either skip it or focus only on what materially changed.
-
-Reader preferences:
-${JSON.stringify(preferences, null, 2)}
-
-Knowledge estimates:
-${JSON.stringify(knowledge, null, 2)}
-
-Recent coverage memory:
-${JSON.stringify(coverage, null, 2)}
-
-Return ONLY valid JSON, with no markdown fences or commentary, using exactly this shape:
-{
-  "date": "Month D, YYYY",
-  "readTime": "~N min",
-  "intro": "2-3 sentence editorial introduction",
-  "stories": [
-    {
-      "id": "short-kebab-case-id",
-      "category": "short category",
-      "title": "headline",
-      "summary": "1-2 sentence summary",
-      "body": "3-6 concise paragraphs as plain text separated by newline characters",
-      "sources": [
-        {"name": "source name", "url": "https://..."}
-      ]
-    }
-  ]
-}
-`;
+  const prompt = buildBriefPrompt({
+    date:new Date().toISOString().slice(0,10),
+    preferences,
+    knowledge,
+    coverage
+  });
 
   try {
     const response = await fetch("https://api.openai.com/v1/responses", {
