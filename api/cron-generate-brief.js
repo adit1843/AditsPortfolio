@@ -79,7 +79,7 @@ async function sendDailyEmail(brief,briefId){
       "Content-Type":"application/json"
     },
     body:JSON.stringify({
-      from:"Daily Brief <onboarding@resend.dev>",
+      from:"Briefline <briefline@mail.aditsanghani.com>",
       to:[SURVEY_EMAIL_TO],
       subject:`Your ${brief.date} Daily Brief is ready`,
       html
