@@ -13,7 +13,7 @@
         const r=await fetch("/api/auth-session",{cache:"no-store"});
         const d=await r.json();
         if(!d.authenticated){
-          location.replace("/briefing/login.html");
+          location.replace("/briefing/login.html?next="+encodeURIComponent(location.pathname+location.search));
           return;
         }
         document.documentElement.classList.remove("auth-pending");
