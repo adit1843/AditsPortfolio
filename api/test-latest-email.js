@@ -34,7 +34,7 @@ module.exports=async function handler(req,res){
         "Content-Type":"application/json"
       },
       body:JSON.stringify({
-        from:"Daily Brief <onboarding@resend.dev>",
+        from:"Briefline <briefline@mail.aditsanghani.com>",
         to:[SURVEY_EMAIL_TO],
         subject:`TEST · Your ${brief.date} Briefline is ready`,
         html:`<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:28px">
