@@ -1,3 +1,4 @@
+const {isAuthed}=require("./_auth");
 const MODEL = process.env.OPENAI_MODEL || "gpt-6-luna";
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -89,9 +90,11 @@ module.exports = async function handler(req,res){
     return res.status(503).json({error:"Daily generation is not fully configured."});
   }
 
-  if(CRON_SECRET){
-    const auth=req.headers.authorization;
-    if(auth !== `Bearer ${CRON_SECRET}`) return res.status(401).json({error:"Unauthorized"});
+  const auth=req.headers.authorization;
+  const cronAuthorized=Boolean(CRON_SECRET && auth === `Bearer ${CRON_SECRET}`);
+  const userAuthorized=isAuthed(req);
+  if(!cronAuthorized && !userAuthorized){
+    return res.status(401).json({error:"Unauthorized"});
   }
 
   try{
