@@ -730,10 +730,10 @@ async function generateLiveBrief(){
 }
 
 async function createExplainer(story){
-  const existing=state.explainers.find(x=>x.storyId===story.id);
-  if(existing){state.view="explainers";render();return;}
+  const existing=state.explainers.find(x=>String(x.storyId)===String(story.id));
+  if(existing){state.libraryFocus=String(existing.id||existing.storyId);state.view="explainers";render();return;}
   const button=[...document.querySelectorAll(".teach-btn")].find(b=>b.closest(".story-card")?.querySelector(".story-title")?.textContent===story.title);
-  if(button){button.disabled=true;button.textContent="Creating explainer…";}
+  if(button){button.disabled=true;button.textContent="Creating deep dive…";}
   try{
     const r=await fetch("/api/generate-explainer",{
       method:"POST",
@@ -747,18 +747,23 @@ async function createExplainer(story){
       storyId:story.id,
       title:data.explainer.title,
       created:new Date().toLocaleDateString(),
+      createdAt:new Date().toISOString(),
+      category:story.tags?.taxonomy?.domain||story.category||story.topics?.[0]||"General",
+      taxonomy:story.tags?.taxonomy||null,
+      originalStoryTitle:story.title,
       body:data.explainer.body,
       takeaway:data.explainer.takeaway,
       sources:data.explainer.sources||[],
       concepts:data.explainer.conceptsCovered||conceptNames(story)
     };
     state.explainers.unshift(explainer);
+    state.libraryFocus=String(explainer.id);
 
     dbPost("explainers",{story_id:story.id,payload:explainer}).catch(()=>{});
     state.view="explainers";
     render();
   }catch(e){
-    if(button){button.disabled=false;button.textContent="Teach me more";}
+    if(button){button.disabled=false;button.textContent="Deep dive";}
     alert(e.message);
   }
 }
@@ -791,8 +796,135 @@ function renderArchive(){
   app.innerHTML=`<section class="hero"><div class="eyebrow">Coverage memory</div><h2>Archive</h2><p>Previous editions become editorial memory so new briefs can reference what you already heard without repeating it.</p></section>${current}${past||'<div class="panel"><p class="muted">No prior generated editions yet.</p></div>'}`;
 }
 
+function libraryTopic(x){
+  return String(x.category||x.taxonomy?.domain||x.concepts?.[0]||"General").trim()||"General";
+}
+function libraryDateValue(x){
+  const raw=x.createdAt||x.created||"";
+  const t=Date.parse(raw);
+  return Number.isFinite(t)?t:0;
+}
 function renderExplainers(){
-  app.innerHTML=`<section class="hero"><div class="eyebrow">On-demand learning</div><h2>Explainers</h2><p>These are separate from story selection. Asking to learn more never pushes a topic into tomorrow's briefing.</p></section>`+(state.explainers.length?state.explainers.map(x=>`<article class="panel"><div class="eyebrow">${escapeHtml(x.created)}</div><h2>${escapeHtml(x.title)}</h2><div class="story-body">${bodyHtml(x.body)}</div>${x.takeaway?`<div class="panel"><strong>Key takeaway</strong><p>${escapeHtml(x.takeaway)}</p></div>`:""}${x.sources?.length?`<div class="story-sources">Sources: ${x.sources.map(sourceHtml).join(" · ")}</div>`:""}<div class="ratings"><button class="ghost" onclick="markUnderstood('${x.storyId}',true)">That made sense</button><button class="ghost" onclick="markUnderstood('${x.storyId}',false)">Still confused</button></div></article>`).join(""):`<div class="panel"><p class="muted">No explainers yet. Open Today and choose “Teach me more.”</p></div>`);
+  const all=[...state.explainers];
+  const topics=[...new Set(all.map(libraryTopic))].sort((a,b)=>a.localeCompare(b));
+  app.innerHTML=`
+    <section class="hero library-hero">
+      <div class="eyebrow">Saved learning</div>
+      <h2>Library</h2>
+      <p>Your Deep Dives live here as a reference library. Search by idea, filter by topic, and open only what you need. Creating a Deep Dive still does not change what Neosis selects for future editions.</p>
+    </section>
+    ${all.length?`
+      <section class="library-toolbar panel">
+        <div class="library-search field">
+          <label for="librarySearch">Find a Deep Dive</label>
+          <input id="librarySearch" type="search" placeholder="Search titles, topics, concepts, or takeaways…" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="libraryTopic">Topic</label>
+          <select id="libraryTopic">
+            <option value="">All topics</option>
+            ${topics.map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join("")}
+          </select>
+        </div>
+        <div class="field">
+          <label for="librarySort">Sort</label>
+          <select id="librarySort">
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+            <option value="topic">Topic A–Z</option>
+            <option value="title">Title A–Z</option>
+          </select>
+        </div>
+      </section>
+      <div class="library-count" id="libraryCount"></div>
+      <div id="libraryResults"></div>
+    `:`<div class="panel library-empty"><h3>No Deep Dives yet</h3><p class="muted">Open Today and choose <strong>Deep dive</strong> on a story you want to understand more deeply. It will be saved here for later.</p></div>`}
+  `;
+
+  if(!all.length)return;
+
+  const search=document.querySelector("#librarySearch");
+  const topic=document.querySelector("#libraryTopic");
+  const sort=document.querySelector("#librarySort");
+  const results=document.querySelector("#libraryResults");
+  const count=document.querySelector("#libraryCount");
+
+  const renderResults=()=>{
+    const q=search.value.trim().toLowerCase();
+    const selectedTopic=topic.value;
+    const order=sort.value;
+    let items=all.filter(x=>{
+      const t=libraryTopic(x);
+      if(selectedTopic&&t!==selectedTopic)return false;
+      if(!q)return true;
+      const hay=[x.title,x.originalStoryTitle,t,x.takeaway,...(x.concepts||[])].filter(Boolean).join(" ").toLowerCase();
+      return hay.includes(q);
+    });
+
+    items.sort((a,b)=>{
+      if(order==="oldest")return libraryDateValue(a)-libraryDateValue(b);
+      if(order==="topic")return libraryTopic(a).localeCompare(libraryTopic(b))||String(a.title||"").localeCompare(String(b.title||""));
+      if(order==="title")return String(a.title||"").localeCompare(String(b.title||""));
+      return libraryDateValue(b)-libraryDateValue(a);
+    });
+
+    count.textContent=`${items.length} Deep Dive${items.length===1?"":"s"}${selectedTopic?` · ${selectedTopic}`:""}`;
+
+    if(!items.length){
+      results.innerHTML='<div class="panel library-empty"><strong>No matches</strong><p class="muted">Try a broader search or choose a different topic.</p></div>';
+      return;
+    }
+
+    const grouped=order==="topic";
+    if(grouped){
+      const groups=new Map();
+      items.forEach(x=>{const t=libraryTopic(x);if(!groups.has(t))groups.set(t,[]);groups.get(t).push(x);});
+      results.innerHTML=[...groups.entries()].map(([label,group])=>`
+        <section class="library-group">
+          <div class="library-group-heading"><h3>${escapeHtml(label)}</h3><span>${group.length}</span></div>
+          <div class="library-list">${group.map(libraryCardHtml).join("")}</div>
+        </section>
+      `).join("");
+    }else{
+      results.innerHTML=`<div class="library-list">${items.map(libraryCardHtml).join("")}</div>`;
+    }
+
+    if(state.libraryFocus){
+      const el=document.querySelector(`details[data-library-id="${CSS.escape(String(state.libraryFocus))}"]`);
+      if(el){el.open=true;setTimeout(()=>el.scrollIntoView({behavior:"smooth",block:"center"}),50);}
+      state.libraryFocus=null;
+    }
+  };
+
+  search.addEventListener("input",renderResults);
+  topic.addEventListener("change",renderResults);
+  sort.addEventListener("change",renderResults);
+  renderResults();
+}
+function libraryCardHtml(x){
+  const id=String(x.id||x.storyId||x.title);
+  const topic=libraryTopic(x);
+  const concepts=(x.concepts||[]).slice(0,4);
+  const date=x.created||((x.createdAt&&new Date(x.createdAt).toLocaleDateString())||"");
+  return `
+    <details class="library-card" data-library-id="${escapeHtml(id)}">
+      <summary>
+        <div class="library-card-main">
+          <div class="library-card-meta"><span class="library-topic">${escapeHtml(topic)}</span>${date?`<span>${escapeHtml(date)}</span>`:""}</div>
+          <h3>${escapeHtml(x.title||"Untitled Deep Dive")}</h3>
+          ${x.takeaway?`<p>${escapeHtml(x.takeaway)}</p>`:""}
+          ${concepts.length?`<div class="library-tags">${concepts.map(c=>`<span>${escapeHtml(c)}</span>`).join("")}</div>`:""}
+        </div>
+        <span class="library-open-label">Open</span>
+      </summary>
+      <div class="library-card-content">
+        ${x.originalStoryTitle?`<div class="library-origin"><span>From</span> ${escapeHtml(x.originalStoryTitle)}</div>`:""}
+        <div class="story-body">${bodyHtml(x.body)}</div>
+        ${x.takeaway?`<div class="library-takeaway"><strong>Key takeaway</strong><p>${escapeHtml(x.takeaway)}</p></div>`:""}
+        ${x.sources?.length?`<div class="story-sources">Sources: ${x.sources.map(sourceHtml).join(" · ")}</div>`:""}
+        <div class="ratings"><button class="ghost" onclick="markUnderstood('${escapeHtml(String(x.storyId))}',true)">That made sense</button><button class="ghost" onclick="markUnderstood('${escapeHtml(String(x.storyId))}',false)">Still confused</button></div>
+      </div>
+    </details>`;
 }
 
 window.markUnderstood=function(storyId,understood){
