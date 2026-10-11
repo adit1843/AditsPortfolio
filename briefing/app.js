@@ -229,7 +229,7 @@ function audioPanelHtml(){
     <section class="panel" id="audioBrief">
       <div class="eyebrow">Produced audio edition</div>
       <h2>Listen to today's Neosis</h2>
-      <p class="muted" id="audioNow">Ready · ${segments.length} produced segments · music & transitions enabled</p>
+      <p class="muted" id="audioNow">Ready · ${segments.length} produced segments · production baked into audio</p>
       <audio id="briefAudio" controls preload="metadata" style="width:100%"></audio>
       <div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-top:12px">
         <div class="field" style="max-width:180px;margin:0">
@@ -248,7 +248,7 @@ function audioPanelHtml(){
 }
 
 async function generateAudioForCurrentBrief(){
-  if(!state.briefDbId || state.brief?.audio?.segments?.length) return;
+  if(!state.briefDbId || (state.brief?.audio?.segments?.length&&Number(state.brief?.audio?.productionVersion||0)>=2)) return;
   state.audioGenerating=true;
   renderToday();
   try{
@@ -274,184 +274,12 @@ function setupBriefAudio(){
   if(!audio) return;
   const segments=state.brief?.audio?.segments||[];
   let index=0,seeking=false,lastTime=0;
-  let audioCtx=null,mediaSource=null,voiceGain=null,musicGain=null,masterGain=null,compressor=null;
-  let introStingPlayed=false,transitionBusy=false,introBedTimer=null;
   const listened=Array(segments.length).fill(0);
   const durations=Array(segments.length).fill(0);
   const now=document.querySelector("#audioNow");
   const speed=document.querySelector("#audioSpeed");
-
   const chapterKey=seg=>seg?.storyId||seg?.kind||"intro";
   const chapterIndexes=chapter=>segments.map((seg,i)=>chapterKey(seg)===chapter?i:-1).filter(i=>i>=0);
-
-  const ensureAudioGraph=()=>{
-    if(audioCtx) return audioCtx;
-    const AudioContextClass=window.AudioContext||window.webkitAudioContext;
-    if(!AudioContextClass) return null;
-    audioCtx=new AudioContextClass();
-    mediaSource=audioCtx.createMediaElementSource(audio);
-    voiceGain=audioCtx.createGain();
-    musicGain=audioCtx.createGain();
-    masterGain=audioCtx.createGain();
-    compressor=audioCtx.createDynamicsCompressor();
-
-    voiceGain.gain.value=1;
-    musicGain.gain.value=.0001;
-    masterGain.gain.value=.93;
-    compressor.threshold.value=-18;
-    compressor.knee.value=14;
-    compressor.ratio.value=3;
-    compressor.attack.value=.008;
-    compressor.release.value=.22;
-
-    mediaSource.connect(voiceGain).connect(masterGain);
-    musicGain.connect(masterGain);
-    masterGain.connect(compressor).connect(audioCtx.destination);
-    return audioCtx;
-  };
-
-  const gainEnvelope=(gain,start,peak,end,attack=.05,release=.18)=>{
-    gain.gain.cancelScheduledValues(start);
-    gain.gain.setValueAtTime(.0001,start);
-    gain.gain.exponentialRampToValueAtTime(Math.max(.0002,peak),start+attack);
-    gain.gain.exponentialRampToValueAtTime(.0001,end-release);
-    gain.gain.setValueAtTime(.0001,end);
-  };
-
-  const tone=(frequency,start,duration,volume=.02,type="sine",destination=null,detune=0,filterHz=null)=>{
-    const ctx=ensureAudioGraph();if(!ctx)return;
-    const osc=ctx.createOscillator(),g=ctx.createGain();
-    osc.type=type;osc.frequency.setValueAtTime(frequency,start);osc.detune.value=detune;
-    let dest=g;
-    if(filterHz){
-      const f=ctx.createBiquadFilter();f.type="lowpass";f.frequency.value=filterHz;osc.connect(f).connect(g);
-    }else osc.connect(g);
-    gainEnvelope(g,start,volume,start+duration,Math.min(.06,duration*.18),Math.min(.22,duration*.3));
-    g.connect(destination||ctx.destination);
-    osc.start(start);osc.stop(start+duration+.03);
-  };
-
-  const noiseSweep=(start,duration,volume=.004,fromHz=900,toHz=5200)=>{
-    const ctx=ensureAudioGraph();if(!ctx)return;
-    const frames=Math.max(1,Math.floor(ctx.sampleRate*duration));
-    const buffer=ctx.createBuffer(1,frames,ctx.sampleRate),data=buffer.getChannelData(0);
-    for(let i=0;i<frames;i++)data[i]=(Math.random()*2-1)*(1-i/frames*.2);
-    const src=ctx.createBufferSource(),filter=ctx.createBiquadFilter(),g=ctx.createGain();
-    filter.type="bandpass";filter.Q.value=.7;
-    filter.frequency.setValueAtTime(fromHz,start);
-    filter.frequency.exponentialRampToValueAtTime(Math.max(fromHz+1,toHz),start+duration);
-    gainEnvelope(g,start,volume,start+duration,.12,.16);
-    src.buffer=buffer;src.connect(filter).connect(g).connect(ctx.destination);
-    src.start(start);src.stop(start+duration);
-  };
-
-  const lowHit=(start,volume=.018)=>{
-    const ctx=ensureAudioGraph();if(!ctx)return;
-    const osc=ctx.createOscillator(),g=ctx.createGain(),f=ctx.createBiquadFilter();
-    osc.type="sine";
-    osc.frequency.setValueAtTime(82.41,start);
-    osc.frequency.exponentialRampToValueAtTime(48,start+.34);
-    f.type="lowpass";f.frequency.value=180;
-    g.gain.setValueAtTime(.0001,start);
-    g.gain.exponentialRampToValueAtTime(volume,start+.018);
-    g.gain.exponentialRampToValueAtTime(.0001,start+.62);
-    osc.connect(f).connect(g).connect(ctx.destination);
-    osc.start(start);osc.stop(start+.68);
-  };
-
-  const clickPulse=(start,frequency=1200,volume=.0025)=>{
-    const ctx=ensureAudioGraph();if(!ctx)return;
-    const osc=ctx.createOscillator(),g=ctx.createGain(),f=ctx.createBiquadFilter();
-    osc.type="triangle";osc.frequency.value=frequency;
-    f.type="highpass";f.frequency.value=600;
-    g.gain.setValueAtTime(volume,start);
-    g.gain.exponentialRampToValueAtTime(.0001,start+.08);
-    osc.connect(f).connect(g).connect(ctx.destination);
-    osc.start(start);osc.stop(start+.09);
-  };
-
-  const playSonicLogo=async(outro=false)=>{
-    const ctx=ensureAudioGraph();if(!ctx)return;
-    if(ctx.state==="suspended")await ctx.resume();
-    const t=ctx.currentTime+.035;
-    if(!outro){
-      lowHit(t,.014);
-      noiseSweep(t+.04,.95,.0028,700,4300);
-      tone(146.83,t+.08,.92,.006,"sine",null,-5,700);
-      tone(220,t+.22,.86,.0065,"triangle",null,3,1200);
-      tone(293.66,t+.46,.82,.006,"sine",null,-2,1800);
-      tone(369.99,t+.68,.96,.0065,"sine",null,4,2200);
-      tone(587.33,t+.92,.72,.0038,"sine",null,0,3500);
-      await new Promise(r=>setTimeout(r,1550));
-    }else{
-      tone(369.99,t,.58,.0055,"sine");
-      tone(293.66,t+.14,.68,.005,"sine");
-      tone(220,t+.34,.82,.0048,"triangle");
-      tone(146.83,t+.58,1.12,.0042,"sine",null,-4,700);
-      lowHit(t+.54,.010);
-      await new Promise(r=>setTimeout(r,1450));
-    }
-  };
-
-  const startIntroBed=()=>{
-    const ctx=ensureAudioGraph();if(!ctx||!musicGain)return;
-    const t=ctx.currentTime;
-    musicGain.gain.cancelScheduledValues(t);
-    musicGain.gain.setValueAtTime(.0001,t);
-    musicGain.gain.exponentialRampToValueAtTime(.017,t+.7);
-
-    // Cinematic editorial bed: low drone, restrained pulse, glassy motif.
-    [
-      [73.42,"sine",.50,-6,420],
-      [110,"triangle",.18,3,560],
-      [146.83,"sine",.11,-3,740],
-      [220,"sine",.035,4,900]
-    ].forEach(([f,type,level,detune,cut])=>{
-      const osc=ctx.createOscillator(),g=ctx.createGain(),filter=ctx.createBiquadFilter();
-      osc.type=type;osc.frequency.value=f;osc.detune.value=detune;
-      filter.type="lowpass";filter.frequency.value=cut;filter.Q.value=.5;g.gain.value=level;
-      osc.connect(filter).connect(g).connect(musicGain);osc.start(t);osc.stop(t+15.5);
-    });
-
-    [0,.95,1.9,2.85,3.8,4.75,5.7,6.65,7.6].forEach((off,i)=>{
-      tone(i%4===0?73.42:110,t+off,.34,i%4===0?.010:.0045,"sine",musicGain,0,260);
-      clickPulse(t+off+.48,i%2?1480:1180,.0018);
-    });
-
-    const motif=[293.66,329.63,369.99,440,369.99,493.88];
-    [0,1.55,3.1,4.65,6.2,7.75].forEach((off,i)=>{
-      tone(motif[i],t+off+.36,.70,.0026,"sine",musicGain,i%2?3:-3,2400);
-    });
-
-    noiseSweep(t+.2,1.3,.0016,700,3100);
-    introBedTimer=setTimeout(()=>{
-      const tt=ctx.currentTime;
-      musicGain.gain.cancelScheduledValues(tt);
-      musicGain.gain.setValueAtTime(Math.max(.0001,musicGain.gain.value),tt);
-      musicGain.gain.exponentialRampToValueAtTime(.0001,tt+2.4);
-    },10200);
-  };
-
-  const playTransition=async(kind="story")=>{
-    const ctx=ensureAudioGraph();if(!ctx)return;
-    if(ctx.state==="suspended")await ctx.resume();
-    const t=ctx.currentTime+.025;
-    if(kind==="outro"){
-      noiseSweep(t,.52,.0018,2600,900);
-      tone(369.99,t,.42,.0048,"sine");
-      tone(293.66,t+.12,.52,.0045,"sine");
-      tone(220,t+.28,.72,.0042,"triangle");
-      lowHit(t+.20,.008);
-      await new Promise(r=>setTimeout(r,720));
-    }else{
-      lowHit(t,.007);
-      noiseSweep(t+.02,.48,.0019,800,5200);
-      tone(293.66,t+.08,.32,.0037,"triangle");
-      tone(369.99,t+.22,.40,.0042,"sine");
-      clickPulse(t+.39,1700,.0019);
-      await new Promise(r=>setTimeout(r,610));
-    }
-  };
 
   const maybeCreditChapter=chapter=>{
     if(!chapter||chapter==="intro"||chapter==="outro")return;
@@ -472,21 +300,8 @@ function setupBriefAudio(){
     audio.playbackRate=Number(speed?.value||1);
     if(now)now.textContent=`Now playing ${index+1} of ${segments.length} · ${seg.label||"Neosis"}`;
   };
-  const playLoaded=async()=>{try{const ctx=ensureAudioGraph();if(ctx?.state==="suspended")await ctx.resume();await audio.play();}catch{}};
-
+  const playLoaded=async()=>{try{await audio.play();}catch{}};
   load(0);
-
-  audio.addEventListener("play",async()=>{
-    const ctx=ensureAudioGraph();if(ctx?.state==="suspended")await ctx.resume();
-    if(index===0&&!introStingPlayed&&audio.currentTime<.4&&!transitionBusy){
-      introStingPlayed=true;transitionBusy=true;audio.pause();
-      if(now)now.textContent="Neosis · opening today’s edition…";
-      await playSonicLogo(false);
-      startIntroBed();
-      transitionBusy=false;
-      await playLoaded();
-    }
-  });
 
   audio.addEventListener("loadedmetadata",()=>{if(Number.isFinite(audio.duration)&&audio.duration>0)durations[index]=audio.duration;lastTime=audio.currentTime||0;});
   audio.addEventListener("seeking",()=>{seeking=true;});
@@ -496,40 +311,22 @@ function setupBriefAudio(){
     if(!seeking&&!audio.paused&&delta>0&&delta<3)listened[index]=Math.min((durations[index]||Infinity),listened[index]+delta);
     lastTime=current;
   });
-
   audio.addEventListener("ended",async()=>{
     if(durations[index])listened[index]=Math.max(listened[index],durations[index]);
     const finishedChapter=chapterKey(segments[index]),nextIndex=index+1;
     const nextChapter=nextIndex<segments.length?chapterKey(segments[nextIndex]):null;
     if(nextChapter!==finishedChapter)maybeCreditChapter(finishedChapter);
-
-    if(nextIndex<segments.length){
-      if(nextChapter!==finishedChapter){
-        if(now)now.textContent="Next story…";
-        await playTransition(nextChapter==="outro"?"outro":"story");
-      }
-      load(nextIndex);await playLoaded();
-    }else if(now){
-      await playSonicLogo(true);
-      now.textContent="Finished today's Neosis.";
-    }
+    if(nextIndex<segments.length){load(nextIndex);await playLoaded();}
+    else if(now)now.textContent="Finished today's Neosis.";
   });
-
   if(speed)speed.addEventListener("change",()=>{audio.playbackRate=Number(speed.value||1);});
   const nextChapter=document.querySelector("#nextChapterBtn");
   if(nextChapter)nextChapter.addEventListener("click",async()=>{
     const currentChapter=chapterKey(segments[index]);maybeCreditChapter(currentChapter);
     let next=index+1;while(next<segments.length&&chapterKey(segments[next])===currentChapter)next++;
-    if(next<segments.length){
-      await playTransition(chapterKey(segments[next])==="outro"?"outro":"story");
-      load(next);await playLoaded();
-    }else{if(now)now.textContent="Finished today's Neosis.";audio.pause();}
+    if(next<segments.length){load(next);await playLoaded();}
+    else{if(now)now.textContent="Finished today's Neosis.";audio.pause();}
   });
-
-  window.addEventListener("beforeunload",()=>{
-    if(introBedTimer)clearTimeout(introBedTimer);
-    try{audioCtx?.close();}catch{}
-  },{once:true});
 }
 
 async function checkApi(){
