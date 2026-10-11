@@ -128,6 +128,35 @@ async function bumpKnowledge(concepts,delta,eventKey){
   state.knowledge.seenEvents[eventKey]=new Date().toISOString();
   await dbPost("knowledge",{payload:state.knowledge});
 }
+
+async function creditStoryConsumption(story,credit,modality){
+  if(!story || !state.briefDbId) return;
+  const eventKey=`${state.briefDbId}:${story.id}:consumed`;
+  const prior=state.knowledge.seenEvents[eventKey];
+  const priorCredit=(prior&&typeof prior==="object")?Number(prior.credit)||0:(prior?3:0);
+  const targetCredit=Math.max(priorCredit,Number(credit)||0);
+  const delta=targetCredit-priorCredit;
+  if(delta<=0) return;
+
+  const names=[...new Set(conceptNames(story).map(x=>String(x).trim()).filter(Boolean))];
+  if(!names.length) return;
+  for(const label of names){
+    const key=canonicalConcept(label);
+    const current=state.knowledge.concepts[key]||{label,score:0,exposures:0};
+    current.label=current.label||label;
+    current.score=clamp((Number(current.score)||0)+delta);
+    current.exposures=(Number(current.exposures)||0)+(priorCredit===0?1:0);
+    current.lastSeen=new Date().toISOString();
+    state.knowledge.concepts[key]=current;
+  }
+  state.knowledge.seenEvents[eventKey]={
+    at:new Date().toISOString(),
+    credit:targetCredit,
+    modality
+  };
+  await dbPost("knowledge",{payload:state.knowledge});
+}
+
 function setupStoryReadTracking(){
   if(!state.briefDbId || !("IntersectionObserver" in window)) return;
   const timers=new Map();
@@ -138,7 +167,7 @@ function setupStoryReadTracking(){
         if(!timers.has(id)){
           timers.set(id,setTimeout(()=>{
             const story=state.brief.stories.find(s=>String(s.id)===String(id));
-            if(story) bumpKnowledge(conceptNames(story),3,`${state.briefDbId}:${id}:story-read`).catch(()=>{});
+            if(story) creditStoryConsumption(story,2,"read").catch(()=>{});
             observer.unobserve(entry.target);
             timers.delete(id);
           },7000));
@@ -235,42 +264,85 @@ function setupBriefAudio(){
   if(!audio) return;
   const segments=state.brief?.audio?.segments||[];
   let index=0;
+  let seeking=false;
+  let lastTime=0;
+  const listened=Array(segments.length).fill(0);
+  const durations=Array(segments.length).fill(0);
   const now=document.querySelector("#audioNow");
   const speed=document.querySelector("#audioSpeed");
+
+  const chapterKey=seg=>seg?.storyId||seg?.kind||"intro";
+  const chapterIndexes=chapter=>segments.map((seg,i)=>chapterKey(seg)===chapter?i:-1).filter(i=>i>=0);
+
+  const maybeCreditChapter=chapter=>{
+    if(!chapter || chapter==="intro") return;
+    const indexes=chapterIndexes(chapter);
+    if(!indexes.length || indexes.some(i=>!durations[i])) return;
+    const total= indexes.reduce((sum,i)=>sum+durations[i],0);
+    const heard= indexes.reduce((sum,i)=>sum+Math.min(listened[i],durations[i]),0);
+    if(total>0 && heard/total>=0.75){
+      const story=state.brief.stories.find(s=>String(s.id)===String(chapter));
+      if(story) creditStoryConsumption(story,3,"audio").catch(()=>{});
+    }
+  };
+
   const load=i=>{
     index=Math.max(0,Math.min(segments.length-1,i));
     const seg=segments[index];
+    lastTime=0;
     audio.src=`/api/brief-audio?path=${encodeURIComponent(seg.path)}`;
     audio.playbackRate=Number(speed?.value||1);
     if(now) now.textContent=`Now playing ${index+1} of ${segments.length} · ${seg.label||"Briefline"}`;
   };
+
   load(0);
+
+  audio.addEventListener("loadedmetadata",()=>{
+    if(Number.isFinite(audio.duration)&&audio.duration>0) durations[index]=audio.duration;
+    lastTime=audio.currentTime||0;
+  });
+  audio.addEventListener("seeking",()=>{seeking=true;});
+  audio.addEventListener("seeked",()=>{
+    seeking=false;
+    lastTime=audio.currentTime||0;
+  });
+  audio.addEventListener("timeupdate",()=>{
+    const current=audio.currentTime||0;
+    const delta=current-lastTime;
+    if(!seeking && !audio.paused && delta>0 && delta<3){
+      listened[index]=Math.min((durations[index]||Infinity),listened[index]+delta);
+    }
+    lastTime=current;
+  });
   audio.addEventListener("ended",()=>{
-    if(index<segments.length-1){
-      load(index+1);
+    if(durations[index]) listened[index]=Math.max(listened[index],durations[index]);
+    const finishedChapter=chapterKey(segments[index]);
+    const nextIndex=index+1;
+    const nextChapter=nextIndex<segments.length?chapterKey(segments[nextIndex]):null;
+    if(nextChapter!==finishedChapter) maybeCreditChapter(finishedChapter);
+
+    if(nextIndex<segments.length){
+      load(nextIndex);
       audio.play().catch(()=>{});
     }else if(now){
       now.textContent="Finished today's Briefline.";
     }
   });
+
   if(speed) speed.addEventListener("change",()=>{audio.playbackRate=Number(speed.value||1);});
+
   const nextChapter=document.querySelector("#nextChapterBtn");
   if(nextChapter) nextChapter.addEventListener("click",()=>{
-    const current=segments[index];
-    const currentChapter=current?.storyId||current?.kind||"intro";
+    const currentChapter=chapterKey(segments[index]);
+    maybeCreditChapter(currentChapter);
     let next=index+1;
-    while(next<segments.length){
-      const candidate=segments[next];
-      const candidateChapter=candidate?.storyId||candidate?.kind||"intro";
-      if(candidateChapter!==currentChapter) break;
-      next++;
-    }
+    while(next<segments.length && chapterKey(segments[next])===currentChapter) next++;
     if(next<segments.length){
       load(next);
       audio.play().catch(()=>{});
     }else{
-      audio.currentTime=audio.duration||0;
       if(now) now.textContent="Finished today's Briefline.";
+      audio.pause();
     }
   });
 }
