@@ -28,6 +28,7 @@ const state={
     tuningHistory:[]
   },
   coverage:[],
+  archivedBriefs:[],
   api:{configured:false,model:null,loading:true,error:null,canRegenerate:true},
   hydrating:true,
   dbError:null,
@@ -57,6 +58,7 @@ async function hydrateFromDatabase(){
     const requestedBrief=params.get("brief");
     const requestedDate=params.get("date");
 
+    state.archivedBriefs=briefs.filter(x=>x?.payload).map(x=>({id:x.id,briefDate:x.brief_date,payload:x.payload,createdAt:x.created_at}));
     if(briefs.length){
       const match=requestedBrief
         ? briefs.find(x=>String(x.id)===String(requestedBrief))
@@ -635,10 +637,71 @@ async function finishBrief(){
   }
 }
 
+function archiveDateValue(x){
+  const raw=x?.payload?.date||x?.briefDate||x?.createdAt||"";
+  const t=Date.parse(raw);
+  return Number.isFinite(t)?t:0;
+}
 function renderArchive(){
-  const current=`<div class="panel"><strong>${escapeHtml(state.brief.date)}</strong><p class="muted">Current brief · ${state.brief.stories.length} stories</p></div>`;
-  const past=state.coverage.map(x=>`<div class="panel"><strong>${escapeHtml(x.date)}</strong><p class="muted">${x.stories.length} stories remembered for future continuity</p></div>`).join("");
-  app.innerHTML=`<section class="hero"><div class="eyebrow">Coverage memory</div><h2>Archive</h2><p>Previous editions become editorial memory so new briefs can reference what you already heard without repeating it.</p></section>${current}${past||'<div class="panel"><p class="muted">No prior generated editions yet.</p></div>'}`;
+  const briefs=[...state.archivedBriefs].sort((a,b)=>archiveDateValue(b)-archiveDateValue(a));
+  app.innerHTML=`
+    <section class="hero archive-hero">
+      <div class="eyebrow">Your history</div>
+      <h2>Archive</h2>
+      <p>Every saved Neosis edition, ready to revisit. Open any day to read the complete briefing exactly as it was saved.</p>
+    </section>
+    <section class="archive-grid">
+      ${briefs.length?briefs.map((row,i)=>{
+        const b=row.payload||{},stories=b.stories||[],first=stories[0];
+        return `
+          <button class="archive-card" type="button" data-archive-id="${escapeHtml(String(row.id))}">
+            <div class="archive-card-top">
+              <span class="archive-date">${escapeHtml(b.date||row.briefDate||"Saved edition")}</span>
+              <span class="archive-count">${stories.length} stor${stories.length===1?"y":"ies"}</span>
+            </div>
+            <h3>${escapeHtml(first?.title||"Neosis daily edition")}</h3>
+            <p>${escapeHtml(first?.summary||b.intro||"Open this edition to read the full briefing.")}</p>
+            <div class="archive-card-foot">
+              <span>${escapeHtml(b.readTime||"Daily brief")}</span>
+              <span>Read edition ↗</span>
+            </div>
+          </button>`;
+      }).join(""):'<div class="panel"><p class="muted">No saved editions yet.</p></div>'}
+    </section>`;
+
+  document.querySelectorAll(".archive-card").forEach(card=>card.addEventListener("click",()=>{
+    const row=state.archivedBriefs.find(x=>String(x.id)===String(card.dataset.archiveId));
+    if(row)renderArchivedBrief(row);
+  }));
+}
+
+function renderArchivedBrief(row){
+  const brief=row.payload||{};
+  app.innerHTML=`
+    <button class="archive-back" type="button" id="archiveBack">← Back to Archive</button>
+    <section class="archive-reader-hero">
+      <div class="archive-reader-meta">
+        <span>${escapeHtml(brief.date||row.briefDate||"Saved edition")}</span>
+        <i></i>
+        <span>${escapeHtml(brief.readTime||"Daily brief")}</span>
+      </div>
+      <div class="eyebrow">Past edition</div>
+      <h2>${escapeHtml(brief.date||"Neosis")}</h2>
+      <p>${escapeHtml(brief.intro||"A saved Neosis edition.")}</p>
+    </section>
+    <div class="archive-reader-list">
+      ${(brief.stories||[]).map((story,i)=>`
+        <article class="story-card archive-story">
+          <div class="story-accent" aria-hidden="true"></div>
+          <div class="story-meta"><span class="story-index">${String(i+1).padStart(2,"0")}</span><span>${escapeHtml(story.contentType?story.contentType.replace(/_/g," "):story.category||"Story")}</span><i></i><span>${escapeHtml(story.category||"Neosis")}</span></div>
+          <h2 class="story-title">${escapeHtml(story.title||"Untitled story")}</h2>
+          <p class="story-summary">${escapeHtml(story.summary||"")}</p>
+          <div class="story-body">${bodyHtml(story.body||"")}</div>
+          ${story.sources?.length?`<div class="story-sources"><span>Sources</span> ${story.sources.map(sourceHtml).join(" · ")}</div>`:""}
+        </article>`).join("")||'<div class="panel"><p class="muted">This saved edition has no stories.</p></div>'}
+    </div>`;
+
+  document.querySelector("#archiveBack")?.addEventListener("click",renderArchive);
 }
 
 function libraryTopic(x){
