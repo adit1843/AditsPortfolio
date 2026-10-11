@@ -1,5 +1,5 @@
-const {requireAuth}=require("./_auth");
-const {generateBriefAudio}=require("./_google_tts");
+const {requireAuth}=require("../lib/briefline/auth");
+const {generateBriefAudio}=require("../lib/briefline/google-tts");
 
 const SUPABASE_URL=process.env.SUPABASE_URL;
 const SUPABASE_SECRET_KEY=process.env.SUPABASE_SECRET_KEY;
