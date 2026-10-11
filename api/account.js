@@ -1,15 +1,35 @@
-const {requireAuth}=require("../lib/briefline/auth");const {userRows,insertUserRow,upsert,encryptSecret,getProfile}=require("../lib/briefline/store");
-async function validateKey(k){const r=await fetch("https://api.openai.com/v1/models",{headers:{Authorization:`Bearer ${k}`}});if(!r.ok){let d={};try{d=await r.json();}catch{}throw new Error(d?.error?.message||"OpenAI rejected this API key.");}}
+const {requireAuth}=require("../lib/briefline/auth");
+const {userRows,insertUserRow,upsert,getProfile,request}=require("../lib/briefline/store");
+
 function defaults(){return{generalNews:40,politics:"important-only",markets:true,topicScores:{},contentTypeScores:{news:55,general_knowledge:50,deep_dive:50,history:50,science:50,business_case:50},mixTargets:{news:45,general_knowledge:20,deep_dive:15,history:7,science:8,business_case:5},requestedTopics:[],avoidedTopics:[],explanationBias:0,languageDirectives:[],editorialDirectives:[],tuningHistory:[]};}
-module.exports=async(req,res)=>{const s=requireAuth(req,res);if(!s)return;try{if(req.method==="GET"){const [p,c,prefs]=await Promise.all([getProfile(s.userId),userRows("user_api_credentials",s.userId,{limit:1}),userRows("preferences",s.userId,{limit:1})]);return res.status(200).json({user:{email:s.email},profile:p||null,apiKey:{configured:Boolean(c?.[0]?.openai_api_key_ciphertext),last4:c?.[0]?.openai_api_key_last4||null},preferences:prefs?.[0]?.payload||defaults()});}if(req.method!=="POST"){res.setHeader("Allow","GET, POST");return res.status(405).json({error:"Method not allowed"});}const b=req.body||{},apiKey=String(b.apiKey||"").trim();if(apiKey){await validateKey(apiKey);await upsert("user_api_credentials",{user_id:s.userId,openai_api_key_ciphertext:encryptSecret(apiKey),openai_api_key_last4:apiKey.slice(-4),updated_at:new Date().toISOString()});}const old=await getProfile(s.userId),x=b.profile||{},complete=Boolean(b.completeOnboarding||old?.onboarding_complete);const p={user_id:s.userId,email:s.email,display_name:String(x.displayName??old?.display_name??"").trim().slice(0,80),timezone:String(x.timezone??old?.timezone??"UTC").slice(0,80),email_enabled:x.emailEnabled===undefined?(old?.email_enabled??true):Boolean(x.emailEnabled),audio_enabled:x.audioEnabled===undefined?(old?.audio_enabled??true):Boolean(x.audioEnabled),onboarding_complete:complete,updated_at:new Date().toISOString()};if(complete){const c=await userRows("user_api_credentials",s.userId,{limit:1});if(!apiKey&&!c?.[0]?.openai_api_key_ciphertext)return res.status(400).json({error:"Add a valid OpenAI API key to finish onboarding."});}await upsert("profiles",p);
-if(complete&&process.env.SURVEY_EMAIL_TO&&String(s.email||"").toLowerCase()===String(process.env.SURVEY_EMAIL_TO).toLowerCase()){
-  for(const table of ["briefs","explainers","preferences","knowledge","coverage","surveys"]){
-    await require("../lib/briefline/store").request(`${table}?user_id=is.null`,{method:"PATCH",body:JSON.stringify({user_id:s.userId})});
-  }
-}
-if(b.preferences){const prefs={...defaults(),...b.preferences};prefs.requestedTopics=Array.isArray(prefs.requestedTopics)?prefs.requestedTopics.slice(0,30):[];prefs.avoidedTopics=Array.isArray(prefs.avoidedTopics)?prefs.avoidedTopics.slice(0,30):[];await insertUserRow("preferences",s.userId,{payload:prefs});}
-if(complete){
-  const existingPrefs=await userRows("preferences",s.userId,{limit:1});
-  if(!existingPrefs?.length) await insertUserRow("preferences",s.userId,{payload:defaults()});
-}
-return res.status(200).json({ok:true,profile:p});}catch(e){return res.status(400).json({error:e instanceof Error?e.message:"Could not save account settings"});}};
+
+module.exports=async(req,res)=>{
+  const s=requireAuth(req,res);if(!s)return;
+  try{
+    if(req.method==="GET"){
+      const [p,prefs]=await Promise.all([getProfile(s.userId),userRows("preferences",s.userId,{limit:1})]);
+      return res.status(200).json({user:{email:s.email},profile:p||null,preferences:prefs?.[0]?.payload||defaults()});
+    }
+    if(req.method!=="POST"){res.setHeader("Allow","GET, POST");return res.status(405).json({error:"Method not allowed"});}
+    const b=req.body||{},old=await getProfile(s.userId),x=b.profile||{},complete=Boolean(b.completeOnboarding||old?.onboarding_complete);
+    const p={user_id:s.userId,email:s.email,display_name:String(x.displayName??old?.display_name??"").trim().slice(0,80),timezone:String(x.timezone??old?.timezone??"UTC").slice(0,80),email_enabled:x.emailEnabled===undefined?(old?.email_enabled??true):Boolean(x.emailEnabled),audio_enabled:x.audioEnabled===undefined?(old?.audio_enabled??true):Boolean(x.audioEnabled),onboarding_complete:complete,updated_at:new Date().toISOString()};
+    await upsert("profiles",p);
+
+    if(complete&&process.env.SURVEY_EMAIL_TO&&String(s.email||"").toLowerCase()===String(process.env.SURVEY_EMAIL_TO).toLowerCase()){
+      for(const table of ["briefs","explainers","preferences","knowledge","coverage","surveys"]){
+        await request(`${table}?user_id=is.null`,{method:"PATCH",body:JSON.stringify({user_id:s.userId})});
+      }
+    }
+    if(b.preferences){
+      const prefs={...defaults(),...b.preferences};
+      prefs.requestedTopics=Array.isArray(prefs.requestedTopics)?prefs.requestedTopics.slice(0,30):[];
+      prefs.avoidedTopics=Array.isArray(prefs.avoidedTopics)?prefs.avoidedTopics.slice(0,30):[];
+      await insertUserRow("preferences",s.userId,{payload:prefs});
+    }
+    if(complete){
+      const existingPrefs=await userRows("preferences",s.userId,{limit:1});
+      if(!existingPrefs?.length)await insertUserRow("preferences",s.userId,{payload:defaults()});
+    }
+    return res.status(200).json({ok:true,profile:p});
+  }catch(e){return res.status(400).json({error:e instanceof Error?e.message:"Could not save account settings"});}
+};
