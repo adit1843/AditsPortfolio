@@ -217,9 +217,9 @@ function audioPanelHtml(){
   }
   return `
     <section class="panel" id="audioBrief">
-      <div class="eyebrow">Audio edition</div>
+      <div class="eyebrow">Produced audio edition</div>
       <h2>Listen to today's Neosis</h2>
-      <p class="muted" id="audioNow">Ready · ${segments.length} audio segments</p>
+      <p class="muted" id="audioNow">Ready · ${segments.length} produced segments · music & transitions enabled</p>
       <audio id="briefAudio" controls preload="metadata" style="width:100%"></audio>
       <div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-top:12px">
         <div class="field" style="max-width:180px;margin:0">
@@ -266,6 +266,13 @@ function setupBriefAudio(){
   let index=0;
   let seeking=false;
   let lastTime=0;
+  let audioCtx=null;
+  let mediaSource=null;
+  let voiceGain=null;
+  let bedGain=null;
+  let introStingPlayed=false;
+  let transitionBusy=false;
+  let introBedTimer=null;
   const listened=Array(segments.length).fill(0);
   const durations=Array(segments.length).fill(0);
   const now=document.querySelector("#audioNow");
@@ -274,12 +281,97 @@ function setupBriefAudio(){
   const chapterKey=seg=>seg?.storyId||seg?.kind||"intro";
   const chapterIndexes=chapter=>segments.map((seg,i)=>chapterKey(seg)===chapter?i:-1).filter(i=>i>=0);
 
+  const ensureAudioGraph=()=>{
+    if(audioCtx) return audioCtx;
+    const AudioContextClass=window.AudioContext||window.webkitAudioContext;
+    if(!AudioContextClass) return null;
+    audioCtx=new AudioContextClass();
+    mediaSource=audioCtx.createMediaElementSource(audio);
+    voiceGain=audioCtx.createGain();
+    bedGain=audioCtx.createGain();
+    voiceGain.gain.value=1;
+    bedGain.gain.value=0;
+    mediaSource.connect(voiceGain).connect(audioCtx.destination);
+    bedGain.connect(audioCtx.destination);
+    return audioCtx;
+  };
+
+  const tone=(frequency,start,duration,volume=.025,type="sine")=>{
+    const ctx=ensureAudioGraph();
+    if(!ctx) return;
+    const osc=ctx.createOscillator();
+    const gain=ctx.createGain();
+    osc.type=type;
+    osc.frequency.setValueAtTime(frequency,start);
+    gain.gain.setValueAtTime(0.0001,start);
+    gain.gain.exponentialRampToValueAtTime(volume,start+.06);
+    gain.gain.exponentialRampToValueAtTime(0.0001,start+duration);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(start);
+    osc.stop(start+duration+.03);
+  };
+
+  const playSonicLogo=async()=>{
+    const ctx=ensureAudioGraph();
+    if(!ctx) return;
+    if(ctx.state==="suspended") await ctx.resume();
+    const t=ctx.currentTime+.03;
+    tone(440,t,.7,.018);
+    tone(554.37,t+.22,.78,.016);
+    tone(659.25,t+.48,.9,.014);
+    tone(880,t+.74,.65,.009);
+    await new Promise(resolve=>setTimeout(resolve,1550));
+  };
+
+  const playTransition=async(kind="story")=>{
+    const ctx=ensureAudioGraph();
+    if(!ctx) return;
+    if(ctx.state==="suspended") await ctx.resume();
+    const t=ctx.currentTime+.02;
+    if(kind==="outro"){
+      tone(659.25,t,.38,.011);
+      tone(554.37,t+.14,.48,.009);
+    }else{
+      tone(523.25,t,.32,.010);
+      tone(659.25,t+.12,.42,.008);
+    }
+    await new Promise(resolve=>setTimeout(resolve,420));
+  };
+
+  const startIntroBed=()=>{
+    const ctx=ensureAudioGraph();
+    if(!ctx||!bedGain) return;
+    const t=ctx.currentTime;
+    bedGain.gain.cancelScheduledValues(t);
+    bedGain.gain.setValueAtTime(.0001,t);
+    bedGain.gain.exponentialRampToValueAtTime(.009,t+.6);
+
+    const freqs=[110,164.81,220];
+    freqs.forEach((frequency,i)=>{
+      const osc=ctx.createOscillator();
+      const g=ctx.createGain();
+      osc.type=i===0?"sine":"triangle";
+      osc.frequency.value=frequency;
+      g.gain.value=i===0?.55:.18;
+      osc.connect(g).connect(bedGain);
+      osc.start();
+      setTimeout(()=>{try{osc.stop();}catch{}},14500);
+    });
+
+    introBedTimer=setTimeout(()=>{
+      const tt=ctx.currentTime;
+      bedGain.gain.cancelScheduledValues(tt);
+      bedGain.gain.setValueAtTime(Math.max(.0001,bedGain.gain.value),tt);
+      bedGain.gain.exponentialRampToValueAtTime(.0001,tt+2.4);
+    },10000);
+  };
+
   const maybeCreditChapter=chapter=>{
-    if(!chapter || chapter==="intro") return;
+    if(!chapter || chapter==="intro" || chapter==="outro") return;
     const indexes=chapterIndexes(chapter);
     if(!indexes.length || indexes.some(i=>!durations[i])) return;
-    const total= indexes.reduce((sum,i)=>sum+durations[i],0);
-    const heard= indexes.reduce((sum,i)=>sum+Math.min(listened[i],durations[i]),0);
+    const total=indexes.reduce((sum,i)=>sum+durations[i],0);
+    const heard=indexes.reduce((sum,i)=>sum+Math.min(listened[i],durations[i]),0);
     if(total>0 && heard/total>=0.75){
       const story=state.brief.stories.find(s=>String(s.id)===String(chapter));
       if(story) creditStoryConsumption(story,3,"audio").catch(()=>{});
@@ -290,12 +382,35 @@ function setupBriefAudio(){
     index=Math.max(0,Math.min(segments.length-1,i));
     const seg=segments[index];
     lastTime=0;
-    audio.src=`/api/brief-audio?path=${encodeURIComponent(seg.path)}`;
+    audio.src=\`/api/brief-audio?path=\${encodeURIComponent(seg.path)}\`;
     audio.playbackRate=Number(speed?.value||1);
-    if(now) now.textContent=`Now playing ${index+1} of ${segments.length} · ${seg.label||"Neosis"}`;
+    if(now) now.textContent=\`Now playing \${index+1} of \${segments.length} · \${seg.label||"Neosis"}\`;
+  };
+
+  const playLoaded=async()=>{
+    try{
+      const ctx=ensureAudioGraph();
+      if(ctx?.state==="suspended") await ctx.resume();
+      await audio.play();
+    }catch{}
   };
 
   load(0);
+
+  audio.addEventListener("play",async()=>{
+    const ctx=ensureAudioGraph();
+    if(ctx?.state==="suspended") await ctx.resume();
+    if(index===0 && !introStingPlayed && audio.currentTime<.4 && !transitionBusy){
+      introStingPlayed=true;
+      transitionBusy=true;
+      audio.pause();
+      if(now) now.textContent="Neosis · starting today’s edition…";
+      await playSonicLogo();
+      startIntroBed();
+      transitionBusy=false;
+      await playLoaded();
+    }
+  });
 
   audio.addEventListener("loadedmetadata",()=>{
     if(Number.isFinite(audio.duration)&&audio.duration>0) durations[index]=audio.duration;
@@ -314,7 +429,7 @@ function setupBriefAudio(){
     }
     lastTime=current;
   });
-  audio.addEventListener("ended",()=>{
+  audio.addEventListener("ended",async()=>{
     if(durations[index]) listened[index]=Math.max(listened[index],durations[index]);
     const finishedChapter=chapterKey(segments[index]);
     const nextIndex=index+1;
@@ -322,9 +437,14 @@ function setupBriefAudio(){
     if(nextChapter!==finishedChapter) maybeCreditChapter(finishedChapter);
 
     if(nextIndex<segments.length){
+      if(nextChapter!==finishedChapter){
+        if(now) now.textContent="Transitioning…";
+        await playTransition(nextChapter==="outro"?"outro":"story");
+      }
       load(nextIndex);
-      audio.play().catch(()=>{});
+      await playLoaded();
     }else if(now){
+      await playSonicLogo();
       now.textContent="Finished today's Neosis.";
     }
   });
@@ -332,19 +452,25 @@ function setupBriefAudio(){
   if(speed) speed.addEventListener("change",()=>{audio.playbackRate=Number(speed.value||1);});
 
   const nextChapter=document.querySelector("#nextChapterBtn");
-  if(nextChapter) nextChapter.addEventListener("click",()=>{
+  if(nextChapter) nextChapter.addEventListener("click",async()=>{
     const currentChapter=chapterKey(segments[index]);
     maybeCreditChapter(currentChapter);
     let next=index+1;
     while(next<segments.length && chapterKey(segments[next])===currentChapter) next++;
     if(next<segments.length){
+      await playTransition(chapterKey(segments[next])==="outro"?"outro":"story");
       load(next);
-      audio.play().catch(()=>{});
+      await playLoaded();
     }else{
       if(now) now.textContent="Finished today's Neosis.";
       audio.pause();
     }
   });
+
+  window.addEventListener("beforeunload",()=>{
+    if(introBedTimer) clearTimeout(introBedTimer);
+    try{audioCtx?.close();}catch{}
+  },{once:true});
 }
 
 async function checkApi(){
