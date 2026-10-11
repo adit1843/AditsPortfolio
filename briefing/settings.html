@@ -1,12 +1,12 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Neosis Settings</title><link rel="icon" href="/assets/neosis-favicon.svg"><link rel="stylesheet" href="./styles.css"></head>
 <body><header class="topbar"><div class="brand"><img class="brand-logo" src="/assets/neosis-icon.svg" alt=""><div><div class="eyebrow">Account</div><h1>Neosis</h1></div></div><nav><a class="nav-btn nav-link" href="/briefing/">← Today</a></nav></header>
 <main class="shell"><section class="auth-card" style="margin:auto"><div class="eyebrow">Settings</div><h1>Your account</h1>
-<p>Manage account, delivery, and your BYOK credential here. To change what Neosis covers or how it explains things, use <strong>Tune Neosis</strong> inside the briefing.</p>
+<p>Manage your account and delivery settings here. To change what Neosis covers or how it explains things, use <strong>Tune Neosis</strong> inside the briefing.</p>
 <form id="settings"><div class="form-grid">
 <div class="field"><label>Name</label><input name="displayName"></div>
 <div class="field"><label>Email</label><input id="email" disabled></div>
 <div class="field"><label>Timezone</label><select name="timezone" id="timezone"></select></div>
-<div class="field"><label>OpenAI API key</label><input name="apiKey" type="password" autocomplete="off" placeholder="Leave blank to keep current key"><div id="keyStatus" class="api-status"></div></div>
+</div>
 </div>
 <label class="check-row"><input name="emailEnabled" type="checkbox"><span><strong>Daily email</strong><div class="helper">Email links to your new Read / Listen / Survey edition.</div></span></label>
 <label class="check-row"><input name="audioEnabled" type="checkbox"><span><strong>Audio edition</strong><div class="helper">Generate the spoken edition when Neosis audio capacity is available.</div></span></label>
@@ -30,14 +30,12 @@ async function load(){
   populateTimezones(f.timezone,d.profile?.timezone||Intl.DateTimeFormat().resolvedOptions().timeZone||"UTC");
   f.emailEnabled.checked=d.profile?.email_enabled!==false;
   f.audioEnabled.checked=d.profile?.audio_enabled!==false;
-  document.querySelector("#keyStatus").textContent=d.apiKey?.configured?`Saved key ending ••••${d.apiKey.last4}`:"No API key saved";
 }
 load().catch(e=>document.querySelector("#status").textContent=e.message);
 document.querySelector("#settings").onsubmit=async e=>{
   e.preventDefault();const f=e.target,save=document.querySelector("#save"),status=document.querySelector("#status");save.disabled=true;status.textContent="Saving…";
   const body={profile:{displayName:f.displayName.value,timezone:f.timezone.value,emailEnabled:f.emailEnabled.checked,audioEnabled:f.audioEnabled.checked}};
-  if(f.apiKey.value.trim())body.apiKey=f.apiKey.value.trim();
-  try{const r=await fetch("/api/account",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}),d=await r.json();if(!r.ok)throw new Error(d.error||"Save failed");status.textContent="Saved.";f.apiKey.value="";await load();}catch(err){status.textContent=err.message;}finally{save.disabled=false;}
+  try{const r=await fetch("/api/account",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}),d=await r.json();if(!r.ok)throw new Error(d.error||"Save failed");status.textContent="Saved.";await load();}catch(err){status.textContent=err.message;}finally{save.disabled=false;}
 };
 document.querySelector("#logout").onclick=async()=>{await fetch("/api/auth-logout",{method:"POST"});location.replace("/briefing/login.html");};
 </script></body></html>
