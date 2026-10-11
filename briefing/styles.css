@@ -1175,3 +1175,37 @@ body:before{display:none}
 @media(prefers-reduced-motion:reduce){
   .hero-listen,.profile-button,.story-card{transition:none!important}
 }
+
+
+/* Archive browser + reader */
+.archive-hero{max-width:760px}
+.archive-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.archive-card{
+  text-align:left;cursor:pointer;border:1px solid rgba(88,55,36,.09);border-radius:25px;
+  padding:25px 26px 22px;background:rgba(255,253,250,.72);box-shadow:0 14px 40px rgba(68,41,27,.055);
+  color:inherit;transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease;
+}
+.archive-card:hover{transform:translateY(-3px);box-shadow:0 24px 58px rgba(68,41,27,.10);border-color:rgba(201,111,72,.22)}
+.archive-card-top,.archive-card-foot{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.archive-date{font-size:10px;text-transform:uppercase;letter-spacing:.13em;font-weight:800;color:#9d674e}
+.archive-count{font-size:10px;color:#9a877b}
+.archive-card h3{font-family:Georgia,"Times New Roman",serif;font-size:28px;line-height:1.08;letter-spacing:-.03em;margin:22px 0 10px;color:#2c1e18}
+.archive-card p{font-size:13px;line-height:1.58;color:#766157;margin:0 0 26px}
+.archive-card-foot{padding-top:15px;border-top:1px solid rgba(87,54,35,.08);font-size:10px;color:#8e786b}
+.archive-card-foot span:last-child{color:#9c5c42;font-weight:750}
+.archive-back{border:0;background:none;padding:4px 0 18px;color:#8d604b;font-size:12px;font-weight:750;cursor:pointer}
+.archive-reader-hero{max-width:850px;padding:28px 4px 34px}
+.archive-reader-meta{display:flex;align-items:center;gap:9px;font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:#a18a7d;margin-bottom:20px}
+.archive-reader-meta i{width:3px;height:3px;border-radius:50%;background:#c4a999}
+.archive-reader-hero h2{font-family:Georgia,"Times New Roman",serif;font-size:clamp(48px,7vw,78px);line-height:.95;letter-spacing:-.05em;margin:7px 0 18px;color:#2a1d17}
+.archive-reader-hero p{font-family:Georgia,"Times New Roman",serif;font-size:17px;line-height:1.65;color:#776259;max-width:720px}
+.archive-reader-list{display:grid;gap:15px;max-width:850px}
+.archive-story{margin:0!important}
+@media(max-width:760px){
+  .archive-grid{grid-template-columns:1fr}
+  .archive-card{padding:22px 20px;border-radius:21px}
+  .archive-card h3{font-size:24px}
+  .archive-reader-hero{padding:18px 2px 24px}
+  .archive-reader-hero h2{font-size:44px}
+  .archive-reader-hero p{font-size:14px}
+}
