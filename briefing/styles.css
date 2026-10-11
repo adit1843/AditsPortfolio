@@ -197,3 +197,9 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .danger-note{padding:13px 15px;border-radius:12px;background:#fff8ee;border:1px solid #edd9b8;color:#654d2b}
 .auth-actions{display:flex;gap:10px;align-items:center;margin-top:18px;flex-wrap:wrap}.auth-tabs{display:flex;gap:8px;margin:16px 0}.auth-tabs button.active{background:#162432;color:#fff}.api-status{font-size:13px;margin-top:6px}
 @media(max-width:650px){.form-grid{grid-template-columns:1fr}.form-grid .full{grid-column:auto}.auth-card{padding:22px}}
+
+.verification-state{text-align:center;padding:14px 4px 2px}
+.verification-state h2{font-family:Georgia,"Times New Roman",serif;font-size:30px;margin:12px 0 8px;color:var(--navy)}
+.verification-state p{margin:8px auto;max-width:470px}
+.verification-icon{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;margin:4px auto 14px;background:#e7f8f5;border:1px solid #a9ddd5;color:#087f72;font-size:28px;font-weight:800}
+.verification-state .ghost{margin-top:18px}
