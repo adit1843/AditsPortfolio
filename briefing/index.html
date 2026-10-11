@@ -30,26 +30,27 @@
 </head>
 <body>
   <header class="topbar">
-    <div class="brand">
-      <img class="brand-logo" src="/assets/neosis-icon.svg" alt="Neosis logo" />
-      <div>
-        <div class="eyebrow">Personal briefing</div>
-        <h1>Neosis</h1>
-      </div>
-    </div>
-    <nav>
-      <button data-view="today" class="nav-btn active">Today</button>
-      <button data-view="archive" class="nav-btn">Archive</button>
-      <button data-view="explainers" class="nav-btn">Library</button>
-      <button data-view="tune" class="nav-btn">Tune Neosis</button>
-      <a href="/briefing/settings.html" class="nav-btn nav-link">Settings</a>
+    <a class="brand" href="/briefing/" aria-label="Neosis home">
+      <span class="brand-mark"><img class="brand-logo" src="/assets/neosis-icon.svg" alt="" /></span>
+      <span class="brand-copy"><strong>Neosis</strong><small>your daily intelligence</small></span>
+    </a>
+    <nav class="main-nav" aria-label="Primary navigation">
+      <button data-view="today" class="nav-btn active"><span>Today</span></button>
+      <button data-view="archive" class="nav-btn"><span>Archive</span></button>
+      <button data-view="explainers" class="nav-btn"><span>Library</span></button>
+      <button data-view="tune" class="nav-btn"><span>Tune</span></button>
     </nav>
+    <a href="/briefing/settings.html" class="profile-button" aria-label="Settings">
+      <span class="profile-dot"></span>
+      <span>Settings</span>
+    </a>
   </header>
 
   <main id="app" class="shell"></main>
 
   <template id="story-template">
     <article class="story-card">
+      <div class="story-accent" aria-hidden="true"></div>
       <div class="story-meta"></div>
       <h2 class="story-title"></h2>
       <p class="story-summary"></p>
