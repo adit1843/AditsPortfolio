@@ -40,7 +40,7 @@ Repair ONLY the JSON syntax. Preserve the facts, wording, URLs, arrays, and obje
 
 BROKEN JSON:
 ${raw}`,
-      max_output_tokens:8000
+      max_output_tokens:10000
     })
   });
   const data=await response.json();
@@ -196,7 +196,7 @@ module.exports = async function handler(req,res){
         model:MODEL,
         tools:[{type:"web_search"}],
         input:prompt,
-        max_output_tokens:8000
+        max_output_tokens:10000
       })
     });
     const data=await response.json();
