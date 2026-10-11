@@ -14,11 +14,15 @@ create table if not exists api_usage (
   reasoning_tokens bigint not null default 0,
   total_tokens bigint not null default 0,
   web_search_calls integer not null default 0,
+  tts_characters bigint not null default 0,
+  billable_tts_characters bigint not null default 0,
   estimated_cost_usd numeric(14,8),
   created_at timestamptz not null default now()
 );
 
 alter table api_usage add column if not exists web_search_calls integer not null default 0;
+alter table api_usage add column if not exists tts_characters bigint not null default 0;
+alter table api_usage add column if not exists billable_tts_characters bigint not null default 0;
 
 create index if not exists api_usage_user_created_idx on api_usage(user_id, created_at desc);
 create index if not exists api_usage_created_idx on api_usage(created_at desc);
