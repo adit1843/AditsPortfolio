@@ -187,9 +187,19 @@ function learnFromSurvey(ratings,depth,missing){
     const rating=Number(ratings[story.id]);
     if(!rating) continue;
     const delta=(rating-3)*4;
-    for(const topic of (story.topics||[story.category]).filter(Boolean)){
+    const taxonomy=story.tags?.taxonomy||{};
+    const affinitySignals=[
+      ...((story.topics||[story.category]).filter(Boolean).map(x=>[x,1])),
+      ...(taxonomy.domain?[[taxonomy.domain,.45]]:[]),
+      ...(taxonomy.topic?[[taxonomy.topic,.8]]:[]),
+      ...(taxonomy.subtopic?[[taxonomy.subtopic,1.15]]:[]),
+      ...((story.tags?.themes||[]).map(x=>[x,.7])),
+      ...((story.tags?.entities||[]).map(x=>[x,.45]))
+    ];
+    for(const [topic,weight] of affinitySignals){
       const key=String(topic).trim();
-      state.prefs.topicScores[key]=clamp((state.prefs.topicScores[key]??50)+delta);
+      if(!key) continue;
+      state.prefs.topicScores[key]=clamp((state.prefs.topicScores[key]??50)+delta*weight);
     }
     const type=story.contentType||"news";
     state.prefs.contentTypeScores[type]=clamp((state.prefs.contentTypeScores[type]??50)+delta);
@@ -700,7 +710,7 @@ async function generateLiveBrief(){
     if(state.brief!==demoBrief&&state.brief?.stories?.length){
       state.coverage.unshift({
         date:state.brief.date,
-        stories:state.brief.stories.map(s=>({title:s.title,category:s.category,summary:s.summary}))
+        stories:state.brief.stories.map(s=>({title:s.title,category:s.category,summary:s.summary,tags:s.tags||null}))
       });
       state.coverage=state.coverage.slice(0,14);
 
