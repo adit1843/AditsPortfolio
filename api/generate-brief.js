@@ -14,7 +14,44 @@ function extractOutputText(data) {
 }
 
 function cleanJson(text) {
-  return text.replace(/^\s*```(?:json)?/i, "").replace(/```\s*$/i, "").trim();
+  return String(text||"").replace(/^\s*```(?:json)?/i, "").replace(/```\s*$/i, "").trim();
+}
+
+async function repairBriefJson(raw){
+  const response=await fetch("https://api.openai.com/v1/responses",{
+    method:"POST",
+    headers:{
+      "Authorization":`Bearer ${process.env.OPENAI_API_KEY}`,
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify({
+      model:MODEL,
+      input:`Repair the following malformed JSON for a Neosis daily briefing.
+
+Return ONLY one valid JSON object. Preserve the existing facts, wording, URLs, arrays, and fields as closely as possible. Fix JSON syntax only. If the text was cut off at the very end, close the current string/object/array cleanly rather than inventing new stories. Do not use markdown fences.
+
+BROKEN JSON:
+${raw}`,
+      max_output_tokens:10000
+    })
+  });
+  const data=await response.json();
+  if(!response.ok) throw new Error(data?.error?.message||"JSON repair request failed");
+  return cleanJson(extractOutputText(data));
+}
+
+async function parseBriefJson(raw){
+  const cleaned=cleanJson(raw);
+  try{
+    return JSON.parse(cleaned);
+  }catch(firstError){
+    const repaired=await repairBriefJson(cleaned);
+    try{
+      return JSON.parse(repaired);
+    }catch{
+      throw new Error(`Brief generation returned invalid JSON even after repair: ${firstError.message}`);
+    }
+  }
 }
 
 module.exports = async function handler(req, res) {
@@ -58,7 +95,7 @@ module.exports = async function handler(req, res) {
         model: MODEL,
         tools: [{ type: "web_search" }],
         input: prompt,
-        max_output_tokens: 8000,
+        max_output_tokens: 10000,
       }),
     });
 
@@ -72,11 +109,10 @@ module.exports = async function handler(req, res) {
     const text = extractOutputText(data);
     let brief;
     try {
-      brief = JSON.parse(cleanJson(text));
-    } catch {
+      brief = await parseBriefJson(text);
+    } catch (parseError) {
       return res.status(502).json({
-        error: "The model returned a response that was not valid JSON.",
-        raw: text.slice(0, 2000),
+        error: parseError instanceof Error ? parseError.message : "The model returned invalid JSON."
       });
     }
 
