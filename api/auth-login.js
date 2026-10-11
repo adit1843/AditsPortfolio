@@ -1,5 +1,5 @@
 const crypto=require("crypto");
-const {createSession,cookieHeader}=require("./_auth");
+const {createSession,cookieHeader}=require("../lib/briefline/auth");
 
 module.exports=async function handler(req,res){
   if(req.method!=="POST"){
