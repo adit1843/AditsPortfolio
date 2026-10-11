@@ -382,9 +382,9 @@ function setupBriefAudio(){
     index=Math.max(0,Math.min(segments.length-1,i));
     const seg=segments[index];
     lastTime=0;
-    audio.src=\`/api/brief-audio?path=\${encodeURIComponent(seg.path)}\`;
+    audio.src=`/api/brief-audio?path=${encodeURIComponent(seg.path)}`;
     audio.playbackRate=Number(speed?.value||1);
-    if(now) now.textContent=\`Now playing \${index+1} of \${segments.length} · \${seg.label||"Neosis"}\`;
+    if(now) now.textContent=`Now playing ${index+1} of ${segments.length} · ${seg.label||"Neosis"}`;
   };
 
   const playLoaded=async()=>{
