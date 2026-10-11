@@ -1,5 +1,71 @@
 const {createSession,cookieHeader}=require("../lib/briefline/auth");
-const U=process.env.SUPABASE_URL,A=process.env.SUPABASE_ANON_KEY;
+
+const U=process.env.SUPABASE_URL;
+const A=process.env.SUPABASE_ANON_KEY;
+const SITE=(process.env.NEOSIS_SITE_URL||"https://aditsanghani.com").replace(/\/+$/,"");
+
 function base(){return (U||"").replace(/\/+$/,"").replace(/\/rest\/v1$/,"");}
-async function call(path,body){const r=await fetch(`${base()}/auth/v1/${path}`,{method:"POST",headers:{apikey:A,"Content-Type":"application/json"},body:JSON.stringify(body)}),d=await r.json();if(!r.ok)throw Object.assign(new Error(d?.msg||d?.error_description||d?.message||"Authentication failed"),{status:r.status});return d;}
-module.exports=async(req,res)=>{if(req.method!=="POST"){res.setHeader("Allow","POST");return res.status(405).json({error:"Method not allowed"});}if(!U||!A||!process.env.BRIEFLINE_SESSION_SECRET)return res.status(503).json({error:"Neosis authentication is not fully configured."});const action=String(req.body?.action||"signin"),email=String(req.body?.email||"").trim().toLowerCase(),password=String(req.body?.password||"");if(!email||!password)return res.status(400).json({error:"Email and password are required."});if(password.length<8)return res.status(400).json({error:"Password must be at least 8 characters."});try{if(action==="signup"){const d=await call("signup",{email,password});if(d?.access_token&&d?.user?.id){res.setHeader("Set-Cookie",cookieHeader(createSession(d.user)));return res.status(200).json({ok:true,authenticated:true});}return res.status(200).json({ok:true,authenticated:false,confirmationRequired:true,message:"Check your email to confirm your Neosis account, then sign in."});}const d=await call("token?grant_type=password",{email,password});if(!d?.user?.id)throw new Error("No user was returned.");res.setHeader("Set-Cookie",cookieHeader(createSession(d.user)));return res.status(200).json({ok:true,authenticated:true});}catch(e){return res.status(e.status||401).json({error:e.message||"Authentication failed"});}};
+function callbackUrl(mode){return `${SITE}/briefing/auth-callback.html?mode=${encodeURIComponent(mode)}`;}
+
+async function call(path,body){
+  const r=await fetch(`${base()}/auth/v1/${path}`,{
+    method:"POST",
+    headers:{apikey:A,"Content-Type":"application/json"},
+    body:JSON.stringify(body)
+  });
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok){
+    let message=d?.msg||d?.error_description||d?.message||"Authentication failed";
+    if(/email rate limit/i.test(message)) message="Too many emails were requested. Please wait a few minutes and try again.";
+    if(/invalid login credentials/i.test(message)) message="That email or password doesn’t look right.";
+    throw Object.assign(new Error(message),{status:r.status});
+  }
+  return d;
+}
+
+module.exports=async(req,res)=>{
+  if(req.method!=="POST"){res.setHeader("Allow","POST");return res.status(405).json({error:"Method not allowed"});}
+  if(!U||!A||!process.env.BRIEFLINE_SESSION_SECRET)return res.status(503).json({error:"Neosis authentication is not fully configured."});
+
+  const action=String(req.body?.action||"signin");
+  const email=String(req.body?.email||"").trim().toLowerCase();
+  const password=String(req.body?.password||"");
+
+  try{
+    if(action==="recover"){
+      if(!email)return res.status(400).json({error:"Enter your email address."});
+      await call(`recover?redirect_to=${encodeURIComponent(callbackUrl("recovery"))}`,{email});
+      return res.status(200).json({ok:true,message:"If an account exists for that email, a reset link is on its way."});
+    }
+
+    if(action==="resend"){
+      if(!email)return res.status(400).json({error:"Enter your email address."});
+      await call(`resend?redirect_to=${encodeURIComponent(callbackUrl("signup"))}`,{type:"signup",email});
+      return res.status(200).json({ok:true,message:"Verification email sent."});
+    }
+
+    if(!email||!password)return res.status(400).json({error:"Email and password are required."});
+    if(password.length<8)return res.status(400).json({error:"Use at least 8 characters for your password."});
+
+    if(action==="signup"){
+      const d=await call(`signup?redirect_to=${encodeURIComponent(callbackUrl("signup"))}`,{email,password});
+      if(d?.access_token&&d?.user?.id){
+        res.setHeader("Set-Cookie",cookieHeader(createSession(d.user)));
+        return res.status(200).json({ok:true,authenticated:true});
+      }
+      return res.status(200).json({
+        ok:true,
+        authenticated:false,
+        confirmationRequired:true,
+        message:"Check your inbox to verify your email."
+      });
+    }
+
+    const d=await call("token?grant_type=password",{email,password});
+    if(!d?.user?.id)throw new Error("No user was returned.");
+    res.setHeader("Set-Cookie",cookieHeader(createSession(d.user)));
+    return res.status(200).json({ok:true,authenticated:true});
+  }catch(e){
+    return res.status(e.status||401).json({error:e.message||"Authentication failed"});
+  }
+};
