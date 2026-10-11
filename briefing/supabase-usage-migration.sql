@@ -13,15 +13,18 @@ create table if not exists api_usage (
   output_tokens bigint not null default 0,
   reasoning_tokens bigint not null default 0,
   total_tokens bigint not null default 0,
+  web_search_calls integer not null default 0,
   estimated_cost_usd numeric(14,8),
   created_at timestamptz not null default now()
 );
+
+alter table api_usage add column if not exists web_search_calls integer not null default 0;
 
 create index if not exists api_usage_user_created_idx on api_usage(user_id, created_at desc);
 create index if not exists api_usage_created_idx on api_usage(created_at desc);
 
 alter table api_usage enable row level security;
 
--- No browser policies are intentionally created.
--- Neosis writes/reads usage only through its Vercel server functions using SUPABASE_SECRET_KEY.
--- user_api_credentials from the earlier BYOK design may be left in place for now; it is no longer used.
+-- No browser policies: usage is accessed only through authenticated Vercel server functions.
+-- BYOK is retired. Remove any previously stored per-user API credentials.
+drop table if exists user_api_credentials;
