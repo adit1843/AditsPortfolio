@@ -12,36 +12,30 @@
   <div><strong>Anything else</strong><span>Books, gaming, gardening, design, language learning, fitness, film, startups, and more.</span></div>
 </div>
 <form id="setup">
-<div class="form-grid">
-<div class="field"><label>Name</label><input name="displayName" autocomplete="name" placeholder="What should Neosis call you?"></div>
-<div class="field"><label>Email</label><input id="email" disabled></div>
-<div class="field"><label>Timezone</label><select name="timezone" id="timezone" required></select><div class="helper">Used to date and schedule your daily edition correctly.</div></div>
-</div>
-</div>
-<div class="notice"><strong>No preference questionnaire.</strong> Start with the default edition, then simply tell Tune Neosis what you want your podcast to become. You can change direction at any time.</div>
-<div class="auth-actions"><button class="primary" id="save">Finish setup</button><span id="status" class="helper"></span></div>
+  <div class="form-grid">
+    <div class="field"><label>Name</label><input name="displayName" autocomplete="name" placeholder="What should Neosis call you?"></div>
+    <div class="field"><label>Email</label><input id="email" disabled></div>
+    <div class="field full"><label>Timezone</label><select name="timezone" id="timezone" required></select><div class="helper">Used to date and schedule your daily edition correctly.</div></div>
+  </div>
+  <div class="notice"><strong>No preference questionnaire.</strong> Start with the default edition, then simply tell Tune Neosis what you want your podcast to become. You can change direction at any time.</div>
+  <div class="auth-actions"><button class="primary" id="save">Finish setup</button><span id="status" class="helper"></span></div>
 </form></main>
 <script>
 function populateTimezones(select,value){
-  let zones=[];
-  try{zones=Intl.supportedValuesOf("timeZone");}catch{}
-  if(!zones.length) zones=["America/New_York","America/Chicago","America/Denver","America/Los_Angeles","America/Phoenix","America/Anchorage","Pacific/Honolulu","Europe/London","Europe/Paris","Asia/Kolkata","Asia/Dubai","Asia/Singapore","Asia/Tokyo","Australia/Sydney","UTC"];
-  if(!zones.includes("UTC")) zones.unshift("UTC");
+  let zones=[];try{zones=Intl.supportedValuesOf("timeZone");}catch{}
+  if(!zones.length)zones=["America/New_York","America/Chicago","America/Denver","America/Los_Angeles","America/Phoenix","America/Anchorage","Pacific/Honolulu","Europe/London","Europe/Paris","Asia/Kolkata","Asia/Dubai","Asia/Singapore","Asia/Tokyo","Australia/Sydney","UTC"];
+  if(!zones.includes("UTC"))zones.unshift("UTC");
   select.innerHTML=zones.map(z=>`<option value="${z}">${z.replaceAll("_"," ")}</option>`).join("");
-  if(zones.includes(value)) select.value=value;
+  select.value=zones.includes(value)?value:"UTC";
 }
 const detected=Intl.DateTimeFormat().resolvedOptions().timeZone||"UTC";
 populateTimezones(document.querySelector("#timezone"),detected);
 (async()=>{const s=await fetch("/api/auth-session").then(r=>r.json());if(!s.authenticated)return location.replace("/briefing/login.html");if(s.onboarded)return location.replace("/briefing/");document.querySelector("#email").value=s.user?.email||"";})();
 document.querySelector("#setup").onsubmit=async e=>{
-  e.preventDefault();
-  const f=e.target,save=document.querySelector("#save"),status=document.querySelector("#status");
+  e.preventDefault();const f=e.target,save=document.querySelector("#save"),status=document.querySelector("#status");
   save.disabled=true;status.textContent="Creating your default Neosis…";
   const body={completeOnboarding:true,profile:{displayName:f.displayName.value,timezone:f.timezone.value,emailEnabled:true,audioEnabled:true}};
-  try{
-    const r=await fetch("/api/account",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}),d=await r.json();
-    if(!r.ok)throw new Error(d.error||"Setup failed");
-    location.replace("/briefing/");
-  }catch(err){status.textContent=err.message;save.disabled=false;}
+  try{const r=await fetch("/api/account",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}),d=await r.json();if(!r.ok)throw new Error(d.error||"Setup failed");location.replace("/briefing/");}
+  catch(err){status.textContent=err.message;save.disabled=false;}
 };
 </script></body></html>
