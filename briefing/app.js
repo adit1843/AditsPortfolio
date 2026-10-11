@@ -296,46 +296,77 @@ function setupBriefAudio(){
     return audioCtx;
   };
 
-  const tone=(frequency,start,duration,volume=.025,type="sine")=>{
+  const tone=(frequency,start,duration,volume=.025,type="sine",destination=null,detune=0)=>{
     const ctx=ensureAudioGraph();
     if(!ctx) return;
     const osc=ctx.createOscillator();
     const gain=ctx.createGain();
     osc.type=type;
     osc.frequency.setValueAtTime(frequency,start);
+    osc.detune.setValueAtTime(detune,start);
     gain.gain.setValueAtTime(0.0001,start);
-    gain.gain.exponentialRampToValueAtTime(volume,start+.06);
+    gain.gain.exponentialRampToValueAtTime(Math.max(.0002,volume),start+.045);
     gain.gain.exponentialRampToValueAtTime(0.0001,start+duration);
-    osc.connect(gain).connect(ctx.destination);
+    osc.connect(gain).connect(destination||ctx.destination);
     osc.start(start);
-    osc.stop(start+duration+.03);
+    osc.stop(start+duration+.05);
+  };
+
+  const softNoise=(start,duration,volume=.006,highpass=1200)=>{
+    const ctx=ensureAudioGraph();
+    if(!ctx) return;
+    const frames=Math.max(1,Math.floor(ctx.sampleRate*duration));
+    const buffer=ctx.createBuffer(1,frames,ctx.sampleRate);
+    const data=buffer.getChannelData(0);
+    for(let i=0;i<frames;i++) data[i]=(Math.random()*2-1)*(1-i/frames);
+    const source=ctx.createBufferSource();
+    const filter=ctx.createBiquadFilter();
+    const gain=ctx.createGain();
+    filter.type="highpass";
+    filter.frequency.value=highpass;
+    gain.gain.setValueAtTime(.0001,start);
+    gain.gain.linearRampToValueAtTime(volume,start+.12);
+    gain.gain.exponentialRampToValueAtTime(.0001,start+duration);
+    source.buffer=buffer;
+    source.connect(filter).connect(gain).connect(ctx.destination);
+    source.start(start);
   };
 
   const playSonicLogo=async()=>{
     const ctx=ensureAudioGraph();
     if(!ctx) return;
     if(ctx.state==="suspended") await ctx.resume();
-    const t=ctx.currentTime+.03;
-    tone(440,t,.7,.018);
-    tone(554.37,t+.22,.78,.016);
-    tone(659.25,t+.48,.9,.014);
-    tone(880,t+.74,.65,.009);
-    await new Promise(resolve=>setTimeout(resolve,1550));
+    const t=ctx.currentTime+.035;
+
+    // Warm, modern four-note identity: A major add9, with a soft shimmer instead of a notification beep.
+    tone(220,t,.95,.010,"sine");
+    tone(329.63,t+.04,.82,.008,"sine");
+    tone(440,t+.18,.78,.010,"triangle");
+    tone(554.37,t+.38,.88,.009,"sine");
+    tone(659.25,t+.61,1.05,.008,"sine");
+    tone(880,t+.72,.72,.0045,"sine");
+    softNoise(t+.12,.9,.0022,2600);
+    await new Promise(resolve=>setTimeout(resolve,1450));
   };
 
   const playTransition=async(kind="story")=>{
     const ctx=ensureAudioGraph();
     if(!ctx) return;
     if(ctx.state==="suspended") await ctx.resume();
-    const t=ctx.currentTime+.02;
+    const t=ctx.currentTime+.025;
     if(kind==="outro"){
-      tone(659.25,t,.38,.011);
-      tone(554.37,t+.14,.48,.009);
+      tone(659.25,t,.46,.0065,"sine");
+      tone(554.37,t+.12,.58,.0055,"sine");
+      tone(440,t+.25,.72,.004,"triangle");
+      softNoise(t,.45,.0014,3000);
+      await new Promise(resolve=>setTimeout(resolve,560));
     }else{
-      tone(523.25,t,.32,.010);
-      tone(659.25,t+.12,.42,.008);
+      tone(440,t,.36,.0045,"sine");
+      tone(554.37,t+.09,.44,.0055,"sine");
+      tone(659.25,t+.20,.52,.0045,"triangle");
+      softNoise(t+.02,.34,.0012,3200);
+      await new Promise(resolve=>setTimeout(resolve,470));
     }
-    await new Promise(resolve=>setTimeout(resolve,420));
   };
 
   const startIntroBed=()=>{
@@ -344,26 +375,59 @@ function setupBriefAudio(){
     const t=ctx.currentTime;
     bedGain.gain.cancelScheduledValues(t);
     bedGain.gain.setValueAtTime(.0001,t);
-    bedGain.gain.exponentialRampToValueAtTime(.009,t+.6);
+    bedGain.gain.exponentialRampToValueAtTime(.0105,t+.8);
 
-    const freqs=[110,164.81,220];
-    freqs.forEach((frequency,i)=>{
+    // A restrained editorial bed: warm low pad + airy upper harmonics + sparse pulse.
+    const pad=[
+      [110,"sine",.42,-5],
+      [164.81,"triangle",.12,4],
+      [220,"sine",.10,-3],
+      [277.18,"sine",.055,6]
+    ];
+    pad.forEach(([frequency,type,level,detune])=>{
       const osc=ctx.createOscillator();
       const g=ctx.createGain();
-      osc.type=i===0?"sine":"triangle";
+      const filter=ctx.createBiquadFilter();
+      osc.type=type;
       osc.frequency.value=frequency;
-      g.gain.value=i===0?.55:.18;
-      osc.connect(g).connect(bedGain);
-      osc.start();
-      setTimeout(()=>{try{osc.stop();}catch{}},14500);
+      osc.detune.value=detune;
+      filter.type="lowpass";
+      filter.frequency.value=950;
+      filter.Q.value=.4;
+      g.gain.value=level;
+      osc.connect(filter).connect(g).connect(bedGain);
+      osc.start(t);
+      osc.stop(t+14.5);
     });
+
+    [0,1.75,3.5,5.25,7].forEach((offset,i)=>{
+      const notes=[440,493.88,554.37,659.25,554.37];
+      tone(notes[i],t+offset+.25,.78,.0026,"sine",bedGain,i%2?5:-4);
+    });
+
+    // Very soft filtered air gives the bed texture without competing with narration.
+    const frames=Math.floor(ctx.sampleRate*12.5);
+    const buffer=ctx.createBuffer(1,frames,ctx.sampleRate);
+    const data=buffer.getChannelData(0);
+    for(let i=0;i<frames;i++) data[i]=(Math.random()*2-1)*.55;
+    const air=ctx.createBufferSource();
+    const airFilter=ctx.createBiquadFilter();
+    const airGain=ctx.createGain();
+    air.buffer=buffer;
+    airFilter.type="bandpass";
+    airFilter.frequency.value=3600;
+    airFilter.Q.value=.65;
+    airGain.gain.value=.012;
+    air.connect(airFilter).connect(airGain).connect(bedGain);
+    air.start(t);
+    air.stop(t+12.5);
 
     introBedTimer=setTimeout(()=>{
       const tt=ctx.currentTime;
       bedGain.gain.cancelScheduledValues(tt);
       bedGain.gain.setValueAtTime(Math.max(.0001,bedGain.gain.value),tt);
-      bedGain.gain.exponentialRampToValueAtTime(.0001,tt+2.4);
-    },10000);
+      bedGain.gain.exponentialRampToValueAtTime(.0001,tt+2.8);
+    },9300);
   };
 
   const maybeCreditChapter=chapter=>{
