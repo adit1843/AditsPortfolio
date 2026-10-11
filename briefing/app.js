@@ -273,16 +273,9 @@ function setupBriefAudio(){
   const audio=document.querySelector("#briefAudio");
   if(!audio) return;
   const segments=state.brief?.audio?.segments||[];
-  let index=0;
-  let seeking=false;
-  let lastTime=0;
-  let audioCtx=null;
-  let mediaSource=null;
-  let voiceGain=null;
-  let bedGain=null;
-  let introStingPlayed=false;
-  let transitionBusy=false;
-  let introBedTimer=null;
+  let index=0,seeking=false,lastTime=0;
+  let audioCtx=null,mediaSource=null,voiceGain=null,musicGain=null,masterGain=null,compressor=null;
+  let introStingPlayed=false,transitionBusy=false,introBedTimer=null;
   const listened=Array(segments.length).fill(0);
   const durations=Array(segments.length).fill(0);
   const now=document.querySelector("#audioNow");
@@ -298,251 +291,243 @@ function setupBriefAudio(){
     audioCtx=new AudioContextClass();
     mediaSource=audioCtx.createMediaElementSource(audio);
     voiceGain=audioCtx.createGain();
-    bedGain=audioCtx.createGain();
+    musicGain=audioCtx.createGain();
+    masterGain=audioCtx.createGain();
+    compressor=audioCtx.createDynamicsCompressor();
+
     voiceGain.gain.value=1;
-    bedGain.gain.value=0;
-    mediaSource.connect(voiceGain).connect(audioCtx.destination);
-    bedGain.connect(audioCtx.destination);
+    musicGain.gain.value=.0001;
+    masterGain.gain.value=.93;
+    compressor.threshold.value=-18;
+    compressor.knee.value=14;
+    compressor.ratio.value=3;
+    compressor.attack.value=.008;
+    compressor.release.value=.22;
+
+    mediaSource.connect(voiceGain).connect(masterGain);
+    musicGain.connect(masterGain);
+    masterGain.connect(compressor).connect(audioCtx.destination);
     return audioCtx;
   };
 
-  const tone=(frequency,start,duration,volume=.025,type="sine",destination=null,detune=0)=>{
-    const ctx=ensureAudioGraph();
-    if(!ctx) return;
-    const osc=ctx.createOscillator();
-    const gain=ctx.createGain();
-    osc.type=type;
-    osc.frequency.setValueAtTime(frequency,start);
-    osc.detune.setValueAtTime(detune,start);
-    gain.gain.setValueAtTime(0.0001,start);
-    gain.gain.exponentialRampToValueAtTime(Math.max(.0002,volume),start+.045);
-    gain.gain.exponentialRampToValueAtTime(0.0001,start+duration);
-    osc.connect(gain).connect(destination||ctx.destination);
-    osc.start(start);
-    osc.stop(start+duration+.05);
-  };
-
-  const softNoise=(start,duration,volume=.006,highpass=1200)=>{
-    const ctx=ensureAudioGraph();
-    if(!ctx) return;
-    const frames=Math.max(1,Math.floor(ctx.sampleRate*duration));
-    const buffer=ctx.createBuffer(1,frames,ctx.sampleRate);
-    const data=buffer.getChannelData(0);
-    for(let i=0;i<frames;i++) data[i]=(Math.random()*2-1)*(1-i/frames);
-    const source=ctx.createBufferSource();
-    const filter=ctx.createBiquadFilter();
-    const gain=ctx.createGain();
-    filter.type="highpass";
-    filter.frequency.value=highpass;
+  const gainEnvelope=(gain,start,peak,end,attack=.05,release=.18)=>{
+    gain.gain.cancelScheduledValues(start);
     gain.gain.setValueAtTime(.0001,start);
-    gain.gain.linearRampToValueAtTime(volume,start+.12);
-    gain.gain.exponentialRampToValueAtTime(.0001,start+duration);
-    source.buffer=buffer;
-    source.connect(filter).connect(gain).connect(ctx.destination);
-    source.start(start);
+    gain.gain.exponentialRampToValueAtTime(Math.max(.0002,peak),start+attack);
+    gain.gain.exponentialRampToValueAtTime(.0001,end-release);
+    gain.gain.setValueAtTime(.0001,end);
   };
 
-  const playSonicLogo=async()=>{
-    const ctx=ensureAudioGraph();
-    if(!ctx) return;
-    if(ctx.state==="suspended") await ctx.resume();
+  const tone=(frequency,start,duration,volume=.02,type="sine",destination=null,detune=0,filterHz=null)=>{
+    const ctx=ensureAudioGraph();if(!ctx)return;
+    const osc=ctx.createOscillator(),g=ctx.createGain();
+    osc.type=type;osc.frequency.setValueAtTime(frequency,start);osc.detune.value=detune;
+    let dest=g;
+    if(filterHz){
+      const f=ctx.createBiquadFilter();f.type="lowpass";f.frequency.value=filterHz;osc.connect(f).connect(g);
+    }else osc.connect(g);
+    gainEnvelope(g,start,volume,start+duration,Math.min(.06,duration*.18),Math.min(.22,duration*.3));
+    g.connect(destination||ctx.destination);
+    osc.start(start);osc.stop(start+duration+.03);
+  };
+
+  const noiseSweep=(start,duration,volume=.004,fromHz=900,toHz=5200)=>{
+    const ctx=ensureAudioGraph();if(!ctx)return;
+    const frames=Math.max(1,Math.floor(ctx.sampleRate*duration));
+    const buffer=ctx.createBuffer(1,frames,ctx.sampleRate),data=buffer.getChannelData(0);
+    for(let i=0;i<frames;i++)data[i]=(Math.random()*2-1)*(1-i/frames*.2);
+    const src=ctx.createBufferSource(),filter=ctx.createBiquadFilter(),g=ctx.createGain();
+    filter.type="bandpass";filter.Q.value=.7;
+    filter.frequency.setValueAtTime(fromHz,start);
+    filter.frequency.exponentialRampToValueAtTime(Math.max(fromHz+1,toHz),start+duration);
+    gainEnvelope(g,start,volume,start+duration,.12,.16);
+    src.buffer=buffer;src.connect(filter).connect(g).connect(ctx.destination);
+    src.start(start);src.stop(start+duration);
+  };
+
+  const lowHit=(start,volume=.018)=>{
+    const ctx=ensureAudioGraph();if(!ctx)return;
+    const osc=ctx.createOscillator(),g=ctx.createGain(),f=ctx.createBiquadFilter();
+    osc.type="sine";
+    osc.frequency.setValueAtTime(82.41,start);
+    osc.frequency.exponentialRampToValueAtTime(48,start+.34);
+    f.type="lowpass";f.frequency.value=180;
+    g.gain.setValueAtTime(.0001,start);
+    g.gain.exponentialRampToValueAtTime(volume,start+.018);
+    g.gain.exponentialRampToValueAtTime(.0001,start+.62);
+    osc.connect(f).connect(g).connect(ctx.destination);
+    osc.start(start);osc.stop(start+.68);
+  };
+
+  const clickPulse=(start,frequency=1200,volume=.0025)=>{
+    const ctx=ensureAudioGraph();if(!ctx)return;
+    const osc=ctx.createOscillator(),g=ctx.createGain(),f=ctx.createBiquadFilter();
+    osc.type="triangle";osc.frequency.value=frequency;
+    f.type="highpass";f.frequency.value=600;
+    g.gain.setValueAtTime(volume,start);
+    g.gain.exponentialRampToValueAtTime(.0001,start+.08);
+    osc.connect(f).connect(g).connect(ctx.destination);
+    osc.start(start);osc.stop(start+.09);
+  };
+
+  const playSonicLogo=async(outro=false)=>{
+    const ctx=ensureAudioGraph();if(!ctx)return;
+    if(ctx.state==="suspended")await ctx.resume();
     const t=ctx.currentTime+.035;
-
-    // Warm, modern four-note identity: A major add9, with a soft shimmer instead of a notification beep.
-    tone(220,t,.95,.010,"sine");
-    tone(329.63,t+.04,.82,.008,"sine");
-    tone(440,t+.18,.78,.010,"triangle");
-    tone(554.37,t+.38,.88,.009,"sine");
-    tone(659.25,t+.61,1.05,.008,"sine");
-    tone(880,t+.72,.72,.0045,"sine");
-    softNoise(t+.12,.9,.0022,2600);
-    await new Promise(resolve=>setTimeout(resolve,1450));
-  };
-
-  const playTransition=async(kind="story")=>{
-    const ctx=ensureAudioGraph();
-    if(!ctx) return;
-    if(ctx.state==="suspended") await ctx.resume();
-    const t=ctx.currentTime+.025;
-    if(kind==="outro"){
-      tone(659.25,t,.46,.0065,"sine");
-      tone(554.37,t+.12,.58,.0055,"sine");
-      tone(440,t+.25,.72,.004,"triangle");
-      softNoise(t,.45,.0014,3000);
-      await new Promise(resolve=>setTimeout(resolve,560));
+    if(!outro){
+      lowHit(t,.014);
+      noiseSweep(t+.04,.95,.0028,700,4300);
+      tone(146.83,t+.08,.92,.006,"sine",null,-5,700);
+      tone(220,t+.22,.86,.0065,"triangle",null,3,1200);
+      tone(293.66,t+.46,.82,.006,"sine",null,-2,1800);
+      tone(369.99,t+.68,.96,.0065,"sine",null,4,2200);
+      tone(587.33,t+.92,.72,.0038,"sine",null,0,3500);
+      await new Promise(r=>setTimeout(r,1550));
     }else{
-      tone(440,t,.36,.0045,"sine");
-      tone(554.37,t+.09,.44,.0055,"sine");
-      tone(659.25,t+.20,.52,.0045,"triangle");
-      softNoise(t+.02,.34,.0012,3200);
-      await new Promise(resolve=>setTimeout(resolve,470));
+      tone(369.99,t,.58,.0055,"sine");
+      tone(293.66,t+.14,.68,.005,"sine");
+      tone(220,t+.34,.82,.0048,"triangle");
+      tone(146.83,t+.58,1.12,.0042,"sine",null,-4,700);
+      lowHit(t+.54,.010);
+      await new Promise(r=>setTimeout(r,1450));
     }
   };
 
   const startIntroBed=()=>{
-    const ctx=ensureAudioGraph();
-    if(!ctx||!bedGain) return;
+    const ctx=ensureAudioGraph();if(!ctx||!musicGain)return;
     const t=ctx.currentTime;
-    bedGain.gain.cancelScheduledValues(t);
-    bedGain.gain.setValueAtTime(.0001,t);
-    bedGain.gain.exponentialRampToValueAtTime(.0105,t+.8);
+    musicGain.gain.cancelScheduledValues(t);
+    musicGain.gain.setValueAtTime(.0001,t);
+    musicGain.gain.exponentialRampToValueAtTime(.017,t+.7);
 
-    // A restrained editorial bed: warm low pad + airy upper harmonics + sparse pulse.
-    const pad=[
-      [110,"sine",.42,-5],
-      [164.81,"triangle",.12,4],
-      [220,"sine",.10,-3],
-      [277.18,"sine",.055,6]
-    ];
-    pad.forEach(([frequency,type,level,detune])=>{
-      const osc=ctx.createOscillator();
-      const g=ctx.createGain();
-      const filter=ctx.createBiquadFilter();
-      osc.type=type;
-      osc.frequency.value=frequency;
-      osc.detune.value=detune;
-      filter.type="lowpass";
-      filter.frequency.value=950;
-      filter.Q.value=.4;
-      g.gain.value=level;
-      osc.connect(filter).connect(g).connect(bedGain);
-      osc.start(t);
-      osc.stop(t+14.5);
+    // Cinematic editorial bed: low drone, restrained pulse, glassy motif.
+    [
+      [73.42,"sine",.50,-6,420],
+      [110,"triangle",.18,3,560],
+      [146.83,"sine",.11,-3,740],
+      [220,"sine",.035,4,900]
+    ].forEach(([f,type,level,detune,cut])=>{
+      const osc=ctx.createOscillator(),g=ctx.createGain(),filter=ctx.createBiquadFilter();
+      osc.type=type;osc.frequency.value=f;osc.detune.value=detune;
+      filter.type="lowpass";filter.frequency.value=cut;filter.Q.value=.5;g.gain.value=level;
+      osc.connect(filter).connect(g).connect(musicGain);osc.start(t);osc.stop(t+15.5);
     });
 
-    [0,1.75,3.5,5.25,7].forEach((offset,i)=>{
-      const notes=[440,493.88,554.37,659.25,554.37];
-      tone(notes[i],t+offset+.25,.78,.0026,"sine",bedGain,i%2?5:-4);
+    [0,.95,1.9,2.85,3.8,4.75,5.7,6.65,7.6].forEach((off,i)=>{
+      tone(i%4===0?73.42:110,t+off,.34,i%4===0?.010:.0045,"sine",musicGain,0,260);
+      clickPulse(t+off+.48,i%2?1480:1180,.0018);
     });
 
-    // Very soft filtered air gives the bed texture without competing with narration.
-    const frames=Math.floor(ctx.sampleRate*12.5);
-    const buffer=ctx.createBuffer(1,frames,ctx.sampleRate);
-    const data=buffer.getChannelData(0);
-    for(let i=0;i<frames;i++) data[i]=(Math.random()*2-1)*.55;
-    const air=ctx.createBufferSource();
-    const airFilter=ctx.createBiquadFilter();
-    const airGain=ctx.createGain();
-    air.buffer=buffer;
-    airFilter.type="bandpass";
-    airFilter.frequency.value=3600;
-    airFilter.Q.value=.65;
-    airGain.gain.value=.012;
-    air.connect(airFilter).connect(airGain).connect(bedGain);
-    air.start(t);
-    air.stop(t+12.5);
+    const motif=[293.66,329.63,369.99,440,369.99,493.88];
+    [0,1.55,3.1,4.65,6.2,7.75].forEach((off,i)=>{
+      tone(motif[i],t+off+.36,.70,.0026,"sine",musicGain,i%2?3:-3,2400);
+    });
 
+    noiseSweep(t+.2,1.3,.0016,700,3100);
     introBedTimer=setTimeout(()=>{
       const tt=ctx.currentTime;
-      bedGain.gain.cancelScheduledValues(tt);
-      bedGain.gain.setValueAtTime(Math.max(.0001,bedGain.gain.value),tt);
-      bedGain.gain.exponentialRampToValueAtTime(.0001,tt+2.8);
-    },9300);
+      musicGain.gain.cancelScheduledValues(tt);
+      musicGain.gain.setValueAtTime(Math.max(.0001,musicGain.gain.value),tt);
+      musicGain.gain.exponentialRampToValueAtTime(.0001,tt+2.4);
+    },10200);
+  };
+
+  const playTransition=async(kind="story")=>{
+    const ctx=ensureAudioGraph();if(!ctx)return;
+    if(ctx.state==="suspended")await ctx.resume();
+    const t=ctx.currentTime+.025;
+    if(kind==="outro"){
+      noiseSweep(t,.52,.0018,2600,900);
+      tone(369.99,t,.42,.0048,"sine");
+      tone(293.66,t+.12,.52,.0045,"sine");
+      tone(220,t+.28,.72,.0042,"triangle");
+      lowHit(t+.20,.008);
+      await new Promise(r=>setTimeout(r,720));
+    }else{
+      lowHit(t,.007);
+      noiseSweep(t+.02,.48,.0019,800,5200);
+      tone(293.66,t+.08,.32,.0037,"triangle");
+      tone(369.99,t+.22,.40,.0042,"sine");
+      clickPulse(t+.39,1700,.0019);
+      await new Promise(r=>setTimeout(r,610));
+    }
   };
 
   const maybeCreditChapter=chapter=>{
-    if(!chapter || chapter==="intro" || chapter==="outro") return;
+    if(!chapter||chapter==="intro"||chapter==="outro")return;
     const indexes=chapterIndexes(chapter);
-    if(!indexes.length || indexes.some(i=>!durations[i])) return;
-    const total=indexes.reduce((sum,i)=>sum+durations[i],0);
-    const heard=indexes.reduce((sum,i)=>sum+Math.min(listened[i],durations[i]),0);
-    if(total>0 && heard/total>=0.75){
+    if(!indexes.length||indexes.some(i=>!durations[i]))return;
+    const total=indexes.reduce((s,i)=>s+durations[i],0);
+    const heard=indexes.reduce((s,i)=>s+Math.min(listened[i],durations[i]),0);
+    if(total>0&&heard/total>=.75){
       const story=state.brief.stories.find(s=>String(s.id)===String(chapter));
-      if(story) creditStoryConsumption(story,3,"audio").catch(()=>{});
+      if(story)creditStoryConsumption(story,3,"audio").catch(()=>{});
     }
   };
 
   const load=i=>{
     index=Math.max(0,Math.min(segments.length-1,i));
-    const seg=segments[index];
-    lastTime=0;
+    const seg=segments[index];lastTime=0;
     audio.src=`/api/brief-audio?path=${encodeURIComponent(seg.path)}`;
     audio.playbackRate=Number(speed?.value||1);
-    if(now) now.textContent=`Now playing ${index+1} of ${segments.length} · ${seg.label||"Neosis"}`;
+    if(now)now.textContent=`Now playing ${index+1} of ${segments.length} · ${seg.label||"Neosis"}`;
   };
-
-  const playLoaded=async()=>{
-    try{
-      const ctx=ensureAudioGraph();
-      if(ctx?.state==="suspended") await ctx.resume();
-      await audio.play();
-    }catch{}
-  };
+  const playLoaded=async()=>{try{const ctx=ensureAudioGraph();if(ctx?.state==="suspended")await ctx.resume();await audio.play();}catch{}};
 
   load(0);
 
   audio.addEventListener("play",async()=>{
-    const ctx=ensureAudioGraph();
-    if(ctx?.state==="suspended") await ctx.resume();
-    if(index===0 && !introStingPlayed && audio.currentTime<.4 && !transitionBusy){
-      introStingPlayed=true;
-      transitionBusy=true;
-      audio.pause();
-      if(now) now.textContent="Neosis · starting today’s edition…";
-      await playSonicLogo();
+    const ctx=ensureAudioGraph();if(ctx?.state==="suspended")await ctx.resume();
+    if(index===0&&!introStingPlayed&&audio.currentTime<.4&&!transitionBusy){
+      introStingPlayed=true;transitionBusy=true;audio.pause();
+      if(now)now.textContent="Neosis · opening today’s edition…";
+      await playSonicLogo(false);
       startIntroBed();
       transitionBusy=false;
       await playLoaded();
     }
   });
 
-  audio.addEventListener("loadedmetadata",()=>{
-    if(Number.isFinite(audio.duration)&&audio.duration>0) durations[index]=audio.duration;
-    lastTime=audio.currentTime||0;
-  });
+  audio.addEventListener("loadedmetadata",()=>{if(Number.isFinite(audio.duration)&&audio.duration>0)durations[index]=audio.duration;lastTime=audio.currentTime||0;});
   audio.addEventListener("seeking",()=>{seeking=true;});
-  audio.addEventListener("seeked",()=>{
-    seeking=false;
-    lastTime=audio.currentTime||0;
-  });
+  audio.addEventListener("seeked",()=>{seeking=false;lastTime=audio.currentTime||0;});
   audio.addEventListener("timeupdate",()=>{
-    const current=audio.currentTime||0;
-    const delta=current-lastTime;
-    if(!seeking && !audio.paused && delta>0 && delta<3){
-      listened[index]=Math.min((durations[index]||Infinity),listened[index]+delta);
-    }
+    const current=audio.currentTime||0,delta=current-lastTime;
+    if(!seeking&&!audio.paused&&delta>0&&delta<3)listened[index]=Math.min((durations[index]||Infinity),listened[index]+delta);
     lastTime=current;
   });
+
   audio.addEventListener("ended",async()=>{
-    if(durations[index]) listened[index]=Math.max(listened[index],durations[index]);
-    const finishedChapter=chapterKey(segments[index]);
-    const nextIndex=index+1;
+    if(durations[index])listened[index]=Math.max(listened[index],durations[index]);
+    const finishedChapter=chapterKey(segments[index]),nextIndex=index+1;
     const nextChapter=nextIndex<segments.length?chapterKey(segments[nextIndex]):null;
-    if(nextChapter!==finishedChapter) maybeCreditChapter(finishedChapter);
+    if(nextChapter!==finishedChapter)maybeCreditChapter(finishedChapter);
 
     if(nextIndex<segments.length){
       if(nextChapter!==finishedChapter){
-        if(now) now.textContent="Transitioning…";
+        if(now)now.textContent="Next story…";
         await playTransition(nextChapter==="outro"?"outro":"story");
       }
-      load(nextIndex);
-      await playLoaded();
+      load(nextIndex);await playLoaded();
     }else if(now){
-      await playSonicLogo();
+      await playSonicLogo(true);
       now.textContent="Finished today's Neosis.";
     }
   });
 
-  if(speed) speed.addEventListener("change",()=>{audio.playbackRate=Number(speed.value||1);});
-
+  if(speed)speed.addEventListener("change",()=>{audio.playbackRate=Number(speed.value||1);});
   const nextChapter=document.querySelector("#nextChapterBtn");
-  if(nextChapter) nextChapter.addEventListener("click",async()=>{
-    const currentChapter=chapterKey(segments[index]);
-    maybeCreditChapter(currentChapter);
-    let next=index+1;
-    while(next<segments.length && chapterKey(segments[next])===currentChapter) next++;
+  if(nextChapter)nextChapter.addEventListener("click",async()=>{
+    const currentChapter=chapterKey(segments[index]);maybeCreditChapter(currentChapter);
+    let next=index+1;while(next<segments.length&&chapterKey(segments[next])===currentChapter)next++;
     if(next<segments.length){
       await playTransition(chapterKey(segments[next])==="outro"?"outro":"story");
-      load(next);
-      await playLoaded();
-    }else{
-      if(now) now.textContent="Finished today's Neosis.";
-      audio.pause();
-    }
+      load(next);await playLoaded();
+    }else{if(now)now.textContent="Finished today's Neosis.";audio.pause();}
   });
 
   window.addEventListener("beforeunload",()=>{
-    if(introBedTimer) clearTimeout(introBedTimer);
+    if(introBedTimer)clearTimeout(introBedTimer);
     try{audioCtx?.close();}catch{}
   },{once:true});
 }
