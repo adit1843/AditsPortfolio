@@ -1,5 +1,5 @@
-const {buildBriefPrompt}=require("./_brief_prompt");
-const {requireAuth}=require("./_auth");
+const {buildBriefPrompt}=require("../lib/briefline/brief-prompt");
+const {requireAuth}=require("../lib/briefline/auth");
 const MODEL = process.env.OPENAI_MODEL || "gpt-6-luna";
 
 function extractOutputText(data) {
