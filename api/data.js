@@ -1,4 +1,4 @@
-const {requireAuth}=require("./_auth");
+const {requireAuth}=require("../lib/briefline/auth");
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY;
 
