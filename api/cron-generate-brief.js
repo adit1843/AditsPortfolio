@@ -21,6 +21,47 @@ function extractOutputText(data) {
   return parts.join("\n").trim();
 }
 
+function cleanJsonText(text){
+  return String(text||"").replace(/^\s*```(?:json)?/i,"").replace(/```\s*$/i,"").trim();
+}
+
+async function repairBriefJson(raw){
+  const response=await fetch("https://api.openai.com/v1/responses",{
+    method:"POST",
+    headers:{
+      Authorization:`Bearer ${OPENAI_API_KEY}`,
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify({
+      model:MODEL,
+      input:`The following text was intended to be a JSON object for a Briefline daily briefing, but it contains JSON syntax errors.
+
+Repair ONLY the JSON syntax. Preserve the facts, wording, URLs, arrays, and object structure as closely as possible. Do not add commentary or markdown fences. Return one valid JSON object only.
+
+BROKEN JSON:
+${raw}`,
+      max_output_tokens:8000
+    })
+  });
+  const data=await response.json();
+  if(!response.ok) throw new Error(data?.error?.message||"JSON repair request failed");
+  return cleanJsonText(extractOutputText(data));
+}
+
+async function parseBriefJson(raw){
+  const cleaned=cleanJsonText(raw);
+  try{
+    return JSON.parse(cleaned);
+  }catch(firstError){
+    const repaired=await repairBriefJson(cleaned);
+    try{
+      return JSON.parse(repaired);
+    }catch{
+      throw new Error(`Brief generation returned invalid JSON even after one repair attempt: ${firstError.message}`);
+    }
+  }
+}
+
 function supabaseBase(){
   if(!SUPABASE_URL) return "";
   return SUPABASE_URL.replace(/\/+$/,"").replace(/\/rest\/v1$/,"");
@@ -161,8 +202,8 @@ module.exports = async function handler(req,res){
     const data=await response.json();
     if(!response.ok) throw new Error(data?.error?.message || "OpenAI request failed");
 
-    const text=extractOutputText(data).replace(/^\s*```(?:json)?/i,"").replace(/```\s*$/i,"").trim();
-    const brief=JSON.parse(text);
+    const text=extractOutputText(data);
+    const brief=await parseBriefJson(text);
 
     const previous=await sbGet("briefs");
     if(previous[0]?.payload?.stories?.length){
