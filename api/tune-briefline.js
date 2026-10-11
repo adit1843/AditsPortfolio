@@ -46,7 +46,7 @@ module.exports=async function handler(req,res){
   const history=Array.isArray(prefs.tuningHistory)?prefs.tuningHistory.slice(-12):[];
 
   const prompt=`
-You are the control layer for a personal briefing product called Briefline.
+You are the control layer for a personal briefing product called Neosis.
 The user is talking directly to you to change how future editions are selected and explained.
 
 User message:
@@ -128,7 +128,7 @@ For any field the user did not address, preserve the current state rather than r
       nextKnowledge.concepts[key]={...current,label:current.label||u.concept,score:clamp(u.score),updatedBy:"user",lastUpdated:new Date().toISOString()};
     }
 
-    const entry={at:new Date().toISOString(),user:message,assistant:String(parsed.assistant||"Updated Briefline.")};
+    const entry={at:new Date().toISOString(),user:message,assistant:String(parsed.assistant||"Updated Neosis.")};
     nextPrefs.tuningHistory=[...history,entry].slice(-20);
 
     return res.status(200).json({
@@ -138,6 +138,6 @@ For any field the user did not address, preserve the current state rather than r
       mixTargets:nextPrefs.mixTargets
     });
   }catch(e){
-    return res.status(500).json({error:e instanceof Error?e.message:"Could not update Briefline settings"});
+    return res.status(500).json({error:e instanceof Error?e.message:"Could not update Neosis settings"});
   }
 };
