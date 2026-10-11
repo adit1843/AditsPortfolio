@@ -1,6 +1,6 @@
-const {generateBriefAudio}=require("./_google_tts");
-const {buildBriefPrompt}=require("./_brief_prompt");
-const {isAuthed}=require("./_auth");
+const {generateBriefAudio}=require("../lib/briefline/google-tts");
+const {buildBriefPrompt}=require("../lib/briefline/brief-prompt");
+const {isAuthed}=require("../lib/briefline/auth");
 const MODEL = process.env.OPENAI_MODEL || "gpt-6-luna";
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const SUPABASE_URL = process.env.SUPABASE_URL;
