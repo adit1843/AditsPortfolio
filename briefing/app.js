@@ -616,10 +616,10 @@ function renderToday(){
           <div class="tune-icon">✦</div>
           <div class="eyebrow">Personalize</div>
           <h3>Tune My Neosis</h3>
-          <p>Tell Neosis what you want more of, less of, or explained differently.</p>
+          <p>Tell Neosis what you want this podcast to become — any subject, recurring format, mix, or explanation style.</p>
 
           <form id="quickTuneForm">
-            <textarea id="quickTuneInput" rows="5" placeholder="More science and history. Less routine market news. Explain finance with less jargon."></textarea>
+            <textarea id="quickTuneInput" rows="5" placeholder="Make this a daily NBA recap. Give me cooking tips every morning. More robotics, less politics. Teach finance with less jargon."></textarea>
             <button class="primary wide" id="quickTuneSubmit" type="submit">Tune Neosis</button>
             <div id="quickTuneStatus" class="tune-status"></div>
           </form>
