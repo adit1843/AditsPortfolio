@@ -16,10 +16,9 @@
 <div class="field"><label>Name</label><input name="displayName" autocomplete="name" placeholder="What should Neosis call you?"></div>
 <div class="field"><label>Email</label><input id="email" disabled></div>
 <div class="field"><label>Timezone</label><select name="timezone" id="timezone" required></select><div class="helper">Used to date and schedule your daily edition correctly.</div></div>
-<div class="field"><label>OpenAI API key</label><input name="apiKey" type="password" autocomplete="off" placeholder="sk-..." required><div class="helper">BYOK: OpenAI bills your account directly for generation.</div></div>
+</div>
 </div>
 <div class="notice"><strong>No preference questionnaire.</strong> Start with the default edition, then simply tell Tune Neosis what you want your podcast to become. You can change direction at any time.</div>
-<div class="danger-note" style="margin-top:12px"><strong>API key privacy:</strong> your key is validated, encrypted server-side with AES-256-GCM, and never shown again. Settings only displays its last four characters.</div>
 <div class="auth-actions"><button class="primary" id="save">Finish setup</button><span id="status" class="helper"></span></div>
 </form></main>
 <script>
@@ -37,8 +36,8 @@ populateTimezones(document.querySelector("#timezone"),detected);
 document.querySelector("#setup").onsubmit=async e=>{
   e.preventDefault();
   const f=e.target,save=document.querySelector("#save"),status=document.querySelector("#status");
-  save.disabled=true;status.textContent="Validating your API key and creating your default Neosis…";
-  const body={apiKey:f.apiKey.value,completeOnboarding:true,profile:{displayName:f.displayName.value,timezone:f.timezone.value,emailEnabled:true,audioEnabled:true}};
+  save.disabled=true;status.textContent="Creating your default Neosis…";
+  const body={completeOnboarding:true,profile:{displayName:f.displayName.value,timezone:f.timezone.value,emailEnabled:true,audioEnabled:true}};
   try{
     const r=await fetch("/api/account",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}),d=await r.json();
     if(!r.ok)throw new Error(d.error||"Setup failed");
