@@ -1,41 +1,63 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Neosis Settings</title><link rel="icon" href="/assets/neosis-favicon.svg"><link rel="stylesheet" href="./styles.css"></head>
 <body><header class="topbar"><div class="brand"><img class="brand-logo" src="/assets/neosis-icon.svg" alt=""><div><div class="eyebrow">Account</div><h1>Neosis</h1></div></div><nav><a class="nav-btn nav-link" href="/briefing/">← Today</a></nav></header>
-<main class="shell"><section class="auth-card" style="margin:auto"><div class="eyebrow">Settings</div><h1>Your account</h1>
-<p>Manage your account and delivery settings here. To change what Neosis covers or how it explains things, use <strong>Tune Neosis</strong> inside the briefing.</p>
-<form id="settings"><div class="form-grid">
-<div class="field"><label>Name</label><input name="displayName"></div>
-<div class="field"><label>Email</label><input id="email" disabled></div>
-<div class="field"><label>Timezone</label><select name="timezone" id="timezone"></select></div>
-</div>
-</div>
-<label class="check-row"><input name="emailEnabled" type="checkbox"><span><strong>Daily email</strong><div class="helper">Email links to your new Read / Listen / Survey edition.</div></span></label>
-<label class="check-row"><input name="audioEnabled" type="checkbox"><span><strong>Audio edition</strong><div class="helper">Generate the spoken edition when Neosis audio capacity is available.</div></span></label>
-<div class="notice">Editorial preferences are intentionally not managed here. Use <strong>Tune Neosis</strong> conversationally, and Neosis will continue learning from your survey and consumption signals.</div>
-<div class="auth-actions"><button class="primary" id="save">Save changes</button><button class="ghost" id="logout" type="button">Sign out</button><span id="status" class="helper"></span></div>
-</form></section></main>
+<main class="shell"><section class="auth-card" style="margin:auto">
+<div class="eyebrow">Settings</div><h1>Your account</h1>
+<p>Manage account and delivery settings here. To change what Neosis covers or how it explains things, use <strong>Tune Neosis</strong> inside the briefing.</p>
+<form id="settings">
+  <div class="form-grid">
+    <div class="field"><label>Name</label><input name="displayName"></div>
+    <div class="field"><label>Email</label><input id="email" disabled></div>
+    <div class="field full"><label>Timezone</label><select name="timezone" id="timezone"></select></div>
+  </div>
+  <label class="check-row"><input name="emailEnabled" type="checkbox"><span><strong>Daily email</strong><div class="helper">Email links to your new Read / Listen / Survey edition.</div></span></label>
+  <label class="check-row"><input name="audioEnabled" type="checkbox"><span><strong>Audio edition</strong><div class="helper">Generate the spoken edition when Neosis audio capacity is available.</div></span></label>
+  <div class="notice">Editorial preferences are intentionally not managed here. Use <strong>Tune Neosis</strong> conversationally, and Neosis will continue learning from your survey and consumption signals.</div>
+  <div class="auth-actions"><button class="primary" id="save">Save changes</button><button class="ghost" id="logout" type="button">Sign out</button><span id="status" class="helper"></span></div>
+</form>
+<div class="section-label">Usage this month</div>
+<div class="metric" id="usageCard"><span class="helper">Loading usage…</span></div>
+<div id="ownerUsage" style="display:none"><div class="section-label">All users · owner view</div><div class="panel" id="ownerUsageBody"></div></div>
+</section></main>
 <script>
 function populateTimezones(select,value){
   let zones=[];try{zones=Intl.supportedValuesOf("timeZone");}catch{}
-  if(!zones.length) zones=["America/New_York","America/Chicago","America/Denver","America/Los_Angeles","America/Phoenix","America/Anchorage","Pacific/Honolulu","Europe/London","Europe/Paris","Asia/Kolkata","Asia/Dubai","Asia/Singapore","Asia/Tokyo","Australia/Sydney","UTC"];
+  if(!zones.length)zones=["America/New_York","America/Chicago","America/Denver","America/Los_Angeles","America/Phoenix","America/Anchorage","Pacific/Honolulu","Europe/London","Europe/Paris","Asia/Kolkata","Asia/Dubai","Asia/Singapore","Asia/Tokyo","Australia/Sydney","UTC"];
   if(!zones.includes("UTC"))zones.unshift("UTC");
   select.innerHTML=zones.map(z=>`<option value="${z}">${z.replaceAll("_"," ")}</option>`).join("");
   select.value=zones.includes(value)?value:(Intl.DateTimeFormat().resolvedOptions().timeZone||"UTC");
 }
+function usageText(u){
+  if(!u)return "No usage yet.";
+  const cost=u.estimatedCostUsd===null?"Cost estimate unavailable until model pricing is configured":`Estimated OpenAI cost: $${Number(u.estimatedCostUsd||0).toFixed(4)}`;
+  return `<strong>${Number(u.totalTokens||0).toLocaleString()} tokens</strong><span class="helper">${u.requests||0} model requests · ${cost}</span>`;
+}
+async function loadUsage(){
+  try{
+    const d=await fetch("/api/usage").then(r=>r.json());
+    document.querySelector("#usageCard").innerHTML=usageText(d.usage);
+    const all=await fetch("/api/usage?scope=all");
+    if(all.ok){
+      const x=await all.json(),wrap=document.querySelector("#ownerUsage"),body=document.querySelector("#ownerUsageBody");
+      wrap.style.display="";
+      body.innerHTML=(x.users||[]).map(u=>`<div class="knowledge-row"><div><strong>${u.displayName||u.email||u.userId}</strong><div class="helper">${u.email||""}</div></div><div>${Number(u.totalTokens||0).toLocaleString()} tokens</div><div>${u.estimatedCostUsd===null?"—":"$"+Number(u.estimatedCostUsd||0).toFixed(4)}</div></div>`).join("")||'<p class="muted">No usage yet.</p>';
+    }
+  }catch{}
+}
 async function load(){
   const s=await fetch("/api/auth-session").then(r=>r.json());if(!s.authenticated)return location.replace("/briefing/login.html");
   const r=await fetch("/api/account"),d=await r.json();if(!r.ok)throw new Error(d.error);
-  const f=document.querySelector("#settings");
-  document.querySelector("#email").value=d.user?.email||"";
+  const f=document.querySelector("#settings");document.querySelector("#email").value=d.user?.email||"";
   f.displayName.value=d.profile?.display_name||"";
   populateTimezones(f.timezone,d.profile?.timezone||Intl.DateTimeFormat().resolvedOptions().timeZone||"UTC");
-  f.emailEnabled.checked=d.profile?.email_enabled!==false;
-  f.audioEnabled.checked=d.profile?.audio_enabled!==false;
+  f.emailEnabled.checked=d.profile?.email_enabled!==false;f.audioEnabled.checked=d.profile?.audio_enabled!==false;
+  loadUsage();
 }
 load().catch(e=>document.querySelector("#status").textContent=e.message);
 document.querySelector("#settings").onsubmit=async e=>{
   e.preventDefault();const f=e.target,save=document.querySelector("#save"),status=document.querySelector("#status");save.disabled=true;status.textContent="Saving…";
   const body={profile:{displayName:f.displayName.value,timezone:f.timezone.value,emailEnabled:f.emailEnabled.checked,audioEnabled:f.audioEnabled.checked}};
-  try{const r=await fetch("/api/account",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}),d=await r.json();if(!r.ok)throw new Error(d.error||"Save failed");status.textContent="Saved.";await load();}catch(err){status.textContent=err.message;}finally{save.disabled=false;}
+  try{const r=await fetch("/api/account",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}),d=await r.json();if(!r.ok)throw new Error(d.error||"Save failed");status.textContent="Saved.";await load();}
+  catch(err){status.textContent=err.message;}finally{save.disabled=false;}
 };
 document.querySelector("#logout").onclick=async()=>{await fetch("/api/auth-logout",{method:"POST"});location.replace("/briefing/login.html");};
 </script></body></html>
