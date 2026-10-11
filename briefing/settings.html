@@ -28,8 +28,12 @@ function populateTimezones(select,value){
 }
 function usageText(u){
   if(!u)return "No usage yet.";
-  const cost=u.estimatedCostUsd===null?"Cost estimate unavailable until model pricing is configured":`Estimated OpenAI cost: $${Number(u.estimatedCostUsd||0).toFixed(4)}`;
-  return `<strong>${Number(u.totalTokens||0).toLocaleString()} tokens</strong><span class="helper">${u.requests||0} model requests · ${cost}</span>`;
+  const total=u.estimatedCostUsd===null?"Cost estimate unavailable":`Estimated total cost: ${Number(u.estimatedCostUsd||0).toFixed(4)}`;
+  const oa=u.providers?.openai;
+  const tts=u.providers?.google_tts;
+  const openaiCost=oa?.estimatedCostUsd===null||oa?.estimatedCostUsd===undefined?"—":"$"+Number(oa.estimatedCostUsd||0).toFixed(4);
+  const ttsCost=tts?.estimatedCostUsd===null||tts?.estimatedCostUsd===undefined?"—":"$"+Number(tts.estimatedCostUsd||0).toFixed(4);
+  return `<strong>${total}</strong><span class="helper">OpenAI: ${Number(u.totalTokens||0).toLocaleString()} tokens · ${openaiCost}<br>Google TTS: ${Number(u.ttsCharacters||0).toLocaleString()} characters · ${ttsCost}</span>`;
 }
 async function loadUsage(){
   try{
@@ -39,7 +43,7 @@ async function loadUsage(){
     if(all.ok){
       const x=await all.json(),wrap=document.querySelector("#ownerUsage"),body=document.querySelector("#ownerUsageBody");
       wrap.style.display="";
-      body.innerHTML=(x.users||[]).map(u=>`<div class="knowledge-row"><div><strong>${u.displayName||u.email||u.userId}</strong><div class="helper">${u.email||""}</div></div><div>${Number(u.totalTokens||0).toLocaleString()} tokens</div><div>${u.estimatedCostUsd===null?"—":"$"+Number(u.estimatedCostUsd||0).toFixed(4)}</div></div>`).join("")||'<p class="muted">No usage yet.</p>';
+      body.innerHTML=(x.users||[]).map(u=>`<div class="knowledge-row"><div><strong>${u.displayName||u.email||u.userId}</strong><div class="helper">${u.email||""}</div></div><div><div>${Number(u.totalTokens||0).toLocaleString()} OpenAI tokens</div><div class="helper">${Number(u.ttsCharacters||0).toLocaleString()} TTS chars</div></div><div>${u.estimatedCostUsd===null?"—":"$"+Number(u.estimatedCostUsd||0).toFixed(4)}</div></div>`).join("")||'<p class="muted">No usage yet.</p>';
     }
   }catch{}
 }
