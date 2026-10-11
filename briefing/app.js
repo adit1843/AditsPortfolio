@@ -543,7 +543,30 @@ async function checkApi(){
   if(state.view==="today") render();
 }
 
+function dailyHeadline(dateLabel=""){
+  const warm=[
+    ["Good morning.","Here’s what’s worth carrying with you today."],
+    ["A little clearer, every day.","Here’s your thoughtful start to what matters."],
+    ["Come curious.","A few things worth knowing, explained for you."],
+    ["Start with what matters.","Your morning, made a little more interesting."],
+    ["There’s always more to notice.","Here’s today’s world, shaped around you."],
+    ["Make room for something new.","A considered mix for the day ahead."],
+    ["Good things to know.","Stories, ideas, and context chosen for you."],
+    ["Begin with curiosity.","Here’s something useful, something surprising, and what matters."],
+    ["Your morning, with a little more meaning.","Settle in — today’s edition is ready."],
+    ["A smarter start, gently.","Here’s what Neosis thinks deserves your attention."],
+    ["Hello, curious mind.","Your daily mix of what matters and what’s interesting."],
+    ["Take a few minutes for your world.","We picked the signal from the noise for you."],
+    ["Something worth knowing is waiting.","Here’s your personal edition for today."],
+    ["Let today make a little more sense.","Your briefing is ready when you are."]
+  ];
+  const d=new Date();
+  const key=Number.isFinite(d.getTime())?Math.floor(new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime()/86400000):0;
+  return warm[Math.abs(key)%warm.length];
+}
+
 function renderToday(){
+  const [heroLine,heroSubline]=dailyHeadline(state.brief.date);
   const apiMessage=state.api.loading
     ? "Checking live generation setup…"
     : state.api.configured
@@ -562,8 +585,9 @@ function renderToday(){
       <div class="today-kicker">${escapeHtml(state.brief.date)} <span>•</span> ${escapeHtml(state.brief.readTime)}</div>
       <div class="today-hero-grid">
         <div>
-          <h2>Your world,<br><em>in context.</em></h2>
-          <p>${escapeHtml(state.brief.intro)}</p>
+          <div class="hero-orbit" aria-hidden="true"><span></span><span></span><span></span></div>
+          <h2><span class="hero-warm">${escapeHtml(heroLine)}</span><br><em>${escapeHtml(heroSubline)}</em></h2>
+          <p class="hero-intro">${escapeHtml(state.brief.intro)}</p>
         </div>
         <div class="edition-card">
           <div class="edition-label">Today’s edition</div>
