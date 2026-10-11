@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Neosis">
+  <rect x="18" y="26" width="25" height="78" rx="9" fill="#111"/>
+  <rect x="85" y="26" width="25" height="78" rx="9" fill="#111"/>
+  <path d="M34 29 C49 30 62 44 73 59 C84 75 94 88 110 89 L110 105 C86 105 70 91 57 73 C47 59 39 48 18 47 L18 30 C24 29 29 29 34 29Z" fill="#fff"/>
+  <path d="M64 15 L68 24 L77 28 L68 32 L64 42 L60 32 L51 28 L60 24 Z" fill="#111"/>
+</svg>
