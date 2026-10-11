@@ -28,7 +28,7 @@ const state={
     tuningHistory:[]
   },
   coverage:[],
-  api:{configured:false,model:null,loading:true,error:null},
+  api:{configured:false,model:null,loading:true,error:null,canRegenerate:true},
   hydrating:true,
   dbError:null,
   briefDbId:null,
@@ -541,9 +541,9 @@ async function checkApi(){
   try{
     const r=await fetch("/api/generate-brief");
     const data=await r.json();
-    state.api={configured:!!data.configured,model:data.model||null,loading:false,error:null};
+    state.api={configured:!!data.configured,model:data.model||null,loading:false,error:null,canRegenerate:data.canRegenerate!==false};
   }catch(e){
-    state.api={configured:false,model:null,loading:false,error:"Could not reach generation API."};
+    state.api={configured:false,model:null,loading:false,error:"Could not reach generation API.",canRegenerate:false};
   }
   if(state.view==="today") render();
 }
@@ -588,7 +588,7 @@ function renderToday(){
             <div class="eyebrow">Today’s briefing</div>
             <h3>Stories selected for you</h3>
           </div>
-          <button class="ghost compact" id="generateBtn" ${state.api.configured?"":"disabled"}>${state.api.configured?"↻ Regenerate":"Unavailable"}</button>
+          <button class="ghost compact" id="generateBtn" ${state.api.configured&&state.api.canRegenerate?"":"disabled"}>${!state.api.configured?"Unavailable":state.api.canRegenerate?"↻ Regenerate once today":"Regeneration used today"}</button>
         </div>
         <span id="generateStatus" class="muted"></span>
         <div id="stories"></div>
@@ -709,12 +709,12 @@ async function generateLiveBrief(){
 
     state.brief=data.brief;
 
-    const saved=await dbPost("briefs",{brief_date:state.brief.date,payload:state.brief});
-    state.briefDbId=saved?.[0]?.id||null;
+    state.briefDbId=data.briefId||null;
+    state.api.canRegenerate=false;
     renderToday();
     if(state.briefDbId) await generateAudioForCurrentBrief();
   }catch(e){
-    btn.disabled=false; btn.textContent="Generate today's live brief";
+    btn.disabled=false; btn.textContent="↻ Regenerate once today";
     status.textContent=` ${e.message}`;
   }
 }
