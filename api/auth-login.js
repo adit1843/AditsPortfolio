@@ -1,21 +1,5 @@
-const crypto=require("crypto");
 const {createSession,cookieHeader}=require("../lib/briefline/auth");
-
-module.exports=async function handler(req,res){
-  if(req.method!=="POST"){
-    res.setHeader("Allow","POST");
-    return res.status(405).json({error:"Method not allowed"});
-  }
-  const expected=process.env.BRIEFLINE_PASSWORD;
-  const supplied=String(req.body?.password||"");
-  if(!expected || !process.env.BRIEFLINE_SESSION_SECRET){
-    return res.status(503).json({error:"Briefline authentication is not configured."});
-  }
-  const a=Buffer.from(expected);
-  const b=Buffer.from(supplied);
-  const ok=a.length===b.length && crypto.timingSafeEqual(a,b);
-  if(!ok) return res.status(401).json({error:"Incorrect password."});
-  const token=createSession();
-  res.setHeader("Set-Cookie",cookieHeader(token));
-  return res.status(200).json({ok:true});
-};
+const U=process.env.SUPABASE_URL,A=process.env.SUPABASE_ANON_KEY;
+function base(){return (U||"").replace(/\/+$/,"");}
+async function call(path,body){const r=await fetch(`${base()}/auth/v1/${path}`,{method:"POST",headers:{apikey:A,"Content-Type":"application/json"},body:JSON.stringify(body)}),d=await r.json();if(!r.ok)throw Object.assign(new Error(d?.msg||d?.error_description||d?.message||"Authentication failed"),{status:r.status});return d;}
+module.exports=async(req,res)=>{if(req.method!=="POST"){res.setHeader("Allow","POST");return res.status(405).json({error:"Method not allowed"});}if(!U||!A||!process.env.BRIEFLINE_SESSION_SECRET)return res.status(503).json({error:"Neosis authentication is not fully configured."});const action=String(req.body?.action||"signin"),email=String(req.body?.email||"").trim().toLowerCase(),password=String(req.body?.password||"");if(!email||!password)return res.status(400).json({error:"Email and password are required."});if(password.length<8)return res.status(400).json({error:"Password must be at least 8 characters."});try{if(action==="signup"){const d=await call("signup",{email,password});if(d?.access_token&&d?.user?.id){res.setHeader("Set-Cookie",cookieHeader(createSession(d.user)));return res.status(200).json({ok:true,authenticated:true});}return res.status(200).json({ok:true,authenticated:false,confirmationRequired:true,message:"Check your email to confirm your Neosis account, then sign in."});}const d=await call("token?grant_type=password",{email,password});if(!d?.user?.id)throw new Error("No user was returned.");res.setHeader("Set-Cookie",cookieHeader(createSession(d.user)));return res.status(200).json({ok:true,authenticated:true});}catch(e){return res.status(e.status||401).json({error:e.message||"Authentication failed"});}};

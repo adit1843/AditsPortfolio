@@ -184,3 +184,16 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
   .section-heading-row{align-items:flex-start}
   .knowledge-row{grid-template-columns:1fr}
 }
+
+.nav-link{text-decoration:none;display:inline-flex;align-items:center}
+.auth-shell{min-height:100vh;display:grid;place-items:center;padding:28px}
+.auth-card{width:min(680px,100%);background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:24px;padding:30px;box-shadow:var(--shadow)}
+.auth-card h1{font-family:Georgia,serif;font-size:42px;margin:6px 0 10px;letter-spacing:-.03em}
+.auth-card p{color:var(--muted);line-height:1.6}
+.auth-brand{display:flex;align-items:center;gap:12px;margin-bottom:22px}.auth-brand img{width:42px;height:42px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.form-grid .full{grid-column:1/-1}
+.check-row{display:flex;gap:10px;align-items:flex-start;padding:12px 0}.check-row input{width:auto;margin-top:4px}
+.helper{font-size:12px;color:var(--muted);line-height:1.5}.notice{padding:13px 15px;border-radius:12px;background:#eef8f8;border:1px solid #cfe6e5;color:#24464a}
+.danger-note{padding:13px 15px;border-radius:12px;background:#fff8ee;border:1px solid #edd9b8;color:#654d2b}
+.auth-actions{display:flex;gap:10px;align-items:center;margin-top:18px;flex-wrap:wrap}.auth-tabs{display:flex;gap:8px;margin:16px 0}.auth-tabs button.active{background:#162432;color:#fff}.api-status{font-size:13px;margin-top:6px}
+@media(max-width:650px){.form-grid{grid-template-columns:1fr}.form-grid .full{grid-column:auto}.auth-card{padding:22px}}

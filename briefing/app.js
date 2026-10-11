@@ -11,10 +11,10 @@ const demoBrief={
 
 const state={
   view:"today",
-  brief:JSON.parse(localStorage.getItem("dailyBriefCurrent")||"null")||demoBrief,
-  explainers:JSON.parse(localStorage.getItem("dailyBriefExplainers")||"[]"),
+  brief:demoBrief,
+  explainers:[],
   knowledge:{concepts:{},seenEvents:{}},
-  prefs:JSON.parse(localStorage.getItem("dailyBriefPrefs")||"null")||{
+  prefs:{
     generalNews:40,
     politics:"important-only",
     markets:true,
@@ -27,7 +27,7 @@ const state={
     editorialDirectives:[],
     tuningHistory:[]
   },
-  coverage:JSON.parse(localStorage.getItem("dailyBriefCoverage")||"[]"),
+  coverage:[],
   api:{configured:false,model:null,loading:true,error:null},
   hydrating:true,
   dbError:null,
@@ -199,7 +199,7 @@ function learnFromSurvey(ratings,depth,missing){
   if(missing?.trim()){
     state.prefs.requestedTopics=[missing.trim(),...(state.prefs.requestedTopics||[])].slice(0,10);
   }
-  localStorage.setItem("dailyBriefPrefs",JSON.stringify(state.prefs));
+
   return dbPost("preferences",{payload:state.prefs});
 }
 
@@ -250,7 +250,7 @@ async function generateAudioForCurrentBrief(){
     const data=await r.json();
     if(!r.ok) throw new Error(data.error||"Audio generation failed");
     state.brief=data.brief||state.brief;
-    localStorage.setItem("dailyBriefCurrent",JSON.stringify(state.brief));
+
   }catch(e){
     console.error("Neosis audio generation failed:",e);
   }finally{
@@ -703,12 +703,12 @@ async function generateLiveBrief(){
         stories:state.brief.stories.map(s=>({title:s.title,category:s.category,summary:s.summary}))
       });
       state.coverage=state.coverage.slice(0,14);
-      localStorage.setItem("dailyBriefCoverage",JSON.stringify(state.coverage));
+
       dbPost("coverage",{payload:state.coverage[0]}).catch(()=>{});
     }
 
     state.brief=data.brief;
-    localStorage.setItem("dailyBriefCurrent",JSON.stringify(state.brief));
+
     const saved=await dbPost("briefs",{brief_date:state.brief.date,payload:state.brief});
     state.briefDbId=saved?.[0]?.id||null;
     renderToday();
@@ -743,7 +743,7 @@ async function createExplainer(story){
       concepts:data.explainer.conceptsCovered||conceptNames(story)
     };
     state.explainers.unshift(explainer);
-    localStorage.setItem("dailyBriefExplainers",JSON.stringify(state.explainers));
+
     dbPost("explainers",{story_id:story.id,payload:explainer}).catch(()=>{});
     state.view="explainers";
     render();
@@ -807,7 +807,7 @@ async function applyTuneMessage(message){
   if(!r.ok) throw new Error(data.error||"Could not update Neosis");
   state.prefs=data.preferences;
   state.knowledge=data.knowledge;
-  localStorage.setItem("dailyBriefPrefs",JSON.stringify(state.prefs));
+
   await Promise.all([
     dbPost("preferences",{payload:state.prefs}),
     dbPost("knowledge",{payload:state.knowledge})
@@ -867,7 +867,7 @@ function renderSurvey(){
   app.innerHTML=`<a class="back-link" href="#" id="backToday">← Back to brief</a><section class="hero"><div class="eyebrow">Post-brief survey</div><h2>How was today's brief?</h2><p>Your answers tune future story selection slowly so one bad story doesn't erase an entire topic.</p></section><form id="surveyForm" class="panel">${state.brief.stories.map((s,i)=>`<div class="survey-row"><strong>${i+1}. ${escapeHtml(s.title)}</strong><div class="ratings" data-story="${s.id}">${[1,2,3,4,5].map(n=>`<button type="button" class="rating-btn" data-rating="${n}">${n}</button>`).join("")}</div></div>`).join("")}<div class="field"><label>Overall depth</label><select name="depth"><option>Too shallow</option><option selected>About right</option><option>Too detailed</option></select></div><div class="field"><label>Did anything feel repetitive?</label><textarea name="repeat" rows="3"></textarea></div><div class="field"><label>What did you wish was covered?</label><textarea name="missing" rows="3"></textarea></div><button class="primary" type="submit">Submit feedback</button></form>`;
   document.querySelector("#backToday").addEventListener("click",e=>{e.preventDefault();state.view="today";render();});
   document.querySelectorAll(".rating-btn").forEach(btn=>btn.addEventListener("click",()=>{btn.parentElement.querySelectorAll(".rating-btn").forEach(x=>x.classList.remove("selected"));btn.classList.add("selected");}));
-  document.querySelector("#surveyForm").addEventListener("submit",e=>{e.preventDefault();localStorage.setItem("dailyBriefLastSurvey",new Date().toISOString());const ratings={};document.querySelectorAll(".ratings[data-story]").forEach(g=>{const selected=g.querySelector(".rating-btn.selected");if(selected)ratings[g.dataset.story]=Number(selected.dataset.rating);});const payload={ratings,depth:e.target.depth.value,repeat:e.target.repeat.value,missing:e.target.missing.value};dbPost("surveys",{brief_date:state.brief.date,payload}).catch(()=>{});learnFromSurvey(ratings,payload.depth,payload.missing).catch(()=>{});e.target.innerHTML='<div class="success"><strong>Thanks.</strong><p>Your feedback will shape future topic and content selection.</p></div>';});
+  document.querySelector("#surveyForm").addEventListener("submit",e=>{e.preventDefault();const ratings={};document.querySelectorAll(".ratings[data-story]").forEach(g=>{const selected=g.querySelector(".rating-btn.selected");if(selected)ratings[g.dataset.story]=Number(selected.dataset.rating);});const payload={ratings,depth:e.target.depth.value,repeat:e.target.repeat.value,missing:e.target.missing.value};dbPost("surveys",{brief_date:state.brief.date,payload}).catch(()=>{});learnFromSurvey(ratings,payload.depth,payload.missing).catch(()=>{});e.target.innerHTML='<div class="success"><strong>Thanks.</strong><p>Your feedback will shape future topic and content selection.</p></div>';});
 }
 
 render();
