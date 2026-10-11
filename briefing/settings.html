@@ -1,2 +1,43 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Neosis Settings</title><link rel="icon" href="/assets/neosis-favicon.svg"><link rel="stylesheet" href="./styles.css"></head><body><header class="topbar"><div class="brand"><img class="brand-logo" src="/assets/neosis-icon.svg" alt=""><div><div class="eyebrow">Account</div><h1>Neosis</h1></div></div><nav><a class="nav-btn nav-link" href="/briefing/">← Today</a></nav></header><main class="shell"><section class="auth-card" style="margin:auto"><div class="eyebrow">Settings</div><h1>Your Neosis</h1><p>Update preferences or replace your BYOK credential. Existing keys are never displayed.</p><form id="settings"><div class="form-grid"><div class="field"><label>Name</label><input name="displayName"></div><div class="field"><label>Email</label><input id="email" disabled></div><div class="field"><label>Timezone</label><input name="timezone"></div><div class="field"><label>OpenAI API key</label><input name="apiKey" type="password" autocomplete="off" placeholder="Leave blank to keep current key"><div id="keyStatus" class="api-status"></div></div><div class="field full"><label>Topics you want more of</label><input name="topics"></div><div class="field full"><label>Topics you want less of</label><input name="avoid"></div><div class="field"><label>Politics</label><select name="politics"><option value="important-only">Important only</option><option value="normal">Normal</option><option value="more">More</option><option value="none">Avoid unless essential</option></select></div></div><label class="check-row"><input name="markets" type="checkbox"><span><strong>Markets & economy</strong></span></label><label class="check-row"><input name="emailEnabled" type="checkbox"><span><strong>Daily email</strong></span></label><label class="check-row"><input name="audioEnabled" type="checkbox"><span><strong>Audio edition</strong></span></label><div class="auth-actions"><button class="primary" id="save">Save changes</button><button class="ghost" id="logout" type="button">Sign out</button><span id="status" class="helper"></span></div></form></section></main><script>
-let currentPrefs={};const list=v=>v.split(",").map(x=>x.trim()).filter(Boolean);async function load(){const s=await fetch("/api/auth-session").then(r=>r.json());if(!s.authenticated)return location.replace("/briefing/login.html");const r=await fetch("/api/account"),d=await r.json();if(!r.ok)throw new Error(d.error);const f=document.querySelector("#settings");currentPrefs=d.preferences||{};document.querySelector("#email").value=d.user?.email||"";f.displayName.value=d.profile?.display_name||"";f.timezone.value=d.profile?.timezone||Intl.DateTimeFormat().resolvedOptions().timeZone||"UTC";f.topics.value=(currentPrefs.requestedTopics||[]).join(", ");f.avoid.value=(currentPrefs.avoidedTopics||[]).join(", ");f.politics.value=currentPrefs.politics||"important-only";f.markets.checked=currentPrefs.markets!==false;f.emailEnabled.checked=d.profile?.email_enabled!==false;f.audioEnabled.checked=d.profile?.audio_enabled!==false;document.querySelector("#keyStatus").textContent=d.apiKey?.configured?`Saved key ending ••••${d.apiKey.last4}`:"No API key saved";}load().catch(e=>document.querySelector("#status").textContent=e.message);document.querySelector("#settings").onsubmit=async e=>{e.preventDefault();const f=e.target,save=document.querySelector("#save"),status=document.querySelector("#status");save.disabled=true;status.textContent="Saving…";const body={profile:{displayName:f.displayName.value,timezone:f.timezone.value,emailEnabled:f.emailEnabled.checked,audioEnabled:f.audioEnabled.checked},preferences:{...currentPrefs,politics:f.politics.value,markets:f.markets.checked,requestedTopics:list(f.topics.value),avoidedTopics:list(f.avoid.value)}};if(f.apiKey.value.trim())body.apiKey=f.apiKey.value.trim();try{const r=await fetch("/api/account",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}),d=await r.json();if(!r.ok)throw new Error(d.error||"Save failed");status.textContent="Saved.";f.apiKey.value="";await load();}catch(err){status.textContent=err.message;}finally{save.disabled=false;}};document.querySelector("#logout").onclick=async()=>{await fetch("/api/auth-logout",{method:"POST"});location.replace("/briefing/login.html");};</script></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Neosis Settings</title><link rel="icon" href="/assets/neosis-favicon.svg"><link rel="stylesheet" href="./styles.css"></head>
+<body><header class="topbar"><div class="brand"><img class="brand-logo" src="/assets/neosis-icon.svg" alt=""><div><div class="eyebrow">Account</div><h1>Neosis</h1></div></div><nav><a class="nav-btn nav-link" href="/briefing/">← Today</a></nav></header>
+<main class="shell"><section class="auth-card" style="margin:auto"><div class="eyebrow">Settings</div><h1>Your account</h1>
+<p>Manage account, delivery, and your BYOK credential here. To change what Neosis covers or how it explains things, use <strong>Tune Neosis</strong> inside the briefing.</p>
+<form id="settings"><div class="form-grid">
+<div class="field"><label>Name</label><input name="displayName"></div>
+<div class="field"><label>Email</label><input id="email" disabled></div>
+<div class="field"><label>Timezone</label><select name="timezone" id="timezone"></select></div>
+<div class="field"><label>OpenAI API key</label><input name="apiKey" type="password" autocomplete="off" placeholder="Leave blank to keep current key"><div id="keyStatus" class="api-status"></div></div>
+</div>
+<label class="check-row"><input name="emailEnabled" type="checkbox"><span><strong>Daily email</strong><div class="helper">Email links to your new Read / Listen / Survey edition.</div></span></label>
+<label class="check-row"><input name="audioEnabled" type="checkbox"><span><strong>Audio edition</strong><div class="helper">Generate the spoken edition when Neosis audio capacity is available.</div></span></label>
+<div class="notice">Editorial preferences are intentionally not managed here. Use <strong>Tune Neosis</strong> conversationally, and Neosis will continue learning from your survey and consumption signals.</div>
+<div class="auth-actions"><button class="primary" id="save">Save changes</button><button class="ghost" id="logout" type="button">Sign out</button><span id="status" class="helper"></span></div>
+</form></section></main>
+<script>
+function populateTimezones(select,value){
+  let zones=[];try{zones=Intl.supportedValuesOf("timeZone");}catch{}
+  if(!zones.length) zones=["America/New_York","America/Chicago","America/Denver","America/Los_Angeles","America/Phoenix","America/Anchorage","Pacific/Honolulu","Europe/London","Europe/Paris","Asia/Kolkata","Asia/Dubai","Asia/Singapore","Asia/Tokyo","Australia/Sydney","UTC"];
+  if(!zones.includes("UTC"))zones.unshift("UTC");
+  select.innerHTML=zones.map(z=>`<option value="${z}">${z.replaceAll("_"," ")}</option>`).join("");
+  select.value=zones.includes(value)?value:(Intl.DateTimeFormat().resolvedOptions().timeZone||"UTC");
+}
+async function load(){
+  const s=await fetch("/api/auth-session").then(r=>r.json());if(!s.authenticated)return location.replace("/briefing/login.html");
+  const r=await fetch("/api/account"),d=await r.json();if(!r.ok)throw new Error(d.error);
+  const f=document.querySelector("#settings");
+  document.querySelector("#email").value=d.user?.email||"";
+  f.displayName.value=d.profile?.display_name||"";
+  populateTimezones(f.timezone,d.profile?.timezone||Intl.DateTimeFormat().resolvedOptions().timeZone||"UTC");
+  f.emailEnabled.checked=d.profile?.email_enabled!==false;
+  f.audioEnabled.checked=d.profile?.audio_enabled!==false;
+  document.querySelector("#keyStatus").textContent=d.apiKey?.configured?`Saved key ending ••••${d.apiKey.last4}`:"No API key saved";
+}
+load().catch(e=>document.querySelector("#status").textContent=e.message);
+document.querySelector("#settings").onsubmit=async e=>{
+  e.preventDefault();const f=e.target,save=document.querySelector("#save"),status=document.querySelector("#status");save.disabled=true;status.textContent="Saving…";
+  const body={profile:{displayName:f.displayName.value,timezone:f.timezone.value,emailEnabled:f.emailEnabled.checked,audioEnabled:f.audioEnabled.checked}};
+  if(f.apiKey.value.trim())body.apiKey=f.apiKey.value.trim();
+  try{const r=await fetch("/api/account",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}),d=await r.json();if(!r.ok)throw new Error(d.error||"Save failed");status.textContent="Saved.";f.apiKey.value="";await load();}catch(err){status.textContent=err.message;}finally{save.disabled=false;}
+};
+document.querySelector("#logout").onclick=async()=>{await fetch("/api/auth-logout",{method:"POST"});location.replace("/briefing/login.html");};
+</script></body></html>
