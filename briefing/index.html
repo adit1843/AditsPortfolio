@@ -17,6 +17,10 @@
           location.replace("/briefing/login.html?next="+encodeURIComponent(location.pathname+location.search));
           return;
         }
+        if(!d.onboarded){
+          location.replace("/briefing/onboarding.html");
+          return;
+        }
         document.documentElement.classList.remove("auth-pending");
       }catch(e){
         location.replace("/briefing/login.html");
@@ -38,6 +42,7 @@
       <button data-view="archive" class="nav-btn">Archive</button>
       <button data-view="explainers" class="nav-btn">Explainers</button>
       <button data-view="tune" class="nav-btn">Tune Neosis</button>
+      <a href="/briefing/settings.html" class="nav-btn nav-link">Settings</a>
     </nav>
   </header>
 

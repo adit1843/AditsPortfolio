@@ -1,5 +1,1 @@
-const {clearCookieHeader}=require("./_auth");
-module.exports=async function handler(req,res){
-  res.setHeader("Set-Cookie",clearCookieHeader());
-  return res.status(200).json({ok:true});
-};
+const {clearCookieHeader}=require("../lib/briefline/auth");module.exports=async(req,res)=>{res.setHeader("Set-Cookie",clearCookieHeader());return res.status(200).json({ok:true});};
