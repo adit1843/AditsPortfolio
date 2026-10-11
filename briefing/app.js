@@ -176,7 +176,16 @@ function learnFromSurvey(ratings,depth,missing){
 
 function audioPanelHtml(){
   const segments=state.brief?.audio?.segments||[];
-  if(!segments.length) return "";
+  if(!segments.length){
+    return `
+      <section class="panel" id="audioBrief">
+        <div class="eyebrow">Audio edition</div>
+        <h2>Listen to today's Briefline</h2>
+        <p class="muted">Generate audio for this saved edition. Briefline will cache it so you only synthesize it once.</p>
+        <button class="primary" id="generateAudioBtn" ${state.briefDbId?"":"disabled"}>${state.briefDbId?"Generate audio":"Save this brief first"}</button>
+        <span id="audioGenerateStatus" class="muted"></span>
+      </section>`;
+  }
   return `
     <section class="panel" id="audioBrief">
       <div class="eyebrow">Audio edition</div>
@@ -195,6 +204,33 @@ function audioPanelHtml(){
       </div>
     </section>`;
 }
+
+async function generateAudioFromWebsite(){
+  const btn=document.querySelector("#generateAudioBtn");
+  const status=document.querySelector("#audioGenerateStatus");
+  if(!state.briefDbId) return;
+  btn.disabled=true;
+  btn.textContent="Generating audio…";
+  status.textContent=" This may take a minute.";
+  try{
+    const r=await fetch("/api/generate-brief-audio",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({briefId:state.briefDbId})
+    });
+    const data=await r.json();
+    if(!r.ok) throw new Error(data.error||"Audio generation failed");
+    state.brief=data.brief||state.brief;
+    localStorage.setItem("dailyBriefCurrent",JSON.stringify(state.brief));
+    renderToday();
+    location.hash="audioBrief";
+  }catch(e){
+    btn.disabled=false;
+    btn.textContent="Generate audio";
+    status.textContent=` ${e.message}`;
+  }
+}
+
 function setupBriefAudio(){
   const audio=document.querySelector("#briefAudio");
   if(!audio) return;
@@ -279,6 +315,8 @@ function renderToday(){
   const surveyBtn=document.querySelector("#surveyBtn");
   if(surveyBtn) surveyBtn.addEventListener("click",renderSurvey);
   setupStoryReadTracking();
+  const generateAudioBtn=document.querySelector("#generateAudioBtn");
+  if(generateAudioBtn&&!generateAudioBtn.disabled) generateAudioBtn.addEventListener("click",generateAudioFromWebsite);
   setupBriefAudio();
 }
 
