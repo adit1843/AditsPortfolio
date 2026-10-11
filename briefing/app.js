@@ -363,34 +363,90 @@ function renderToday(){
     ? "Checking live generation setup…"
     : state.api.configured
       ? `Live generation ready · ${escapeHtml(state.api.model||"model configured")}`
-      : "Demo mode · add OPENAI_API_KEY in Vercel to enable live current-news generation";
+      : "Live generation is not configured";
+
+  const mix=state.prefs.mixTargets||{news:45,general_knowledge:20,deep_dive:15,history:7,science:8,business_case:5};
+  const mixSummary=[
+    ["News",mix.news||0],
+    ["GK",mix.general_knowledge||0],
+    ["Deep dives",mix.deep_dive||0]
+  ];
 
   app.innerHTML=`
-    <section class="hero">
-      <div class="eyebrow">${escapeHtml(state.brief.date)} · ${escapeHtml(state.brief.readTime)}</div>
-      <h2>What matters today.</h2>
-      <p>${escapeHtml(state.brief.intro)}</p>
+    <section class="today-hero">
+      <div class="today-kicker">${escapeHtml(state.brief.date)} <span>•</span> ${escapeHtml(state.brief.readTime)}</div>
+      <div class="today-hero-grid">
+        <div>
+          <h2>Your world,<br><em>in context.</em></h2>
+          <p>${escapeHtml(state.brief.intro)}</p>
+        </div>
+        <div class="edition-card">
+          <div class="edition-label">Today’s edition</div>
+          <div class="edition-stat"><strong>${state.brief.stories.length}</strong><span>stories</span></div>
+          <div class="edition-stat"><strong>${escapeHtml(state.brief.readTime||"—")}</strong><span>read</span></div>
+          <div class="edition-status">${state.api.configured?"● Live":"○ Demo"}</div>
+        </div>
+      </div>
     </section>
+
     ${audioPanelHtml()}
-    <section class="panel">
-      <div class="eyebrow">Generation status</div>
-      <h2>${state.api.configured?"Live briefing is connected":"Prototype is in demo mode"}</h2>
-      <p class="muted">${apiMessage}</p>
-      <button class="primary" id="generateBtn" ${state.api.configured?"":"disabled"}>${state.api.configured?"Generate today's live brief":"Live generation not configured"}</button>
-      <span id="generateStatus" class="muted"></span>
-    </section>
-    <div id="stories"></div>
-    <section class="panel">
-      <div class="section-label">Feedback</div>
-      <h2>Help tomorrow's brief get better</h2>
-      <p class="muted">You can take today's survey here or use the survey link in your morning email.</p>
-      <button class="primary" id="surveyBtn">Take today's survey</button>
-    </section>`;
+
+    <div class="today-layout">
+      <div class="today-main">
+        <div class="section-heading-row">
+          <div>
+            <div class="eyebrow">Today’s briefing</div>
+            <h3>Stories selected for you</h3>
+          </div>
+          <button class="ghost compact" id="generateBtn" ${state.api.configured?"":"disabled"}>${state.api.configured?"↻ Regenerate":"Unavailable"}</button>
+        </div>
+        <span id="generateStatus" class="muted"></span>
+        <div id="stories"></div>
+
+        <section class="panel feedback-card">
+          <div class="eyebrow">Feedback loop</div>
+          <h2>Make tomorrow better.</h2>
+          <p class="muted">Rate today’s stories so Neosis can learn what deserves more space, less space, or a different level of depth.</p>
+          <button class="primary" id="surveyBtn">Take today’s survey</button>
+        </section>
+      </div>
+
+      <aside class="today-sidebar">
+        <section class="tune-card">
+          <div class="tune-icon">✦</div>
+          <div class="eyebrow">Personalize</div>
+          <h3>Tune My Neosis</h3>
+          <p>Tell Neosis what you want more of, less of, or explained differently.</p>
+
+          <form id="quickTuneForm">
+            <textarea id="quickTuneInput" rows="5" placeholder="More science and history. Less routine market news. Explain finance with less jargon."></textarea>
+            <button class="primary wide" id="quickTuneSubmit" type="submit">Tune Neosis</button>
+            <div id="quickTuneStatus" class="tune-status"></div>
+          </form>
+
+          <div class="mix-mini">
+            <div class="mix-mini-title">Current mix</div>
+            ${mixSummary.map(([label,value])=>`
+              <div class="mix-mini-row">
+                <span>${label}</span>
+                <div class="mix-mini-track"><i style="width:${Number(value)||0}%"></i></div>
+                <b>${Number(value)||0}%</b>
+              </div>`).join("")}
+          </div>
+          <button class="text-link" id="openTuneView" type="button">Open full tuning history →</button>
+        </section>
+
+        <section class="side-note">
+          <div class="eyebrow">Generation</div>
+          <p>${apiMessage}</p>
+        </section>
+      </aside>
+    </div>`;
 
   const holder=document.querySelector("#stories");
   state.brief.stories.forEach((story,i)=>{
     const node=document.querySelector("#story-template").content.cloneNode(true);
-    node.querySelector(".story-meta").textContent=`${story.contentType?story.contentType.replace(/_/g," ")+" · ":""}${story.category} · ${i+1} of ${state.brief.stories.length}`;
+    node.querySelector(".story-meta").textContent=`${story.contentType?story.contentType.replace(/_/g," ")+" · ":""}${story.category} · ${String(i+1).padStart(2,"0")}`;
     node.querySelector(".story-title").textContent=story.title;
     node.querySelector(".story-summary").textContent=story.summary;
     node.querySelector(".story-body").innerHTML=bodyHtml(story.body);
@@ -400,10 +456,40 @@ function renderToday(){
     article.dataset.storyId=story.id;
     holder.appendChild(node);
   });
+
   const generateBtn=document.querySelector("#generateBtn");
   if(generateBtn&&!generateBtn.disabled) generateBtn.addEventListener("click",generateLiveBrief);
+
   const surveyBtn=document.querySelector("#surveyBtn");
   if(surveyBtn) surveyBtn.addEventListener("click",renderSurvey);
+
+  const openTune=document.querySelector("#openTuneView");
+  if(openTune) openTune.addEventListener("click",()=>{state.view="tune";render();});
+
+  const quickTuneForm=document.querySelector("#quickTuneForm");
+  if(quickTuneForm) quickTuneForm.addEventListener("submit",async e=>{
+    e.preventDefault();
+    const input=document.querySelector("#quickTuneInput");
+    const btn=document.querySelector("#quickTuneSubmit");
+    const status=document.querySelector("#quickTuneStatus");
+    const message=input.value.trim();
+    if(!message) return;
+    btn.disabled=true;
+    btn.textContent="Tuning…";
+    status.textContent="Interpreting your request…";
+    try{
+      const data=await applyTuneMessage(message);
+      input.value="";
+      status.textContent=data.assistant||"Updated. Tomorrow’s brief will reflect this.";
+      btn.textContent="Updated ✓";
+      setTimeout(()=>{if(document.body.contains(btn)){btn.disabled=false;btn.textContent="Tune Neosis";}},1400);
+    }catch(err){
+      btn.disabled=false;
+      btn.textContent="Tune Neosis";
+      status.textContent=err.message;
+    }
+  });
+
   setupStoryReadTracking();
   setupBriefAudio();
 }
@@ -521,6 +607,24 @@ function renderKnowledge(){
   app.innerHTML=`<section class="hero"><div class="eyebrow">What the system thinks you know</div><h2>Knowledge graph</h2><p>This is independent from your interest profile. You can care deeply about a topic while still wanting beginner-level explanations.</p></section><section class="panel">${state.knowledge.map(k=>`<div class="knowledge-row"><div><strong>${escapeHtml(k.topic)}</strong></div><div class="bar"><span style="width:${k.score}%"></span></div><div>${k.score}%</div></div>`).join("")}</section>`;
 }
 
+async function applyTuneMessage(message){
+  const r=await fetch("/api/tune-briefline",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({message,preferences:state.prefs,knowledge:state.knowledge})
+  });
+  const data=await r.json();
+  if(!r.ok) throw new Error(data.error||"Could not update Neosis");
+  state.prefs=data.preferences;
+  state.knowledge=data.knowledge;
+  localStorage.setItem("dailyBriefPrefs",JSON.stringify(state.prefs));
+  await Promise.all([
+    dbPost("preferences",{payload:state.prefs}),
+    dbPost("knowledge",{payload:state.knowledge})
+  ]);
+  return data;
+}
+
 function renderTune(){
   const history=(state.prefs.tuningHistory||[]).slice(-12);
   const mix=state.prefs.mixTargets||{news:45,general_knowledge:20,deep_dive:15,history:7,science:8,business_case:5};
@@ -560,20 +664,7 @@ function renderTune(){
     if(!message) return;
     btn.disabled=true;btn.textContent="Updating…";status.textContent=" Interpreting your preferences.";
     try{
-      const r=await fetch("/api/tune-briefline",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({message,preferences:state.prefs,knowledge:state.knowledge})
-      });
-      const data=await r.json();
-      if(!r.ok) throw new Error(data.error||"Could not update Neosis");
-      state.prefs=data.preferences;
-      state.knowledge=data.knowledge;
-      localStorage.setItem("dailyBriefPrefs",JSON.stringify(state.prefs));
-      await Promise.all([
-        dbPost("preferences",{payload:state.prefs}),
-        dbPost("knowledge",{payload:state.knowledge})
-      ]);
+      await applyTuneMessage(message);
       renderTune();
     }catch(err){
       btn.disabled=false;btn.textContent="Update Neosis";status.textContent=" "+err.message;
