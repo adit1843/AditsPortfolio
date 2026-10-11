@@ -85,6 +85,7 @@ async function hydrateFromDatabase(){
     state.hydrating=false;
     render();
     if(new URLSearchParams(location.search).get("survey")==="1") renderSurvey();
+    else if(state.briefDbId&&Number(state.brief?.audio?.productionVersion||0)<2) setTimeout(()=>generateAudioForCurrentBrief(),350);
   }
 }
 
