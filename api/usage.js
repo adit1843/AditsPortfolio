@@ -5,7 +5,7 @@ function summarize(rows){
   const byUser={};
   for(const r of rows||[]){
     const uid=r.user_id||"unknown";
-    const x=byUser[uid]||(byUser[uid]={userId:uid,requests:0,inputTokens:0,cachedInputTokens:0,outputTokens:0,reasoningTokens:0,totalTokens:0,webSearchCalls:0,estimatedCostUsd:0,costConfigured:true,operations:{}});
+    const x=byUser[uid]||(byUser[uid]={userId:uid,requests:0,inputTokens:0,cachedInputTokens:0,outputTokens:0,reasoningTokens:0,totalTokens:0,webSearchCalls:0,estimatedCostUsd:0,costConfigured:true,ttsCharacters:0,billableTtsCharacters:0,providers:{},operations:{}});
     x.requests++;
     x.inputTokens+=Number(r.input_tokens)||0;
     x.cachedInputTokens+=Number(r.cached_input_tokens)||0;
@@ -13,11 +13,20 @@ function summarize(rows){
     x.reasoningTokens+=Number(r.reasoning_tokens)||0;
     x.totalTokens+=Number(r.total_tokens)||0;
     x.webSearchCalls+=Number(r.web_search_calls)||0;
+    x.ttsCharacters+=Number(r.tts_characters)||0;
+    x.billableTtsCharacters+=Number(r.billable_tts_characters)||0;
+    const provider=r.provider||"unknown";
+    const pv=x.providers[provider]||(x.providers[provider]={requests:0,estimatedCostUsd:0,costConfigured:true,ttsCharacters:0,totalTokens:0});
+    pv.requests++;
+    pv.totalTokens+=Number(r.total_tokens)||0;
+    pv.ttsCharacters+=Number(r.tts_characters)||0;
+    if(r.estimated_cost_usd===null||r.estimated_cost_usd===undefined)pv.costConfigured=false;
+    else pv.estimatedCostUsd+=Number(r.estimated_cost_usd)||0;
     if(r.estimated_cost_usd===null||r.estimated_cost_usd===undefined)x.costConfigured=false;
     else x.estimatedCostUsd+=Number(r.estimated_cost_usd)||0;
     const op=r.operation||"unknown";x.operations[op]=(x.operations[op]||0)+1;
   }
-  return Object.values(byUser).map(x=>({...x,estimatedCostUsd:x.costConfigured?Number(x.estimatedCostUsd.toFixed(6)):null}));
+  return Object.values(byUser).map(x=>({...x,estimatedCostUsd:x.costConfigured?Number(x.estimatedCostUsd.toFixed(6)):null,providers:Object.fromEntries(Object.entries(x.providers).map(([k,v])=>[k,{...v,estimatedCostUsd:v.costConfigured?Number(v.estimatedCostUsd.toFixed(6)):null}]))}));
 }
 module.exports=async(req,res)=>{
   const s=requireAuth(req,res);if(!s)return;
@@ -38,6 +47,6 @@ module.exports=async(req,res)=>{
       return res.status(200).json({month,scope:"all",users:summarize(rows).map(x=>({...x,...(names[x.userId]||{})}))});
     }
     rows=await request(`api_usage?user_id=eq.${encodeURIComponent(s.userId)}&select=*&${filter}&order=created_at.desc&limit=5000`);
-    return res.status(200).json({month,scope:"self",usage:summarize(rows)[0]||{userId:s.userId,requests:0,inputTokens:0,cachedInputTokens:0,outputTokens:0,reasoningTokens:0,totalTokens:0,webSearchCalls:0,estimatedCostUsd:0,costConfigured:true,operations:{}}});
+    return res.status(200).json({month,scope:"self",usage:summarize(rows)[0]||{userId:s.userId,requests:0,inputTokens:0,cachedInputTokens:0,outputTokens:0,reasoningTokens:0,totalTokens:0,webSearchCalls:0,estimatedCostUsd:0,costConfigured:true,ttsCharacters:0,billableTtsCharacters:0,providers:{},operations:{}}});
   }catch(e){return res.status(500).json({error:e instanceof Error?e.message:"Could not load usage"});}
 };
