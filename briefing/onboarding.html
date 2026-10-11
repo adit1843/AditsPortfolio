@@ -1,2 +1,40 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Set up Neosis</title><link rel="icon" href="/assets/neosis-favicon.svg"><link rel="stylesheet" href="./styles.css"></head><body class="auth-shell"><main class="auth-card"><div class="auth-brand"><img src="/assets/neosis-icon.svg" alt=""><div><div class="eyebrow">First-time setup</div><strong>Neosis</strong></div></div><h1>Make it yours.</h1><p>Neosis uses your own OpenAI API key for generation. It is validated, encrypted server-side, and never returned after saving.</p><form id="setup"><div class="form-grid"><div class="field"><label>Name</label><input name="displayName" autocomplete="name" placeholder="What should Neosis call you?"></div><div class="field"><label>Email</label><input id="email" disabled></div><div class="field"><label>Timezone</label><input name="timezone" required></div><div class="field"><label>OpenAI API key</label><input name="apiKey" type="password" autocomplete="off" placeholder="sk-..." required><div class="helper">BYOK: OpenAI bills your account directly.</div></div><div class="field full"><label>Topics you want more of</label><input name="topics" placeholder="AI infrastructure, markets, robotics, history..."></div><div class="field full"><label>Topics you want less of</label><input name="avoid" placeholder="Celebrity news, sports..."></div><div class="field"><label>Politics</label><select name="politics"><option value="important-only">Important only</option><option value="normal">Normal</option><option value="more">More</option><option value="none">Avoid unless essential</option></select></div><div class="field"><label>Explanation depth</label><select name="depth"><option value="balanced">Balanced</option><option value="more-context">More foundational context</option><option value="technical">More technical</option></select></div></div><label class="check-row"><input name="markets" type="checkbox" checked><span><strong>Markets & economy</strong><div class="helper">Include material market and macro developments.</div></span></label><label class="check-row"><input name="emailEnabled" type="checkbox" checked><span><strong>Daily email</strong></span></label><label class="check-row"><input name="audioEnabled" type="checkbox" checked><span><strong>Audio edition</strong><div class="helper">Uses the shared Neosis TTS quota.</div></span></label><div class="danger-note"><strong>API key privacy:</strong> stored with AES-256-GCM encryption; only the last four characters are shown later.</div><div class="auth-actions"><button class="primary" id="save">Finish setup</button><span id="status" class="helper"></span></div></form></main><script>
-const tz=Intl.DateTimeFormat().resolvedOptions().timeZone||"UTC";document.querySelector("[name=timezone]").value=tz;(async()=>{const s=await fetch("/api/auth-session").then(r=>r.json());if(!s.authenticated)return location.replace("/briefing/login.html");if(s.onboarded)return location.replace("/briefing/");document.querySelector("#email").value=s.user?.email||"";})();const list=v=>v.split(",").map(x=>x.trim()).filter(Boolean);document.querySelector("#setup").onsubmit=async e=>{e.preventDefault();const f=e.target,save=document.querySelector("#save"),status=document.querySelector("#status");save.disabled=true;status.textContent="Validating key and saving…";const depth=f.depth.value,body={apiKey:f.apiKey.value,completeOnboarding:true,profile:{displayName:f.displayName.value,timezone:f.timezone.value,emailEnabled:f.emailEnabled.checked,audioEnabled:f.audioEnabled.checked},preferences:{generalNews:40,politics:f.politics.value,markets:f.markets.checked,requestedTopics:list(f.topics.value),avoidedTopics:list(f.avoid.value),explanationBias:depth==="more-context"?8:depth==="technical"?-8:0,topicScores:{},contentTypeScores:{news:55,general_knowledge:50,deep_dive:50,history:50,science:50,business_case:50},mixTargets:{news:45,general_knowledge:20,deep_dive:15,history:7,science:8,business_case:5},languageDirectives:[],editorialDirectives:[],tuningHistory:[]}};try{const r=await fetch("/api/account",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}),d=await r.json();if(!r.ok)throw new Error(d.error||"Setup failed");location.replace("/briefing/");}catch(err){status.textContent=err.message;save.disabled=false;}};</script></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Set up Neosis</title><link rel="icon" href="/assets/neosis-favicon.svg"><link rel="stylesheet" href="./styles.css"></head>
+<body class="auth-shell"><main class="auth-card">
+<div class="auth-brand"><img src="/assets/neosis-icon.svg" alt=""><div><div class="eyebrow">First-time setup</div><strong>Neosis</strong></div></div>
+<h1>One last step.</h1>
+<p>Every new Neosis starts with the same balanced briefing. It learns your interests and preferred depth naturally as you use <strong>Tune Neosis</strong>, rate stories, and read or listen.</p>
+<form id="setup">
+<div class="form-grid">
+<div class="field"><label>Name</label><input name="displayName" autocomplete="name" placeholder="What should Neosis call you?"></div>
+<div class="field"><label>Email</label><input id="email" disabled></div>
+<div class="field"><label>Timezone</label><select name="timezone" id="timezone" required></select><div class="helper">Used to date and schedule your daily edition correctly.</div></div>
+<div class="field"><label>OpenAI API key</label><input name="apiKey" type="password" autocomplete="off" placeholder="sk-..." required><div class="helper">BYOK: OpenAI bills your account directly for generation.</div></div>
+</div>
+<div class="notice"><strong>No preference questionnaire.</strong> Everyone starts with Neosis’s default editorial mix. Personalization develops from your behavior and the feedback you give inside the product.</div>
+<div class="danger-note" style="margin-top:12px"><strong>API key privacy:</strong> your key is validated, encrypted server-side with AES-256-GCM, and never shown again. Settings only displays its last four characters.</div>
+<div class="auth-actions"><button class="primary" id="save">Finish setup</button><span id="status" class="helper"></span></div>
+</form></main>
+<script>
+function populateTimezones(select,value){
+  let zones=[];
+  try{zones=Intl.supportedValuesOf("timeZone");}catch{}
+  if(!zones.length) zones=["America/New_York","America/Chicago","America/Denver","America/Los_Angeles","America/Phoenix","America/Anchorage","Pacific/Honolulu","Europe/London","Europe/Paris","Asia/Kolkata","Asia/Dubai","Asia/Singapore","Asia/Tokyo","Australia/Sydney","UTC"];
+  if(!zones.includes("UTC")) zones.unshift("UTC");
+  select.innerHTML=zones.map(z=>`<option value="${z}">${z.replaceAll("_"," ")}</option>`).join("");
+  if(zones.includes(value)) select.value=value;
+}
+const detected=Intl.DateTimeFormat().resolvedOptions().timeZone||"UTC";
+populateTimezones(document.querySelector("#timezone"),detected);
+(async()=>{const s=await fetch("/api/auth-session").then(r=>r.json());if(!s.authenticated)return location.replace("/briefing/login.html");if(s.onboarded)return location.replace("/briefing/");document.querySelector("#email").value=s.user?.email||"";})();
+document.querySelector("#setup").onsubmit=async e=>{
+  e.preventDefault();
+  const f=e.target,save=document.querySelector("#save"),status=document.querySelector("#status");
+  save.disabled=true;status.textContent="Validating your API key and creating your default Neosis…";
+  const body={apiKey:f.apiKey.value,completeOnboarding:true,profile:{displayName:f.displayName.value,timezone:f.timezone.value,emailEnabled:true,audioEnabled:true}};
+  try{
+    const r=await fetch("/api/account",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}),d=await r.json();
+    if(!r.ok)throw new Error(d.error||"Setup failed");
+    location.replace("/briefing/");
+  }catch(err){status.textContent=err.message;save.disabled=false;}
+};
+</script></body></html>
