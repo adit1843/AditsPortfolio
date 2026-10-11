@@ -32,6 +32,31 @@ module.exports=async(req,res)=>{
   const password=String(req.body?.password||"");
 
   try{
+    if(action==="exchange"){
+      const token=String(req.body?.accessToken||"");
+      if(!token)return res.status(400).json({error:"Invalid verification session."});
+      const r=await fetch(`${base()}/auth/v1/user`,{headers:{apikey:A,Authorization:`Bearer ${token}`}});
+      const user=await r.json().catch(()=>({}));
+      if(!r.ok||!user?.id)throw Object.assign(new Error(user?.message||"This verification link is invalid or expired."),{status:401});
+      res.setHeader("Set-Cookie",cookieHeader(createSession(user)));
+      return res.status(200).json({ok:true,user:{id:user.id,email:user.email}});
+    }
+
+    if(action==="reset"){
+      const token=String(req.body?.accessToken||"");
+      const newPassword=String(req.body?.password||"");
+      if(!token)return res.status(400).json({error:"Your reset link is invalid or expired."});
+      if(newPassword.length<8)return res.status(400).json({error:"Use at least 8 characters for your new password."});
+      const r=await fetch(`${base()}/auth/v1/user`,{
+        method:"PUT",
+        headers:{apikey:A,Authorization:`Bearer ${token}`,"Content-Type":"application/json"},
+        body:JSON.stringify({password:newPassword})
+      });
+      const d=await r.json().catch(()=>({}));
+      if(!r.ok)throw Object.assign(new Error(d?.msg||d?.message||"Could not update password"),{status:r.status});
+      return res.status(200).json({ok:true});
+    }
+
     if(action==="recover"){
       if(!email)return res.status(400).json({error:"Enter your email address."});
       await call(`recover?redirect_to=${encodeURIComponent(callbackUrl("recovery"))}`,{email});
