@@ -2,7 +2,15 @@
 <body class="auth-shell"><main class="auth-card">
 <div class="auth-brand"><img src="/assets/neosis-icon.svg" alt=""><div><div class="eyebrow">First-time setup</div><strong>Neosis</strong></div></div>
 <h1>One last step.</h1>
-<p>Every new Neosis starts with the same balanced briefing. It learns your interests and preferred depth naturally as you use <strong>Tune Neosis</strong>, rate stories, and read or listen.</p>
+<p>Neosis is not just a news briefing. It can become <strong>your daily podcast about almost anything</strong>. Everyone starts with a balanced edition, then you shape it naturally with Tune Neosis, ratings, and what you read or listen to.</p>
+<div class="podcast-examples">
+  <div><strong>Yesterday in sports</strong><span>“Give me a 10-minute recap of the NBA, Champions League, and F1.”</span></div>
+  <div><strong>Morning cooking coach</strong><span>“Teach me one useful vegetarian cooking technique every morning.”</span></div>
+  <div><strong>Learn something daily</strong><span>“Mostly history, science, and one deep explanation of something important.”</span></div>
+  <div><strong>Industry intelligence</strong><span>“Track AI infrastructure, robotics, and data-center engineering.”</span></div>
+  <div><strong>Build your own mix</strong><span>“Markets on weekdays, travel ideas on Fridays, and less politics.”</span></div>
+  <div><strong>Anything else</strong><span>Books, gaming, gardening, design, language learning, fitness, film, startups, and more.</span></div>
+</div>
 <form id="setup">
 <div class="form-grid">
 <div class="field"><label>Name</label><input name="displayName" autocomplete="name" placeholder="What should Neosis call you?"></div>
@@ -10,7 +18,7 @@
 <div class="field"><label>Timezone</label><select name="timezone" id="timezone" required></select><div class="helper">Used to date and schedule your daily edition correctly.</div></div>
 <div class="field"><label>OpenAI API key</label><input name="apiKey" type="password" autocomplete="off" placeholder="sk-..." required><div class="helper">BYOK: OpenAI bills your account directly for generation.</div></div>
 </div>
-<div class="notice"><strong>No preference questionnaire.</strong> Everyone starts with Neosis’s default editorial mix. Personalization develops from your behavior and the feedback you give inside the product.</div>
+<div class="notice"><strong>No preference questionnaire.</strong> Start with the default edition, then simply tell Tune Neosis what you want your podcast to become. You can change direction at any time.</div>
 <div class="danger-note" style="margin-top:12px"><strong>API key privacy:</strong> your key is validated, encrypted server-side with AES-256-GCM, and never shown again. Settings only displays its last four characters.</div>
 <div class="auth-actions"><button class="primary" id="save">Finish setup</button><span id="status" class="helper"></span></div>
 </form></main>
