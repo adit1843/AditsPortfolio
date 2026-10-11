@@ -7,4 +7,9 @@ if(complete&&process.env.SURVEY_EMAIL_TO&&String(s.email||"").toLowerCase()===St
     await require("../lib/briefline/store").request(`${table}?user_id=is.null`,{method:"PATCH",body:JSON.stringify({user_id:s.userId})});
   }
 }
-if(b.preferences){const prefs={...defaults(),...b.preferences};prefs.requestedTopics=Array.isArray(prefs.requestedTopics)?prefs.requestedTopics.slice(0,30):[];prefs.avoidedTopics=Array.isArray(prefs.avoidedTopics)?prefs.avoidedTopics.slice(0,30):[];await insertUserRow("preferences",s.userId,{payload:prefs});}return res.status(200).json({ok:true,profile:p});}catch(e){return res.status(400).json({error:e instanceof Error?e.message:"Could not save account settings"});}};
+if(b.preferences){const prefs={...defaults(),...b.preferences};prefs.requestedTopics=Array.isArray(prefs.requestedTopics)?prefs.requestedTopics.slice(0,30):[];prefs.avoidedTopics=Array.isArray(prefs.avoidedTopics)?prefs.avoidedTopics.slice(0,30):[];await insertUserRow("preferences",s.userId,{payload:prefs});}
+if(complete){
+  const existingPrefs=await userRows("preferences",s.userId,{limit:1});
+  if(!existingPrefs?.length) await insertUserRow("preferences",s.userId,{payload:defaults()});
+}
+return res.status(200).json({ok:true,profile:p});}catch(e){return res.status(400).json({error:e instanceof Error?e.message:"Could not save account settings"});}};
