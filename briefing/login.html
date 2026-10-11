@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Briefline — Sign in</title>
+  <title>Neosis — Sign in</title>
+  <link rel="icon" type="image/svg+xml" href="/assets/neosis-icon.svg" />
   <link rel="stylesheet" href="./styles.css">
   <style>
     body{min-height:100vh;display:grid;place-items:center;padding:24px}
@@ -19,12 +20,12 @@
 <body>
   <main class="login-card">
     <div class="eyebrow">Private briefing</div>
-    <h1>Briefline</h1>
+    <h1>Neosis</h1>
     <p>Your personalized daily briefing, context memory, explainers, and feedback loop.</p>
     <form id="loginForm">
       <label for="password">Password</label>
       <input id="password" name="password" type="password" autocomplete="current-password" required autofocus>
-      <button class="primary" type="submit">Enter Briefline</button>
+      <button class="primary" type="submit">Enter Neosis</button>
       <div id="error" class="error" aria-live="polite"></div>
     </form>
   </main>
@@ -48,7 +49,7 @@
         const next=new URLSearchParams(location.search).get("next")||"/briefing/";location.replace(next);
       }catch(err){
         error.textContent=err.message;
-        button.disabled=false;button.textContent="Enter Briefline";
+        button.disabled=false;button.textContent="Enter Neosis";
       }
     });
   </script>
