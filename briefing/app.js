@@ -366,33 +366,55 @@ function dailyHeadline(dateLabel=""){
 function renderToday(){
   const [heroLine,heroSubline]=dailyHeadline(state.brief.date);
   const apiMessage=state.api.loading
-    ? "Checking live generation setup…"
+    ? "Checking live generation…"
     : state.api.configured
-      ? `Live generation ready · ${escapeHtml(state.api.model||"model configured")}`
-      : "Live generation is not configured";
+      ? `Live · ${escapeHtml(state.api.model||"generation ready")}`
+      : "Generation unavailable";
 
   const mix=state.prefs.mixTargets||{news:45,general_knowledge:20,deep_dive:15,history:7,science:8,business_case:5};
   const mixSummary=[
     ["News",mix.news||0],
-    ["GK",mix.general_knowledge||0],
+    ["Knowledge",mix.general_knowledge||0],
     ["Deep dives",mix.deep_dive||0]
   ];
+  const leadStory=state.brief.stories?.[0];
 
   app.innerHTML=`
     <section class="today-hero">
-      <div class="today-kicker">${escapeHtml(state.brief.date)} <span>•</span> ${escapeHtml(state.brief.readTime)}</div>
-      <div class="today-hero-grid">
-        <div>
-          <div class="hero-orbit" aria-hidden="true"><span></span><span></span><span></span></div>
-          <h2><span class="hero-warm">${escapeHtml(heroLine)}</span><br><em>${escapeHtml(heroSubline)}</em></h2>
+      <div class="hero-glow hero-glow-one"></div>
+      <div class="hero-glow hero-glow-two"></div>
+      <div class="hero-topline">
+        <div class="today-kicker"><span class="live-pip"></span>${escapeHtml(state.brief.date)}</div>
+        <div class="hero-meta">${state.brief.stories.length} stories <i></i> ${escapeHtml(state.brief.readTime||"—")}</div>
+      </div>
+
+      <div class="hero-content">
+        <div class="hero-copy">
+          <div class="hero-label">Made for you, this morning</div>
+          <h2><span class="hero-warm">${escapeHtml(heroLine)}</span><em>${escapeHtml(heroSubline)}</em></h2>
           <p class="hero-intro">${escapeHtml(state.brief.intro)}</p>
+          <div class="hero-actions">
+            <button class="hero-listen" type="button" id="heroListenBtn">
+              <span class="hero-play">▶</span>
+              <span><strong>Listen to today</strong><small>${escapeHtml(state.brief.readTime||"Daily edition")}</small></span>
+            </button>
+            <button class="hero-scroll" type="button" id="heroReadBtn">Start reading ↓</button>
+          </div>
         </div>
-        <div class="edition-card">
-          <div class="edition-label">Today’s edition</div>
-          <div class="edition-stat"><strong>${state.brief.stories.length}</strong><span>stories</span></div>
-          <div class="edition-stat"><strong>${escapeHtml(state.brief.readTime||"—")}</strong><span>read</span></div>
-          <div class="edition-status">${state.api.configured?"● Live":"○ Demo"}</div>
-        </div>
+
+        <aside class="hero-feature">
+          <div class="hero-feature-top">
+            <span>Opening story</span>
+            <span>01 / ${String(state.brief.stories.length).padStart(2,"0")}</span>
+          </div>
+          <div class="hero-feature-rule"></div>
+          <h3>${escapeHtml(leadStory?.title||"Your edition is ready")}</h3>
+          <p>${escapeHtml(leadStory?.summary||"A personal mix of what matters, what is useful, and what is worth understanding.")}</p>
+          <div class="hero-feature-foot">
+            <span>${escapeHtml(leadStory?.category||"Neosis")}</span>
+            <span class="feature-arrow">↗</span>
+          </div>
+        </aside>
       </div>
     </section>
 
@@ -400,52 +422,57 @@ function renderToday(){
 
     <div class="today-layout">
       <div class="today-main">
-        <div class="section-heading-row">
+        <div class="section-heading-row" id="briefingStart">
           <div>
-            <div class="eyebrow">Today’s briefing</div>
-            <h3>Stories selected for you</h3>
+            <div class="eyebrow">Your edition</div>
+            <h3>Worth your attention</h3>
           </div>
-          <button class="ghost compact" id="generateBtn" ${state.api.configured&&state.api.canRegenerate?"":"disabled"}>${!state.api.configured?"Unavailable":state.api.canRegenerate?"↻ Regenerate once today":"Regeneration used today"}</button>
+          <div class="edition-tools">
+            <span class="edition-generation">${apiMessage}</span>
+            <button class="ghost compact" id="generateBtn" ${state.api.configured&&state.api.canRegenerate?"":"disabled"}>${!state.api.configured?"Unavailable":state.api.canRegenerate?"Refresh edition":"Refresh used"}</button>
+          </div>
         </div>
         <span id="generateStatus" class="muted"></span>
-        <div id="stories"></div>
+        <div id="stories" class="story-stack"></div>
 
         <section class="panel feedback-card">
-          <div class="eyebrow">Feedback loop</div>
-          <h2>Make tomorrow better.</h2>
-          <p class="muted">Rate today’s stories so Neosis can learn what deserves more space, less space, or a different level of depth.</p>
-          <button class="primary" id="surveyBtn">Take today’s survey</button>
+          <div class="feedback-orb" aria-hidden="true">✦</div>
+          <div class="eyebrow">Teach Neosis</div>
+          <h2>Make tomorrow feel even more like you.</h2>
+          <p class="muted">A few quick signals help Neosis sharpen what it chooses and how deeply it explains it.</p>
+          <button class="primary" id="surveyBtn">Rate this edition</button>
         </section>
       </div>
 
       <aside class="today-sidebar">
         <section class="tune-card">
-          <div class="tune-icon">✦</div>
-          <div class="eyebrow">Personalize</div>
-          <h3>Tune My Neosis</h3>
-          <p>Tell Neosis what you want this podcast to become — any subject, recurring format, mix, or explanation style.</p>
+          <div class="tune-card-head">
+            <div class="tune-icon">✦</div>
+            <div><div class="eyebrow">Shape tomorrow</div><h3>Tune Neosis</h3></div>
+          </div>
+          <p>Talk to it naturally. Ask for more, less, deeper, lighter, or something completely new.</p>
 
           <form id="quickTuneForm">
-            <textarea id="quickTuneInput" rows="5" placeholder="Make this a daily NBA recap. Give me cooking tips every morning. More robotics, less politics. Teach finance with less jargon."></textarea>
-            <button class="primary wide" id="quickTuneSubmit" type="submit">Tune Neosis</button>
+            <textarea id="quickTuneInput" rows="5" placeholder="More robotics. Less politics. Teach me one useful cooking idea each morning. Make finance stories less jargon-heavy."></textarea>
+            <button class="primary wide" id="quickTuneSubmit" type="submit"><span>Update my Neosis</span><span>→</span></button>
             <div id="quickTuneStatus" class="tune-status"></div>
           </form>
 
           <div class="mix-mini">
-            <div class="mix-mini-title">Current mix</div>
+            <div class="mix-mini-title"><span>Today’s mix</span><span>adaptive</span></div>
             ${mixSummary.map(([label,value])=>`
               <div class="mix-mini-row">
                 <span>${label}</span>
                 <div class="mix-mini-track"><i style="width:${Number(value)||0}%"></i></div>
-                <b>${Number(value)||0}%</b>
+                <b>${Number(value)||0}</b>
               </div>`).join("")}
           </div>
-          <button class="text-link" id="openTuneView" type="button">Open full tuning history →</button>
+          <button class="text-link" id="openTuneView" type="button">Open tuning history <span>↗</span></button>
         </section>
 
         <section class="side-note">
-          <div class="eyebrow">Generation</div>
-          <p>${apiMessage}</p>
+          <span class="side-note-icon">◎</span>
+          <div><strong>Neosis remembers context.</strong><p>What you read, rate, and explore changes how future editions are explained.</p></div>
         </section>
       </aside>
     </div>`;
@@ -453,14 +480,16 @@ function renderToday(){
   const holder=document.querySelector("#stories");
   state.brief.stories.forEach((story,i)=>{
     const node=document.querySelector("#story-template").content.cloneNode(true);
-    node.querySelector(".story-meta").textContent=`${story.contentType?story.contentType.replace(/_/g," ")+" · ":""}${story.category} · ${String(i+1).padStart(2,"0")}`;
+    const article=node.querySelector(".story-card");
+    article.dataset.storyId=story.id;
+    article.style.setProperty("--story-index",i);
+    node.querySelector(".story-meta").innerHTML=`<span class="story-index">${String(i+1).padStart(2,"0")}</span><span>${escapeHtml(story.contentType?story.contentType.replace(/_/g," "):story.category)}</span><i></i><span>${escapeHtml(story.category)}</span>`;
     node.querySelector(".story-title").textContent=story.title;
     node.querySelector(".story-summary").textContent=story.summary;
     node.querySelector(".story-body").innerHTML=bodyHtml(story.body);
-    node.querySelector(".story-sources").innerHTML="Sources: "+(story.sources||[]).map(sourceHtml).join(" · ");
+    node.querySelector(".story-sources").innerHTML="<span>Sources</span> "+(story.sources||[]).map(sourceHtml).join(" · ");
+    node.querySelector(".teach-btn").innerHTML='<span>Go deeper</span><span>↗</span>';
     node.querySelector(".teach-btn").addEventListener("click",()=>createExplainer(story));
-    const article=node.querySelector(".story-card");
-    article.dataset.storyId=story.id;
     holder.appendChild(node);
   });
 
@@ -473,6 +502,15 @@ function renderToday(){
   const openTune=document.querySelector("#openTuneView");
   if(openTune) openTune.addEventListener("click",()=>{state.view="tune";render();});
 
+  const readBtn=document.querySelector("#heroReadBtn");
+  if(readBtn)readBtn.addEventListener("click",()=>document.querySelector("#briefingStart")?.scrollIntoView({behavior:"smooth",block:"start"}));
+  const listenBtn=document.querySelector("#heroListenBtn");
+  if(listenBtn)listenBtn.addEventListener("click",()=>{
+    const audio=document.querySelector("#briefAudio");
+    if(audio){audio.scrollIntoView({behavior:"smooth",block:"center"});setTimeout(()=>audio.play().catch(()=>{}),350);}
+    else document.querySelector("#audioBrief")?.scrollIntoView({behavior:"smooth",block:"center"});
+  });
+
   const quickTuneForm=document.querySelector("#quickTuneForm");
   if(quickTuneForm) quickTuneForm.addEventListener("submit",async e=>{
     e.preventDefault();
@@ -482,17 +520,17 @@ function renderToday(){
     const message=input.value.trim();
     if(!message) return;
     btn.disabled=true;
-    btn.textContent="Tuning…";
+    btn.innerHTML="<span>Tuning…</span><span>✦</span>";
     status.textContent="Interpreting your request…";
     try{
       const data=await applyTuneMessage(message);
       input.value="";
       status.textContent=data.assistant||"Updated. Tomorrow’s brief will reflect this.";
-      btn.textContent="Updated ✓";
-      setTimeout(()=>{if(document.body.contains(btn)){btn.disabled=false;btn.textContent="Tune Neosis";}},1400);
+      btn.innerHTML="<span>Updated</span><span>✓</span>";
+      setTimeout(()=>{if(document.body.contains(btn)){btn.disabled=false;btn.innerHTML="<span>Update my Neosis</span><span>→</span>";}},1400);
     }catch(err){
       btn.disabled=false;
-      btn.textContent="Tune Neosis";
+      btn.innerHTML="<span>Update my Neosis</span><span>→</span>";
       status.textContent=err.message;
     }
   });
