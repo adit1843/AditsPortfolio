@@ -95,7 +95,7 @@ function setActive(){document.querySelectorAll(".nav-btn").forEach(b=>b.classLis
 function render(){
   setActive();
   if(state.hydrating){
-    app.innerHTML='<section class="hero"><div class="eyebrow">Briefline</div><h2>Loading your latest brief…</h2><p class="muted">Fetching the newest saved edition.</p></section>';
+    app.innerHTML='<section class="hero"><div class="eyebrow">Neosis</div><h2>Loading your latest brief…</h2><p class="muted">Fetching the newest saved edition.</p></section>';
     return;
   }
   ({today:renderToday,archive:renderArchive,explainers:renderExplainers,tune:renderTune}[state.view]||renderToday)();
@@ -212,13 +212,13 @@ function audioPanelHtml(){
       <section class="panel" id="audioBrief">
         <div class="eyebrow">Audio edition</div>
         <h2>Preparing today's audio…</h2>
-        <p class="muted">Briefline is generating and caching the spoken edition automatically.</p>
+        <p class="muted">Neosis is generating and caching the spoken edition automatically.</p>
       </section>`;
   }
   return `
     <section class="panel" id="audioBrief">
       <div class="eyebrow">Audio edition</div>
-      <h2>Listen to today's Briefline</h2>
+      <h2>Listen to today's Neosis</h2>
       <p class="muted" id="audioNow">Ready · ${segments.length} audio segments</p>
       <audio id="briefAudio" controls preload="metadata" style="width:100%"></audio>
       <div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-top:12px">
@@ -252,7 +252,7 @@ async function generateAudioForCurrentBrief(){
     state.brief=data.brief||state.brief;
     localStorage.setItem("dailyBriefCurrent",JSON.stringify(state.brief));
   }catch(e){
-    console.error("Briefline audio generation failed:",e);
+    console.error("Neosis audio generation failed:",e);
   }finally{
     state.audioGenerating=false;
     renderToday();
@@ -292,7 +292,7 @@ function setupBriefAudio(){
     lastTime=0;
     audio.src=`/api/brief-audio?path=${encodeURIComponent(seg.path)}`;
     audio.playbackRate=Number(speed?.value||1);
-    if(now) now.textContent=`Now playing ${index+1} of ${segments.length} · ${seg.label||"Briefline"}`;
+    if(now) now.textContent=`Now playing ${index+1} of ${segments.length} · ${seg.label||"Neosis"}`;
   };
 
   load(0);
@@ -325,7 +325,7 @@ function setupBriefAudio(){
       load(nextIndex);
       audio.play().catch(()=>{});
     }else if(now){
-      now.textContent="Finished today's Briefline.";
+      now.textContent="Finished today's Neosis.";
     }
   });
 
@@ -341,7 +341,7 @@ function setupBriefAudio(){
       load(next);
       audio.play().catch(()=>{});
     }else{
-      if(now) now.textContent="Finished today's Briefline.";
+      if(now) now.textContent="Finished today's Neosis.";
       audio.pause();
     }
   });
@@ -528,25 +528,25 @@ function renderTune(){
   app.innerHTML=`
     <section class="hero">
       <div class="eyebrow">Generation controls</div>
-      <h2>Tune Briefline</h2>
-      <p>Tell Briefline what you like, dislike, understand, want explained differently, or how you want the daily mix changed. It will translate that into the hidden interest and knowledge models.</p>
+      <h2>Tune Neosis</h2>
+      <p>Tell Neosis what you like, dislike, understand, want explained differently, or how you want the daily mix changed. It will translate that into the hidden interest and knowledge models.</p>
     </section>
     <section class="panel">
       <div class="section-label">Current story mix</div>
       <div class="mix-grid">
         ${Object.entries(mix).map(([k,v])=>`<div class="knowledge-row"><div><strong>${escapeHtml(labels[k]||k)}</strong></div><div class="bar"><span style="width:${Number(v)||0}%"></span></div><div>${Number(v)||0}%</div></div>`).join("")}
       </div>
-      <p class="muted">These are approximate targets. Briefline can still override them when a major story deserves coverage.</p>
+      <p class="muted">These are approximate targets. Neosis can still override them when a major story deserves coverage.</p>
     </section>
     <section class="panel">
-      <div class="section-label">Talk to Briefline</div>
+      <div class="section-label">Talk to Neosis</div>
       <div id="tuneHistory">${history.length?history.map(x=>`
         <div class="tune-message user"><strong>You</strong><p>${escapeHtml(x.user)}</p></div>
-        <div class="tune-message assistant"><strong>Briefline</strong><p>${escapeHtml(x.assistant)}</p></div>
+        <div class="tune-message assistant"><strong>Neosis</strong><p>${escapeHtml(x.assistant)}</p></div>
       `).join(""):'<p class="muted">Try: “Less market news, more science and history. I understand basic data-center cooling, but networking terms still lose me. Use less jargon in finance stories.”</p>'}</div>
       <form id="tuneForm">
-        <div class="field"><label for="tuneInput">What should change?</label><textarea id="tuneInput" rows="5" placeholder="Tell Briefline what you want more or less of, what you already understand, or how explanations should feel."></textarea></div>
-        <button class="primary" id="tuneSubmit" type="submit">Update Briefline</button>
+        <div class="field"><label for="tuneInput">What should change?</label><textarea id="tuneInput" rows="5" placeholder="Tell Neosis what you want more or less of, what you already understand, or how explanations should feel."></textarea></div>
+        <button class="primary" id="tuneSubmit" type="submit">Update Neosis</button>
         <span id="tuneStatus" class="muted"></span>
       </form>
     </section>`;
@@ -566,7 +566,7 @@ function renderTune(){
         body:JSON.stringify({message,preferences:state.prefs,knowledge:state.knowledge})
       });
       const data=await r.json();
-      if(!r.ok) throw new Error(data.error||"Could not update Briefline");
+      if(!r.ok) throw new Error(data.error||"Could not update Neosis");
       state.prefs=data.preferences;
       state.knowledge=data.knowledge;
       localStorage.setItem("dailyBriefPrefs",JSON.stringify(state.prefs));
@@ -576,7 +576,7 @@ function renderTune(){
       ]);
       renderTune();
     }catch(err){
-      btn.disabled=false;btn.textContent="Update Briefline";status.textContent=" "+err.message;
+      btn.disabled=false;btn.textContent="Update Neosis";status.textContent=" "+err.message;
     }
   });
 }
