@@ -34,7 +34,7 @@ async function repairBriefJson(raw){
     },
     body:JSON.stringify({
       model:MODEL,
-      input:`The following text was intended to be a JSON object for a Briefline daily briefing, but it contains JSON syntax errors.
+      input:`The following text was intended to be a JSON object for a Neosis daily briefing, but it contains JSON syntax errors.
 
 Repair ONLY the JSON syntax. Preserve the facts, wording, URLs, arrays, and object structure as closely as possible. Do not add commentary or markdown fences. Return one valid JSON object only.
 
@@ -134,7 +134,7 @@ async function sendDailyEmail(brief,briefId){
       "Content-Type":"application/json"
     },
     body:JSON.stringify({
-      from:"Briefline <briefline@mail.aditsanghani.com>",
+      from:"Neosis <briefline@mail.aditsanghani.com>",
       to:[SURVEY_EMAIL_TO],
       subject:`Your ${brief.date} Daily Brief is ready`,
       html
