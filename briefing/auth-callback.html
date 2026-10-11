@@ -34,7 +34,7 @@ function errorView(message){
 async function signupFlow(){
   if(!token)return errorView(err||"This verification link is missing its session. Please request another verification email.");
   try{
-    const r=await fetch("/api/auth-exchange",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({accessToken:token})});
+    const r=await fetch("/api/auth-login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"exchange",accessToken:token})});
     const d=await r.json();
     if(!r.ok)throw new Error(d.error||"Could not verify account.");
     state.innerHTML='<div class="verification-icon">✓</div><h1>Email verified.</h1><p>You’re in. Taking you to your Neosis setup…</p>';
@@ -77,7 +77,7 @@ function recoveryFlow(){
     if(pw.value!==document.querySelector("#confirm").value){msg.textContent="Passwords don’t match.";msg.className="auth-message error";return;}
     button.disabled=true;button.textContent="Updating…";msg.textContent="";
     try{
-      const r=await fetch("/api/auth-reset",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({accessToken:token,password:pw.value})});
+      const r=await fetch("/api/auth-login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"reset",accessToken:token,password:pw.value})});
       const d=await r.json();if(!r.ok)throw new Error(d.error||"Could not update password.");
       state.innerHTML='<div class="verification-icon">✓</div><h1>Password updated.</h1><p>Your new password is ready to use.</p><a class="primary wide auth-link-button" href="/briefing/login.html">Sign in to Neosis</a>';
       history.replaceState(null,"",location.pathname);
