@@ -203,3 +203,9 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .verification-state p{margin:8px auto;max-width:470px}
 .verification-icon{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;margin:4px auto 14px;background:#e7f8f5;border:1px solid #a9ddd5;color:#087f72;font-size:28px;font-weight:800}
 .verification-state .ghost{margin-top:18px}
+
+.podcast-examples{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:20px 0}
+.podcast-examples>div{border:1px solid var(--line);background:var(--paper-soft);border-radius:14px;padding:13px 14px}
+.podcast-examples strong{display:block;font-size:13px;color:var(--navy);margin-bottom:4px}
+.podcast-examples span{display:block;font-size:12px;line-height:1.45;color:var(--muted)}
+@media(max-width:650px){.podcast-examples{grid-template-columns:1fr}}
