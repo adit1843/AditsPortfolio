@@ -63,7 +63,6 @@ async function one(p){
     userId:uid,
     operation:"scheduled_final",
     input:buildBriefPrompt({date:localDate,preferences,knowledge,coverage,candidates:ranked.selected,contentPlan,sourcePlan}),
-    tools:[{type:"web_search"}],
     maxOutputTokens:10000
   });
   const brief=await parse(out(final),uid,"scheduled_final");
