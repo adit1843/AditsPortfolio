@@ -25,13 +25,14 @@ module.exports=async(req,res)=>{
   const s=requireAuth(req,res);if(!s)return;
   const profile=await getProfile(s.userId).catch(()=>null);
   const day=localDay(profile);
+  const owner=Boolean(process.env.SURVEY_EMAIL_TO&&String(s.email||"").toLowerCase()===String(process.env.SURVEY_EMAIL_TO).toLowerCase());
   if(req.method==="GET"){
-    const used=await manualAlreadyUsed(s.userId,day).catch(()=>false);
-    return res.status(200).json({configured:Boolean(process.env.OPENAI_API_KEY),model:DEFAULT_MODEL,canRegenerate:!used,regenerationLocalDate:day});
+    const used=owner?false:await manualAlreadyUsed(s.userId,day).catch(()=>false);
+    return res.status(200).json({configured:Boolean(process.env.OPENAI_API_KEY),model:DEFAULT_MODEL,canRegenerate:owner||!used,unlimitedRegenerations:owner,regenerationLocalDate:day});
   }
   if(req.method!=="POST"){res.setHeader("Allow","GET, POST");return res.status(405).json({error:"Method not allowed"});}
   if(!process.env.OPENAI_API_KEY)return res.status(503).json({error:"Neosis generation is not configured."});
-  if(await manualAlreadyUsed(s.userId,day))return res.status(429).json({error:"You’ve already used today’s regeneration. Neosis allows one regeneration per local day.",code:"daily_regeneration_limit"});
+  if(!owner&&await manualAlreadyUsed(s.userId,day))return res.status(429).json({error:"You’ve already used today’s regeneration. Neosis allows one regeneration per local day.",code:"daily_regeneration_limit"});
   const preferences=req.body?.preferences||{},knowledge=req.body?.knowledge||{},coverage=req.body?.coverage||[];
   try{
     const discovery=await jsonResponse({userId:s.userId,operation:"manual_discovery",input:buildDiscoveryPrompt({date:day,preferences,coverage}),web:true,max:9000});
