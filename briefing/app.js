@@ -684,7 +684,7 @@ function renderToday(){
     const actions=node.querySelector(".story-actions");
     const feedback=document.createElement("div");
     feedback.className="story-preference";
-    feedback.innerHTML='<span>Was this your kind of story?</span><button type="button" data-rec="more">More like this</button><button type="button" data-rec="less">Less like this</button><button type="button" data-rec="copy">Copy</button>';
+    feedback.innerHTML='<span>Was this your kind of story?</span><button type="button" data-rec="more">More like this</button><button type="button" data-rec="less">Less like this</button>';
     feedback.querySelector('[data-rec="more"]').addEventListener("click",e=>{
       e.currentTarget.classList.add("selected");
       feedback.querySelectorAll('[data-rec="more"],[data-rec="less"]').forEach(b=>b.disabled=true);
@@ -694,13 +694,6 @@ function renderToday(){
       e.currentTarget.classList.add("selected");
       feedback.querySelectorAll('[data-rec="more"],[data-rec="less"]').forEach(b=>b.disabled=true);
       recEvent("less_like_this",story,{eventKey:`${state.briefDbId}:${story.id}:less-like-this`}).catch(()=>{});
-    });
-    feedback.querySelector('[data-rec="copy"]').addEventListener("click",async e=>{
-      const sourceUrls=(story.sources||[]).map(s=>typeof s==="object"?s.url:null).filter(Boolean);
-      const text=[story.title,story.summary,sourceUrls.join("\n")].filter(Boolean).join("\n\n");
-      try{await navigator.clipboard.writeText(text);e.currentTarget.textContent="Copied";}
-      catch{e.currentTarget.textContent="Copy failed";}
-      recEvent("share_or_copy",story,{eventKey:`${state.briefDbId}:${story.id}:copy`}).catch(()=>{});
     });
     actions.appendChild(feedback);
     holder.appendChild(node);
