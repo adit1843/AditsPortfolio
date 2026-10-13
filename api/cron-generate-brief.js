@@ -76,11 +76,23 @@ module.exports=async(req,res)=>{
   const ok=Boolean(CRON_SECRET&&req.headers.authorization===`Bearer ${CRON_SECRET}`),s=getSession(req);
   if(!ok&&!s)return res.status(401).json({error:"Unauthorized"});
   try{
-    const ps=s?await request(`profiles?user_id=eq.${encodeURIComponent(s.userId)}&select=*&limit=1`):await listProfiles(),results=[];
-    for(const p of ps){
-      if(p.last_brief_local_date===day(p)){results.push({userId:p.user_id,skipped:"already_generated"});continue;}
-      try{results.push(await one(p));}catch(e){results.push({userId:p.user_id,error:e.message});}
-    }
-    return res.status(200).json({ok:true,processed:results.length,results});
+    const ps=s?await request(`profiles?user_id=eq.${encodeURIComponent(s.userId)}&select=*&limit=1`):await listProfiles();
+
+    // Run each user's edition independently so one slow/failing account cannot block the rest.
+    const tasks=ps.map(async p=>{
+      if(p.last_brief_local_date===day(p))return{userId:p.user_id,skipped:"already_generated"};
+      try{return await one(p);}
+      catch(e){return{userId:p.user_id,error:e instanceof Error?e.message:"User generation failed"};}
+    });
+    const results=await Promise.all(tasks);
+
+    return res.status(200).json({
+      ok:true,
+      processed:results.length,
+      succeeded:results.filter(x=>x.briefId).length,
+      skipped:results.filter(x=>x.skipped).length,
+      failed:results.filter(x=>x.error).length,
+      results
+    });
   }catch(e){return res.status(500).json({error:e instanceof Error?e.message:"Daily generation failed"});}
 };
