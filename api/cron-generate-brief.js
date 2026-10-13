@@ -36,7 +36,7 @@ function day(p){try{return new Intl.DateTimeFormat("en-CA",{timeZone:p.timezone|
 async function email(p,b,id){
   if(!p.email_enabled||!RESEND_API_KEY||!SITE_URL)return null;
   const {html,text,subject}=buildDailyEmail({brief:b,briefId:id,baseUrl:SITE_URL,audioEnabled:Boolean(p.audio_enabled)});
-  const rr=await fetch("https://api.resend.com/emails",{method:"POST",headers:{Authorization:`Bearer ${RESEND_API_KEY}`,"Content-Type":"application/json"},body:JSON.stringify({from:"Neosis <briefline@mail.aditsanghani.com>",to:[p.email],subject,html,text})});
+  const rr=await fetch("https://api.resend.com/emails",{method:"POST",headers:{Authorization:`Bearer ${RESEND_API_KEY}`,"Content-Type":"application/json"},body:JSON.stringify({from:"Noesis <briefline@mail.aditsanghani.com>",to:[p.email],subject,html,text})});
   const d=await rr.json();if(!rr.ok)throw new Error(d?.message||"Email failed");return d.id;
 }
 async function one(p){

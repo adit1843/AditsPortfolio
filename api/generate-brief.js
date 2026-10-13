@@ -33,8 +33,8 @@ module.exports=async(req,res)=>{
     return res.status(200).json({configured:Boolean(process.env.OPENAI_API_KEY),model:DEFAULT_MODEL,canRegenerate:owner||!used,unlimitedRegenerations:owner,regenerationLocalDate:day});
   }
   if(req.method!=="POST"){res.setHeader("Allow","GET, POST");return res.status(405).json({error:"Method not allowed"});}
-  if(!process.env.OPENAI_API_KEY)return res.status(503).json({error:"Neosis generation is not configured."});
-  if(!owner&&await manualAlreadyUsed(s.userId,day))return res.status(429).json({error:"You’ve already used today’s regeneration. Neosis allows one regeneration per local day.",code:"daily_regeneration_limit"});
+  if(!process.env.OPENAI_API_KEY)return res.status(503).json({error:"Noesis generation is not configured."});
+  if(!owner&&await manualAlreadyUsed(s.userId,day))return res.status(429).json({error:"You’ve already used today’s regeneration. Noesis allows one regeneration per local day.",code:"daily_regeneration_limit"});
   let preferences=req.body?.preferences||{};const knowledge=req.body?.knowledge||{},coverage=req.body?.coverage||[];
   try{
     const behaviorEvents=await userRows("recommendation_events",s.userId,{limit:1000,order:"created_at.asc"}).catch(()=>[]);
@@ -49,7 +49,7 @@ module.exports=async(req,res)=>{
       max:9000
     });
     const candidates=Array.isArray(discovery.json?.candidates)?discovery.json.candidates:[];
-    if(candidates.length<8)throw new Error("Neosis could not build a large enough candidate pool.");
+    if(candidates.length<8)throw new Error("Noesis could not build a large enough candidate pool.");
     const ranked=selectCandidates(candidates,{preferences,knowledge,coverage,contentPlan},12);
     const final=await jsonResponse({
       userId:s.userId,

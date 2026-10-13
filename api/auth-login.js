@@ -2,7 +2,7 @@ const {createSession,cookieHeader}=require("../lib/briefline/auth");
 
 const U=process.env.SUPABASE_URL;
 const A=process.env.SUPABASE_ANON_KEY;
-const SITE=(process.env.NEOSIS_SITE_URL||"https://aditsanghani.com").replace(/\/+$/,"");
+const SITE=(process.env.NOESIS_SITE_URL||"https://aditsanghani.com").replace(/\/+$/,"");
 
 function base(){return (U||"").replace(/\/+$/,"").replace(/\/rest\/v1$/,"");}
 function callbackUrl(mode){return `${SITE}/briefing/auth-callback.html?mode=${encodeURIComponent(mode)}`;}
@@ -25,7 +25,7 @@ async function call(path,body){
 
 module.exports=async(req,res)=>{
   if(req.method!=="POST"){res.setHeader("Allow","POST");return res.status(405).json({error:"Method not allowed"});}
-  if(!U||!A||!process.env.BRIEFLINE_SESSION_SECRET)return res.status(503).json({error:"Neosis authentication is not fully configured."});
+  if(!U||!A||!process.env.BRIEFLINE_SESSION_SECRET)return res.status(503).json({error:"Noesis authentication is not fully configured."});
 
   const action=String(req.body?.action||"signin");
   const email=String(req.body?.email||"").trim().toLowerCase();

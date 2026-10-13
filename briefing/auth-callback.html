@@ -3,20 +3,20 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Neosis — Account</title>
-  <link rel="icon" href="/assets/neosis-favicon.svg?v=cards-20261013">
+  <title>Noesis — Account</title>
+  <link rel="icon" href="/assets/noesis-favicon.svg?v=cards-20261013">
   <link rel="stylesheet" href="./styles.css?v=cards-20261013">
-<link rel="manifest" href="/briefing/manifest.webmanifest?v=cards-20261013"><meta name="theme-color" content="#f6eee6"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Neosis"><link rel="apple-touch-icon" href="/assets/neosis-apple-touch-icon.png?v=cards-20261013"></head>
+<link rel="manifest" href="/briefing/manifest.webmanifest?v=cards-20261013"><meta name="theme-color" content="#f6eee6"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Noesis"><link rel="apple-touch-icon" href="/assets/noesis-apple-touch-icon.png?v=cards-20261013"></head>
 <body class="auth-shell auth-shell-premium">
   <main class="auth-card auth-card-premium auth-callback-card">
     <div class="auth-brand auth-brand-center">
-      <img src="/assets/neosis-icon.svg?v=cards-20261013" alt="">
-      <div><div class="eyebrow">Personal briefing</div><strong>Neosis</strong></div>
+      <img src="/assets/noesis-icon.svg?v=cards-20261013" alt="">
+      <div><div class="eyebrow">Personal briefing</div><strong>Noesis</strong></div>
     </div>
     <div id="state" class="verification-state">
       <div class="auth-spinner" aria-hidden="true"></div>
       <h1>Verifying your account…</h1>
-      <p>One moment while Neosis finishes setting things up.</p>
+      <p>One moment while Noesis finishes setting things up.</p>
     </div>
   </main>
 <script>
@@ -28,7 +28,7 @@ const token=params.get("access_token");
 const err=params.get("error_description")||params.get("error");
 
 function errorView(message){
-  state.innerHTML='<div class="verification-icon error">!</div><h1>This link didn’t work.</h1><p id="callbackError"></p><a class="primary wide auth-link-button" href="/briefing/login.html">Back to Neosis</a>';
+  state.innerHTML='<div class="verification-icon error">!</div><h1>This link didn’t work.</h1><p id="callbackError"></p><a class="primary wide auth-link-button" href="/briefing/login.html">Back to Noesis</a>';
   document.querySelector("#callbackError").textContent=message||"The link may have expired. Request a new one from the sign-in page.";
 }
 async function signupFlow(){
@@ -37,7 +37,7 @@ async function signupFlow(){
     const r=await fetch("/api/auth-login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"exchange",accessToken:token})});
     const d=await r.json();
     if(!r.ok)throw new Error(d.error||"Could not verify account.");
-    state.innerHTML='<div class="verification-icon">✓</div><h1>Email verified.</h1><p>You’re in. Taking you to your Neosis setup…</p>';
+    state.innerHTML='<div class="verification-icon">✓</div><h1>Email verified.</h1><p>You’re in. Taking you to your Noesis setup…</p>';
     setTimeout(()=>location.replace("/briefing/onboarding.html"),650);
   }catch(e){errorView(e.message);}
 }
@@ -79,7 +79,7 @@ function recoveryFlow(){
     try{
       const r=await fetch("/api/auth-login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"reset",accessToken:token,password:pw.value})});
       const d=await r.json();if(!r.ok)throw new Error(d.error||"Could not update password.");
-      state.innerHTML='<div class="verification-icon">✓</div><h1>Password updated.</h1><p>Your new password is ready to use.</p><a class="primary wide auth-link-button" href="/briefing/login.html">Sign in to Neosis</a>';
+      state.innerHTML='<div class="verification-icon">✓</div><h1>Password updated.</h1><p>Your new password is ready to use.</p><a class="primary wide auth-link-button" href="/briefing/login.html">Sign in to Noesis</a>';
       history.replaceState(null,"",location.pathname);
     }catch(ex){msg.textContent=ex.message;msg.className="auth-message error";button.disabled=false;button.textContent="Update password";}
   };

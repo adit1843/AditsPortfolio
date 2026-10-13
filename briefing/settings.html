@@ -1,8 +1,8 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Neosis Settings</title><link rel="icon" href="/assets/neosis-favicon.svg?v=cards-20261013"><link rel="stylesheet" href="./styles.css?v=cards-20261013"><link rel="manifest" href="/briefing/manifest.webmanifest?v=cards-20261013"><meta name="theme-color" content="#f6eee6"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Neosis"><link rel="apple-touch-icon" href="/assets/neosis-apple-touch-icon.png?v=cards-20261013"></head>
-<body><header class="topbar"><div class="brand"><img class="brand-logo" src="/assets/neosis-icon.svg?v=cards-20261013" alt=""><div><div class="eyebrow">Account</div><h1>Neosis</h1></div></div><nav><a class="nav-btn nav-link" href="/briefing/">← Today</a></nav></header>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Noesis Settings</title><link rel="icon" href="/assets/noesis-favicon.svg?v=cards-20261013"><link rel="stylesheet" href="./styles.css?v=cards-20261013"><link rel="manifest" href="/briefing/manifest.webmanifest?v=cards-20261013"><meta name="theme-color" content="#f6eee6"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Noesis"><link rel="apple-touch-icon" href="/assets/noesis-apple-touch-icon.png?v=cards-20261013"></head>
+<body><header class="topbar"><div class="brand"><img class="brand-logo" src="/assets/noesis-icon.svg?v=cards-20261013" alt=""><div><div class="eyebrow">Account</div><h1>Noesis</h1></div></div><nav><a class="nav-btn nav-link" href="/briefing/">← Today</a></nav></header>
 <main class="shell"><section class="auth-card auth-card-premium" style="margin:auto">
 <div class="eyebrow">Settings</div><h1>Your account</h1>
-<p>Manage account and delivery settings here. To change what Neosis covers or how it explains things, use <strong>Tune Neosis</strong> inside the briefing.</p>
+<p>Manage account and delivery settings here. To change what Noesis covers or how it explains things, use <strong>Tune Noesis</strong> inside the briefing.</p>
 <form id="settings">
   <div class="form-grid">
     <div class="field"><label>Name</label><input name="displayName"></div>
@@ -10,8 +10,8 @@
     <div class="field full"><label>Timezone</label><select name="timezone" id="timezone"></select></div>
   </div>
   <label class="check-row"><input name="emailEnabled" type="checkbox"><span><strong>Daily email</strong><div class="helper">Email links to your new Read / Listen / Survey edition.</div></span></label>
-  <label class="check-row"><input name="audioEnabled" type="checkbox"><span><strong>Audio edition</strong><div class="helper">Generate the spoken edition when Neosis audio capacity is available.</div></span></label>
-  <div class="notice">Editorial preferences are intentionally not managed here. Use <strong>Tune Neosis</strong> conversationally, and Neosis will continue learning from your survey and consumption signals.</div>
+  <label class="check-row"><input name="audioEnabled" type="checkbox"><span><strong>Audio edition</strong><div class="helper">Generate the spoken edition when Noesis audio capacity is available.</div></span></label>
+  <div class="notice">Editorial preferences are intentionally not managed here. Use <strong>Tune Noesis</strong> conversationally, and Noesis will continue learning from your survey and consumption signals.</div>
   <div class="auth-actions"><button class="primary" id="save">Save changes</button><button class="ghost" id="logout" type="button">Sign out</button><span id="status" class="helper"></span></div>
 </form>
 <div class="section-label">Usage this month</div>
@@ -20,28 +20,28 @@
 
 <div id="ownerControls" style="display:none">
   <div class="section-label">Owner controls</div>
-  <div class="notice"><strong>Unlimited regenerations enabled.</strong><div class="helper">Your owner account can manually regenerate Neosis without the normal one-per-day limit. Other accounts remain limited.</div></div>
+  <div class="notice"><strong>Unlimited regenerations enabled.</strong><div class="helper">Your owner account can manually regenerate Noesis without the normal one-per-day limit. Other accounts remain limited.</div></div>
 </div>
 
 <div class="section-label">Danger zone</div>
 <section class="danger-zone">
   <div>
-    <strong>Reset Neosis completely</strong>
+    <strong>Reset Noesis completely</strong>
     <p>This permanently clears your saved editions, Deep Dives, tuning instructions, survey feedback, coverage memory, and learned knowledge. Your login, profile, email/audio delivery settings, and usage records are kept.</p>
   </div>
-  <button class="danger-button" id="openReset" type="button">Reset Neosis</button>
+  <button class="danger-button" id="openReset" type="button">Reset Noesis</button>
 </section>
 
 <dialog id="resetDialog" class="reset-dialog">
   <form method="dialog" class="reset-dialog-card" id="resetForm">
     <div class="eyebrow">Permanent reset</div>
-    <h2>Start Neosis over from zero?</h2>
+    <h2>Start Noesis over from zero?</h2>
     <p>This cannot be undone. Your archive, Deep Dives, tuning history, survey feedback, topic preferences, coverage memory, and knowledge model will all be erased.</p>
     <div class="danger-note"><strong>Your account will remain active.</strong><br>Your name, email, timezone, delivery settings, and usage records will not be deleted.</div>
-    <label class="check-row reset-check"><input id="resetAcknowledge" type="checkbox"><span><strong>I understand this permanently deletes my Neosis history and personalization.</strong></span></label>
-    <div class="field"><label for="resetPhrase">Type <strong>RESET NEOSIS</strong> to confirm</label><input id="resetPhrase" autocomplete="off" placeholder="RESET NEOSIS"></div>
+    <label class="check-row reset-check"><input id="resetAcknowledge" type="checkbox"><span><strong>I understand this permanently deletes my Noesis history and personalization.</strong></span></label>
+    <div class="field"><label for="resetPhrase">Type <strong>RESET NOESIS</strong> to confirm</label><input id="resetPhrase" autocomplete="off" placeholder="RESET NOESIS"></div>
     <div class="auth-actions">
-      <button class="danger-button" id="confirmReset" type="button" disabled>Permanently reset Neosis</button>
+      <button class="danger-button" id="confirmReset" type="button" disabled>Permanently reset Noesis</button>
       <button class="ghost" id="cancelReset" type="button">Cancel</button>
       <span id="resetStatus" class="helper"></span>
     </div>
@@ -95,7 +95,7 @@ document.querySelector("#settings").onsubmit=async e=>{
   catch(err){status.textContent=err.message;}finally{save.disabled=false;}
 };
 const resetDialog=document.querySelector("#resetDialog"),resetPhrase=document.querySelector("#resetPhrase"),resetAck=document.querySelector("#resetAcknowledge"),confirmReset=document.querySelector("#confirmReset"),resetStatus=document.querySelector("#resetStatus");
-function updateResetState(){confirmReset.disabled=!(resetAck.checked&&resetPhrase.value==="RESET NEOSIS");}
+function updateResetState(){confirmReset.disabled=!(resetAck.checked&&resetPhrase.value==="RESET NOESIS");}
 document.querySelector("#openReset").onclick=()=>{resetPhrase.value="";resetAck.checked=false;resetStatus.textContent="";updateResetState();resetDialog.showModal();};
 document.querySelector("#cancelReset").onclick=()=>resetDialog.close();
 resetPhrase.addEventListener("input",updateResetState);resetAck.addEventListener("change",updateResetState);
@@ -103,7 +103,7 @@ confirmReset.onclick=async()=>{
   if(confirmReset.disabled)return;
   confirmReset.disabled=true;resetStatus.textContent=" Resetting…";
   try{
-    const r=await fetch("/api/account",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"reset_neosis",confirmation:resetPhrase.value})});
+    const r=await fetch("/api/account",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"reset_noesis",confirmation:resetPhrase.value})});
     const d=await r.json();if(!r.ok)throw new Error(d.error||"Reset failed");
     resetStatus.textContent=" Reset complete.";
     setTimeout(()=>location.replace("/briefing/"),500);

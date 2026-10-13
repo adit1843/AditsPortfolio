@@ -130,7 +130,7 @@ function setActive(){document.querySelectorAll(".nav-btn").forEach(b=>b.classLis
 function render(){
   setActive();
   if(state.hydrating){
-    app.innerHTML='<section class="hero"><div class="eyebrow">Neosis</div><h2>Loading your latest brief…</h2><p class="muted">Fetching the newest saved edition.</p></section>';
+    app.innerHTML='<section class="hero"><div class="eyebrow">Noesis</div><h2>Loading your latest brief…</h2><p class="muted">Fetching the newest saved edition.</p></section>';
     return;
   }
   ({today:renderToday,archive:renderArchive,explainers:renderExplainers,tune:renderTune}[state.view]||renderToday)();
@@ -303,9 +303,9 @@ function currentChapterStart(){
 
 function playbackStatus(){
   if(state.audioGenerating&&!playback.segments.length)return "Preparing today's audio…";
-  if(!playback.segments.length)return "Today's Neosis";
+  if(!playback.segments.length)return "Today's Noesis";
   const seg=playback.segments[playback.index]||playback.segments[0];
-  return `${seg?.label||"Neosis"} · chapter ${chapterStarts().findIndex(x=>x.index===currentChapterStart())+1} of ${chapterStarts().length}`;
+  return `${seg?.label||"Noesis"} · chapter ${chapterStarts().findIndex(x=>x.index===currentChapterStart())+1} of ${chapterStarts().length}`;
 }
 
 function rebuildChapterSelect(){
@@ -372,7 +372,7 @@ async function generateAudioForCurrentBrief(){
     state.brief=data.brief||state.brief;
     setupBriefAudio();
   }catch(e){
-    console.error("Neosis audio generation failed:",e);
+    console.error("Noesis audio generation failed:",e);
   }finally{
     state.audioGenerating=false;
     syncPersistentAudioDock();
@@ -527,7 +527,7 @@ function dailyHeadline(dateLabel=""){
     ["Good things to know.","Stories, ideas, and context chosen for you."],
     ["Begin with curiosity.","Here’s something useful, something surprising, and what matters."],
     ["Your morning, with a little more meaning.","Settle in — today’s edition is ready."],
-    ["A smarter start, gently.","Here’s what Neosis thinks deserves your attention."],
+    ["A smarter start, gently.","Here’s what Noesis thinks deserves your attention."],
     ["Hello, curious mind.","Your daily mix of what matters and what’s interesting."],
     ["Take a few minutes for your world.","We picked the signal from the noise for you."],
     ["Something worth knowing is waiting.","Here’s your personal edition for today."],
@@ -543,13 +543,13 @@ function renderEmptyToday(){
   app.innerHTML=`
     <section class="empty-edition-shell">
       <div class="empty-edition-card">
-        <div class="empty-edition-mark"><img src="/assets/neosis-icon.svg" alt=""></div>
+        <div class="empty-edition-mark"><img src="/assets/noesis-icon.svg" alt=""></div>
         <div class="eyebrow">Your next edition</div>
-        <h2>A fresh Neosis is on the way.</h2>
+        <h2>A fresh Noesis is on the way.</h2>
         <p>Your personalized stories refresh automatically at <strong>5:00 AM Central</strong> each morning. Your next scheduled edition will be ready tomorrow.</p>
         <div class="empty-edition-separator"><span>Want something today?</span></div>
         <button class="primary empty-refresh" id="emptyRefreshBtn" type="button" ${apiReady&&!state.briefGenerating?"":"disabled"}>${state.briefGenerating?"Building your edition…":"Refresh now"}</button>
-        <div class="empty-edition-note" id="emptyRefreshStatus">${state.briefGenerating?"Neosis is researching and writing your stories. You can keep using the app while it works.":"Create a fresh edition now without changing tomorrow’s scheduled refresh."}</div>
+        <div class="empty-edition-note" id="emptyRefreshStatus">${state.briefGenerating?"Noesis is researching and writing your stories. You can keep using the app while it works.":"Create a fresh edition now without changing tomorrow’s scheduled refresh."}</div>
       </div>
     </section>`;
   const btn=document.querySelector("#emptyRefreshBtn");
@@ -604,7 +604,7 @@ function renderToday(){
           <h3>${escapeHtml(leadStory?.title||"Your edition is ready")}</h3>
           <p>${escapeHtml(leadStory?.summary||"A personal mix of what matters, what is useful, and what is worth understanding.")}</p>
           <div class="hero-feature-foot">
-            <span>${escapeHtml(leadStory?.category||"Neosis")}</span>
+            <span>${escapeHtml(leadStory?.category||"Noesis")}</span>
             <span class="feature-arrow">↗</span>
           </div>
         </aside>
@@ -629,9 +629,9 @@ function renderToday(){
         <section class="panel feedback-card">
           <div class="feedback-orb" aria-hidden="true">✦</div>
           <div class="eyebrow">Learning quietly</div>
-          <h2>Neosis gets better as you use it.</h2>
+          <h2>Noesis gets better as you use it.</h2>
           <p class="muted">What you read, finish, skip, revisit, explore, and explicitly ask for all shape future editions. No survey required.</p>
-          <button class="primary" id="feedbackTuneBtn">Tune Neosis</button>
+          <button class="primary" id="feedbackTuneBtn">Tune Noesis</button>
         </section>
       </div>
 
@@ -639,13 +639,13 @@ function renderToday(){
         <section class="tune-card">
           <div class="tune-card-head">
             <div class="tune-icon">✦</div>
-            <div><div class="eyebrow">Shape tomorrow</div><h3>Tune Neosis</h3></div>
+            <div><div class="eyebrow">Shape tomorrow</div><h3>Tune Noesis</h3></div>
           </div>
           <p>Talk to it naturally. Ask for more, less, deeper, lighter, or something completely new.</p>
 
           <form id="quickTuneForm">
             <textarea id="quickTuneInput" rows="5" placeholder="More robotics. Less politics. Teach me one useful cooking idea each morning. Make finance stories less jargon-heavy."></textarea>
-            <button class="primary wide" id="quickTuneSubmit" type="submit"><span>Update my Neosis</span><span>→</span></button>
+            <button class="primary wide" id="quickTuneSubmit" type="submit"><span>Update my Noesis</span><span>→</span></button>
             <div id="quickTuneStatus" class="tune-status"></div>
           </form>
 
@@ -663,7 +663,7 @@ function renderToday(){
 
         <section class="side-note">
           <span class="side-note-icon">◎</span>
-          <div><strong>Neosis learns from behavior.</strong><p>Reading, listening, skipping, revisiting, and Tune instructions all sharpen future story selection.</p></div>
+          <div><strong>Noesis learns from behavior.</strong><p>Reading, listening, skipping, revisiting, and Tune instructions all sharpen future story selection.</p></div>
         </section>
       </aside>
     </div>`;
@@ -742,10 +742,10 @@ function renderToday(){
       input.value="";
       status.textContent=data.assistant||"Updated. Tomorrow’s brief will reflect this.";
       btn.innerHTML="<span>Updated</span><span>✓</span>";
-      setTimeout(()=>{if(document.body.contains(btn)){btn.disabled=false;btn.innerHTML="<span>Update my Neosis</span><span>→</span>";}},1400);
+      setTimeout(()=>{if(document.body.contains(btn)){btn.disabled=false;btn.innerHTML="<span>Update my Noesis</span><span>→</span>";}},1400);
     }catch(err){
       btn.disabled=false;
-      btn.innerHTML="<span>Update my Neosis</span><span>→</span>";
+      btn.innerHTML="<span>Update my Noesis</span><span>→</span>";
       status.textContent=err.message;
     }
   });
@@ -759,7 +759,7 @@ async function generateLiveBrief(){
   const status=document.querySelector("#generateStatus")||document.querySelector("#emptyRefreshStatus");
   state.briefGenerating=true;
   if(btn){btn.disabled=true;btn.textContent="Building your edition…";}
-  if(status)status.textContent=" Neosis is researching and writing your stories. You can keep using the app while it works.";
+  if(status)status.textContent=" Noesis is researching and writing your stories. You can keep using the app while it works.";
   if(state.view==="today"&&!state.brief?.stories?.length)renderEmptyToday();
   try{
     const r=await fetch("/api/generate-brief",{
@@ -873,7 +873,7 @@ function renderArchive(){
     <section class="hero archive-hero">
       <div class="eyebrow">Your history</div>
       <h2>Archive</h2>
-      <p>Every saved Neosis edition, ready to revisit. Open any day to read the complete briefing exactly as it was saved.</p>
+      <p>Every saved Noesis edition, ready to revisit. Open any day to read the complete briefing exactly as it was saved.</p>
     </section>
     <section class="archive-grid">
       ${briefs.length?briefs.map((row,i)=>{
@@ -884,7 +884,7 @@ function renderArchive(){
               <span class="archive-date">${escapeHtml(b.date||row.briefDate||"Saved edition")}</span>
               <span class="archive-count">${stories.length} stor${stories.length===1?"y":"ies"}</span>
             </div>
-            <h3>${escapeHtml(first?.title||"Neosis daily edition")}</h3>
+            <h3>${escapeHtml(first?.title||"Noesis daily edition")}</h3>
             <p>${escapeHtml(first?.summary||b.intro||"Open this edition to read the full briefing.")}</p>
             <div class="archive-card-foot">
               <span>${escapeHtml(b.readTime||"Daily brief")}</span>
@@ -911,14 +911,14 @@ function renderArchivedBrief(row){
         <span>${escapeHtml(brief.readTime||"Daily brief")}</span>
       </div>
       <div class="eyebrow">Past edition</div>
-      <h2>${escapeHtml(brief.date||"Neosis")}</h2>
-      <p>${escapeHtml(brief.intro||"A saved Neosis edition.")}</p>
+      <h2>${escapeHtml(brief.date||"Noesis")}</h2>
+      <p>${escapeHtml(brief.intro||"A saved Noesis edition.")}</p>
     </section>
     <div class="archive-reader-list">
       ${(brief.stories||[]).map((story,i)=>`
         <article class="story-card archive-story" data-story-id="${escapeHtml(String(story.id))}">
           <div class="story-accent" aria-hidden="true"></div>
-          <div class="story-meta"><span class="story-index">${String(i+1).padStart(2,"0")}</span><span>${escapeHtml(story.contentType?story.contentType.replace(/_/g," "):story.category||"Story")}</span><i></i><span>${escapeHtml(story.category||"Neosis")}</span></div>
+          <div class="story-meta"><span class="story-index">${String(i+1).padStart(2,"0")}</span><span>${escapeHtml(story.contentType?story.contentType.replace(/_/g," "):story.category||"Story")}</span><i></i><span>${escapeHtml(story.category||"Noesis")}</span></div>
           <h2 class="story-title">${escapeHtml(story.title||"Untitled story")}</h2>
           <p class="story-summary">${escapeHtml(story.summary||"")}</p>
           <div class="story-body">${bodyHtml(story.body||"")}</div>
@@ -951,7 +951,7 @@ function renderExplainers(){
     <section class="hero library-hero">
       <div class="eyebrow">Saved learning</div>
       <h2>Library</h2>
-      <p>Your Deep Dives live here as a reference library. Search by idea, filter by topic, and open only what you need. Creating a Deep Dive still does not change what Neosis selects for future editions.</p>
+      <p>Your Deep Dives live here as a reference library. Search by idea, filter by topic, and open only what you need. Creating a Deep Dive still does not change what Noesis selects for future editions.</p>
     </section>
     ${all.length?`
       <section class="library-toolbar panel">
@@ -1086,7 +1086,7 @@ async function applyTuneMessage(message){
     body:JSON.stringify({message,preferences:state.prefs,knowledge:state.knowledge})
   });
   const data=await r.json();
-  if(!r.ok) throw new Error(data.error||"Could not update Neosis");
+  if(!r.ok) throw new Error(data.error||"Could not update Noesis");
   state.prefs=data.preferences;
   state.knowledge=data.knowledge;
 
@@ -1172,13 +1172,13 @@ function renderTune(){
   app.innerHTML=`
     <section class="hero">
       <div class="eyebrow">Your personalization</div>
-      <h2>Tune Neosis</h2>
-      <p>Neosis learns mostly from what you actually read, listen to, skip, revisit, and explore. Direct instructions here always outrank passive behavior.</p>
+      <h2>Tune Noesis</h2>
+      <p>Noesis learns mostly from what you actually read, listen to, skip, revisit, and explore. Direct instructions here always outrank passive behavior.</p>
     </section>
 
     <section class="panel learned-profile">
       <div class="tuning-ledger-head">
-        <div><div class="section-label">What Neosis has learned</div><h3>Your emerging interest map</h3></div>
+        <div><div class="section-label">What Noesis has learned</div><h3>Your emerging interest map</h3></div>
         <span class="tuning-count">${learned.length} signal${learned.length===1?"":"s"}</span>
       </div>
       <p class="muted">These are behavioral inferences, not permanent settings. Confidence rises gradually, recent interests fade over time, and one skip never changes your profile much.</p>
@@ -1205,17 +1205,17 @@ function renderTune(){
     </section>
 
     <section class="panel tune-compose">
-      <div class="section-label">Talk to Neosis</div>
+      <div class="section-label">Talk to Noesis</div>
       <form id="tuneForm">
         <div class="field"><label for="tuneInput">What should change?</label><textarea id="tuneInput" rows="5" placeholder="More robotics. Less politics. Give me a full U.S. market recap every morning. I’m not actually interested in celebrity news."></textarea></div>
-        <button class="primary" id="tuneSubmit" type="submit">Update Neosis</button>
+        <button class="primary" id="tuneSubmit" type="submit">Update Noesis</button>
         <span id="tuneStatus" class="muted"></span>
       </form>
     </section>
 
     <section class="panel tuning-ledger">
       <div class="tuning-ledger-head">
-        <div><div class="section-label">Direct instructions</div><h3>What you’ve explicitly told Neosis</h3></div>
+        <div><div class="section-label">Direct instructions</div><h3>What you’ve explicitly told Noesis</h3></div>
         <span class="tuning-count">${history.length} instruction${history.length===1?"":"s"}</span>
       </div>
       <p class="muted">These are stronger than passive behavior. Delete an instruction whenever you no longer want it shaping future editions.</p>
@@ -1225,10 +1225,10 @@ function renderTune(){
           <div class="tuning-event-body">
             <div class="tuning-event-meta"><span>Direct instruction</span><time>${escapeHtml(tuneDate(x.at))}</time></div>
             <strong>${escapeHtml(x.user)}</strong>
-            <p>${escapeHtml(x.assistant||"Neosis updated your preferences.")}</p>
+            <p>${escapeHtml(x.assistant||"Noesis updated your preferences.")}</p>
           </div>
           <button class="tuning-delete" type="button" data-kind="chat" data-key="${escapeHtml(x.at||"")}">Delete</button>
-        </article>`).join(""):'<div class="tuning-empty"><strong>No direct instructions yet.</strong><p>Use natural language above whenever you want to steer Neosis deliberately.</p></div>'}
+        </article>`).join(""):'<div class="tuning-empty"><strong>No direct instructions yet.</strong><p>Use natural language above whenever you want to steer Noesis deliberately.</p></div>'}
       </div>
     </section>`;
 
@@ -1241,7 +1241,7 @@ function renderTune(){
     if(!message)return;
     btn.disabled=true;btn.textContent="Updating…";status.textContent=" Interpreting your preferences.";
     try{await applyTuneMessage(message);renderTune();}
-    catch(err){btn.disabled=false;btn.textContent="Update Neosis";status.textContent=" "+err.message;}
+    catch(err){btn.disabled=false;btn.textContent="Update Noesis";status.textContent=" "+err.message;}
   });
 
   document.querySelectorAll(".tuning-delete[data-kind='chat']").forEach(btn=>btn.addEventListener("click",()=>deleteTuneInstruction(btn.dataset.key,btn)));

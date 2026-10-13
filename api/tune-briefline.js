@@ -61,7 +61,7 @@ async function rebuildFromSources({userId,history,surveys,currentKnowledge,curre
   };
 
   if(cleanHistory.length){
-    const prompt=`Rebuild Neosis personalization from scratch using ONLY these still-active direct tuning instructions, in chronological order: ${JSON.stringify(cleanHistory.map(x=>x.user))}. Interest controls WHAT is selected; knowledge controls HOW deeply concepts are explained. Return ONLY JSON {"topicScores":{},"contentTypeScores":{},"mixTargets":{"news":45,"general_knowledge":20,"deep_dive":15,"history":7,"science":8,"business_case":5},"requestedTopics":[],"knowledgeUpdates":[],"languageDirectives":[],"editorialDirectives":[],"explanationBias":0}.`;
+    const prompt=`Rebuild Noesis personalization from scratch using ONLY these still-active direct tuning instructions, in chronological order: ${JSON.stringify(cleanHistory.map(x=>x.user))}. Interest controls WHAT is selected; knowledge controls HOW deeply concepts are explained. Return ONLY JSON {"topicScores":{},"contentTypeScores":{},"mixTargets":{"news":45,"general_knowledge":20,"deep_dive":15,"history":7,"science":8,"business_case":5},"requestedTopics":[],"knowledgeUpdates":[],"languageDirectives":[],"editorialDirectives":[],"explanationBias":0}.`;
     const d=await createResponse({userId,operation:"tune_rebuild",input:prompt,maxOutputTokens:2400});
     const p=JSON.parse(clean(out(d)));
     next.topicScores={...(p.topicScores||{})};
@@ -85,7 +85,7 @@ async function rebuildFromSources({userId,history,surveys,currentKnowledge,curre
 module.exports=async(req,res)=>{
   const s=requireAuth(req,res);if(!s)return;
   if(req.method!=="POST"){res.setHeader("Allow","POST");return res.status(405).json({error:"Method not allowed"});}
-  if(!process.env.OPENAI_API_KEY)return res.status(503).json({error:"Neosis generation is not configured."});
+  if(!process.env.OPENAI_API_KEY)return res.status(503).json({error:"Noesis generation is not configured."});
   const action=String(req.body?.action||"tune");
   if(action==="rebuild"){
     try{
@@ -97,12 +97,12 @@ module.exports=async(req,res)=>{
         currentPreferences:req.body?.preferences||{}
       });
       return res.status(200).json(rebuilt);
-    }catch(e){return res.status(e.status||500).json({error:e instanceof Error?e.message:"Could not rebuild Neosis tuning"});}
+    }catch(e){return res.status(e.status||500).json({error:e instanceof Error?e.message:"Could not rebuild Noesis tuning"});}
   }
   const message=String(req.body?.message||"").trim();
   if(!message)return res.status(400).json({error:"A tuning message is required."});
   const prefs=req.body?.preferences||{},knowledge=req.body?.knowledge||{concepts:{},seenEvents:{}},history=Array.isArray(prefs.tuningHistory)?prefs.tuningHistory.slice(-12):[];
-  const prompt=`You are Neosis's control layer. Neosis can become a daily podcast about ANYTHING, not merely a news briefing. A user may ask for yesterday's sports results, cooking tips every morning, a history show, a language lesson, a narrowly scoped industry briefing, or any hybrid. User message: ${message}. Current interest/editorial state: ${JSON.stringify(prefs)}. Hidden knowledge: ${JSON.stringify(knowledge?.concepts||{})}. Recent tuning: ${JSON.stringify(history)}. Interest controls WHAT is selected; knowledge controls HOW deeply concepts are explained. Asking for an explanation alone never means more stories on that topic. Explicit recurring instructions such as "give me NBA results every morning" or "make this mostly cooking" should be captured as durable editorialDirectives and, where useful, requestedTopics or topicScoreUpdates. Preserve arbitrary subject matter literally rather than forcing it into generic news categories. Mix targets news/general_knowledge/deep_dive/history/science/business_case are broad presentation formats, not subject-matter limits. Scores are 0-100. Return ONLY JSON {"assistant":"","topicScoreUpdates":{},"contentTypeScoreUpdates":{},"mixTargets":{"news":45,"general_knowledge":20,"deep_dive":15,"history":7,"science":8,"business_case":5},"knowledgeUpdates":[],"languageDirectives":[],"editorialDirectives":[]}`;
+  const prompt=`You are Noesis's control layer. Noesis can become a daily podcast about ANYTHING, not merely a news briefing. A user may ask for yesterday's sports results, cooking tips every morning, a history show, a language lesson, a narrowly scoped industry briefing, or any hybrid. User message: ${message}. Current interest/editorial state: ${JSON.stringify(prefs)}. Hidden knowledge: ${JSON.stringify(knowledge?.concepts||{})}. Recent tuning: ${JSON.stringify(history)}. Interest controls WHAT is selected; knowledge controls HOW deeply concepts are explained. Asking for an explanation alone never means more stories on that topic. Explicit recurring instructions such as "give me NBA results every morning" or "make this mostly cooking" should be captured as durable editorialDirectives and, where useful, requestedTopics or topicScoreUpdates. Preserve arbitrary subject matter literally rather than forcing it into generic news categories. Mix targets news/general_knowledge/deep_dive/history/science/business_case are broad presentation formats, not subject-matter limits. Scores are 0-100. Return ONLY JSON {"assistant":"","topicScoreUpdates":{},"contentTypeScoreUpdates":{},"mixTargets":{"news":45,"general_knowledge":20,"deep_dive":15,"history":7,"science":8,"business_case":5},"knowledgeUpdates":[],"languageDirectives":[],"editorialDirectives":[]}`;
   try{
     const d=await createResponse({userId:s.userId,operation:"tune",input:prompt,maxOutputTokens:2200});
     const p=JSON.parse(clean(out(d))),next={...prefs,topicScores:{...(prefs.topicScores||{})},contentTypeScores:{...(prefs.contentTypeScores||{})},mixTargets:mix(p.mixTargets||prefs.mixTargets),languageDirectives:Array.isArray(p.languageDirectives)?p.languageDirectives.slice(-12):(prefs.languageDirectives||[]),editorialDirectives:Array.isArray(p.editorialDirectives)?p.editorialDirectives.slice(-12):(prefs.editorialDirectives||[])};
@@ -110,8 +110,8 @@ module.exports=async(req,res)=>{
     for(const[k,v]of Object.entries(p.contentTypeScoreUpdates||{}))next.contentTypeScores[k]=clamp(v);
     const nk={concepts:{...(knowledge?.concepts||{})},seenEvents:{...(knowledge?.seenEvents||{})}};
     for(const u of p.knowledgeUpdates||[]){if(!u?.concept)continue;const k=canon(u.concept),cur=nk.concepts[k]||{label:u.concept,score:0,exposures:0};nk.concepts[k]={...cur,label:cur.label||u.concept,score:clamp(u.score),updatedBy:"user",lastUpdated:new Date().toISOString()};}
-    const entry={at:new Date().toISOString(),user:message,assistant:String(p.assistant||"Updated Neosis.")};
+    const entry={at:new Date().toISOString(),user:message,assistant:String(p.assistant||"Updated Noesis.")};
     next.tuningHistory=[...history,entry].slice(-20);
     return res.status(200).json({assistant:entry.assistant,preferences:next,knowledge:nk,mixTargets:next.mixTargets});
-  }catch(e){return res.status(e.status||500).json({error:e instanceof Error?e.message:"Could not update Neosis settings"});}
+  }catch(e){return res.status(e.status||500).json({error:e instanceof Error?e.message:"Could not update Noesis settings"});}
 };

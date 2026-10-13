@@ -1,8 +1,8 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Set up Neosis</title><link rel="icon" href="/assets/neosis-favicon.svg?v=cards-20261013"><link rel="stylesheet" href="./styles.css?v=cards-20261013"><link rel="manifest" href="/briefing/manifest.webmanifest?v=cards-20261013"><meta name="theme-color" content="#f6eee6"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Neosis"><link rel="apple-touch-icon" href="/assets/neosis-apple-touch-icon.png?v=cards-20261013"></head>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Set up Noesis</title><link rel="icon" href="/assets/noesis-favicon.svg?v=cards-20261013"><link rel="stylesheet" href="./styles.css?v=cards-20261013"><link rel="manifest" href="/briefing/manifest.webmanifest?v=cards-20261013"><meta name="theme-color" content="#f6eee6"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Noesis"><link rel="apple-touch-icon" href="/assets/noesis-apple-touch-icon.png?v=cards-20261013"></head>
 <body class="auth-shell auth-shell-premium"><main class="auth-card auth-card-premium">
-<div class="auth-brand"><img src="/assets/neosis-icon.svg?v=cards-20261013" alt=""><div><div class="eyebrow">First-time setup</div><strong>Neosis</strong></div></div>
+<div class="auth-brand"><img src="/assets/noesis-icon.svg?v=cards-20261013" alt=""><div><div class="eyebrow">First-time setup</div><strong>Noesis</strong></div></div>
 <div class="auth-heading"><div class="eyebrow">Almost there</div><h1>Make it yours.</h1></div>
-<p>Neosis is not just a news briefing. It can become <strong>your daily podcast about almost anything</strong>. Everyone starts with a balanced edition, then Neosis learns naturally from Tune instructions and what you read, listen to, skip, revisit, and explore.</p>
+<p>Noesis is not just a news briefing. It can become <strong>your daily podcast about almost anything</strong>. Everyone starts with a balanced edition, then Noesis learns naturally from Tune instructions and what you read, listen to, skip, revisit, and explore.</p>
 <div class="podcast-examples">
   <div><strong>Yesterday in sports</strong><span>“Give me a 10-minute recap of the NBA, Champions League, and F1.”</span></div>
   <div><strong>Morning cooking coach</strong><span>“Teach me one useful vegetarian cooking technique every morning.”</span></div>
@@ -13,12 +13,12 @@
 </div>
 <form id="setup">
   <div class="form-grid">
-    <div class="field"><label>Name</label><input name="displayName" autocomplete="name" placeholder="What should Neosis call you?"></div>
+    <div class="field"><label>Name</label><input name="displayName" autocomplete="name" placeholder="What should Noesis call you?"></div>
     <div class="field"><label>Email</label><input id="email" disabled></div>
     <div class="field full"><label>Timezone</label><select name="timezone" id="timezone" required></select><div class="helper">Used to date and schedule your daily edition correctly.</div></div>
   </div>
-  <div class="notice"><strong>No preference questionnaire.</strong> Start with the default edition, then simply tell Tune Neosis what you want your podcast to become. You can change direction at any time.</div>
-  <div class="auth-actions"><button class="primary" id="save">Start my Neosis</button><span id="status" class="helper"></span></div>
+  <div class="notice"><strong>No preference questionnaire.</strong> Start with the default edition, then simply tell Tune Noesis what you want your podcast to become. You can change direction at any time.</div>
+  <div class="auth-actions"><button class="primary" id="save">Start my Noesis</button><span id="status" class="helper"></span></div>
 </form></main>
 <script>
 function populateTimezones(select,value){
@@ -33,7 +33,7 @@ populateTimezones(document.querySelector("#timezone"),detected);
 (async()=>{const s=await fetch("/api/auth-session").then(r=>r.json());if(!s.authenticated)return location.replace("/briefing/login.html");if(s.onboarded)return location.replace("/briefing/");document.querySelector("#email").value=s.user?.email||"";})();
 document.querySelector("#setup").onsubmit=async e=>{
   e.preventDefault();const f=e.target,save=document.querySelector("#save"),status=document.querySelector("#status");
-  save.disabled=true;status.textContent="Creating your default Neosis…";
+  save.disabled=true;status.textContent="Creating your default Noesis…";
   const body={completeOnboarding:true,profile:{displayName:f.displayName.value,timezone:f.timezone.value,emailEnabled:true,audioEnabled:true}};
   try{const r=await fetch("/api/account",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}),d=await r.json();if(!r.ok)throw new Error(d.error||"Setup failed");location.replace("/briefing/");}
   catch(err){status.textContent=err.message;save.disabled=false;}

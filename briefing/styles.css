@@ -333,7 +333,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 }
 
 
-/* Neosis 2.0 — richer editorial visual system */
+/* Noesis 2.0 — richer editorial visual system */
 :root{
   --bg:#f4f6f8;
   --paper:rgba(255,255,255,.76);
@@ -408,10 +408,10 @@ body:before{
 .today-hero h2 em{display:inline-block;font-size:.54em;line-height:1.15;margin-top:10px;color:#57717c;letter-spacing:-.018em;max-width:720px}
 .hero-intro{font-size:17px!important;line-height:1.72!important;max-width:700px!important;color:#5b6872!important}
 .hero-orbit{position:absolute;right:270px;top:42px;width:96px;height:96px;opacity:.68;pointer-events:none}
-.hero-orbit span{position:absolute;inset:0;border:1px solid rgba(32,199,201,.24);border-radius:50%;animation:neosisOrbit 11s linear infinite}
+.hero-orbit span{position:absolute;inset:0;border:1px solid rgba(32,199,201,.24);border-radius:50%;animation:noesisOrbit 11s linear infinite}
 .hero-orbit span:nth-child(2){inset:13px;border-color:rgba(118,132,255,.20);animation-duration:8s;animation-direction:reverse}
 .hero-orbit span:nth-child(3){inset:33px;background:radial-gradient(circle,rgba(32,199,201,.32),transparent 68%);border:0;animation:none}
-@keyframes neosisOrbit{to{transform:rotate(360deg)}}
+@keyframes noesisOrbit{to{transform:rotate(360deg)}}
 .edition-card{
   position:relative;overflow:hidden;
   background:linear-gradient(150deg,#0d2a41 0%,#123c54 60%,#126977 140%);
@@ -575,7 +575,7 @@ body:before{
 }
 
 
-/* Neosis Warm Luxe — global palette + richer surfaces */
+/* Noesis Warm Luxe — global palette + richer surfaces */
 :root{
   --bg:#f7f1e9;
   --paper:rgba(255,250,244,.82);
@@ -826,7 +826,7 @@ body:before{
 
 
 /* =========================================================
-   NEOSIS ATELIER — full visual redesign
+   NOESIS ATELIER — full visual redesign
    ========================================================= */
 :root{
   --canvas:#f5f0e9;
@@ -1257,7 +1257,7 @@ body:before{display:none}
 @media(max-width:650px){.danger-zone{align-items:flex-start;flex-direction:column}.danger-zone .danger-button{width:100%}.reset-dialog-card{padding:22px}}
 
 
-/* Persistent Neosis audio */
+/* Persistent Noesis audio */
 .persistent-audio-dock[hidden]{display:none!important}
 .persistent-audio-dock{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:60;width:min(760px,calc(100vw - 32px));display:grid;grid-template-columns:minmax(150px,1fr) minmax(280px,2fr);gap:18px;align-items:center;padding:12px 16px;border:1px solid rgba(96,62,43,.16);border-radius:20px;background:rgba(48,33,25,.94);box-shadow:0 18px 55px rgba(45,27,19,.25);backdrop-filter:blur(18px);color:#fff}
 .persistent-audio-copy{min-width:0}

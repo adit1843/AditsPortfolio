@@ -13,8 +13,8 @@ module.exports=async(req,res)=>{
     }
     if(req.method!=="POST"){res.setHeader("Allow","GET, POST");return res.status(405).json({error:"Method not allowed"});}
     const b=req.body||{};
-    if(b.action==="reset_neosis"){
-      if(String(b.confirmation||"")!=="RESET NEOSIS")return res.status(400).json({error:"Reset confirmation did not match."});
+    if(b.action==="reset_noesis"){
+      if(String(b.confirmation||"")!=="RESET NOESIS")return res.status(400).json({error:"Reset confirmation did not match."});
       const old=await getProfile(s.userId);
       for(const table of ["briefs","explainers","preferences","knowledge","coverage","surveys","recommendation_events"]){
         await request(`${table}?user_id=eq.${encodeURIComponent(s.userId)}`,{method:"DELETE"});
