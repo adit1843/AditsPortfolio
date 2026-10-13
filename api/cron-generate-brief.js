@@ -7,6 +7,7 @@ const {request,userRows,insertUserRow,listProfiles}=require("../lib/briefline/st
 const {createResponse}=require("../lib/briefline/openai");
 const {buildContentPlan,resolveSourcePlan,webSearchTool}=require("../lib/briefline/source-planner");
 const {buildBehavioralInterest}=require("../lib/briefline/behavior");
+const {buildDailyEmail}=require("../lib/briefline/daily-email");
 
 const CRON_SECRET=process.env.CRON_SECRET,RESEND_API_KEY=process.env.RESEND_API_KEY,SITE_URL=process.env.SITE_URL;
 
@@ -34,9 +35,8 @@ async function parse(raw,userId,operation){
 function day(p){try{return new Intl.DateTimeFormat("en-CA",{timeZone:p.timezone||"UTC",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());}catch{return new Date().toISOString().slice(0,10);}}
 async function email(p,b,id){
   if(!p.email_enabled||!RESEND_API_KEY||!SITE_URL)return null;
-  const base=SITE_URL.replace(/\/$/,""),u=`${base}/briefing/?brief=${id}`,l=`${u}#briefingStart`;
-  const html=`<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:28px"><p style="letter-spacing:.12em;font-size:12px;color:#777">NEOSIS</p><h1>Your daily briefing is ready</h1><p>${b.date} · ${b.readTime||"Daily edition"}</p><p>${b.intro||""}</p><p><a href="${u}">Read</a>${p.audio_enabled?` · <a href="${l}">Listen</a>`:""}</p></div>`;
-  const rr=await fetch("https://api.resend.com/emails",{method:"POST",headers:{Authorization:`Bearer ${RESEND_API_KEY}`,"Content-Type":"application/json"},body:JSON.stringify({from:"Neosis <briefline@mail.aditsanghani.com>",to:[p.email],subject:`Your ${b.date} Neosis is ready`,html})});
+  const {html,text,subject}=buildDailyEmail({brief:b,briefId:id,baseUrl:SITE_URL,audioEnabled:Boolean(p.audio_enabled)});
+  const rr=await fetch("https://api.resend.com/emails",{method:"POST",headers:{Authorization:`Bearer ${RESEND_API_KEY}`,"Content-Type":"application/json"},body:JSON.stringify({from:"Neosis <briefline@mail.aditsanghani.com>",to:[p.email],subject,html,text})});
   const d=await rr.json();if(!rr.ok)throw new Error(d?.message||"Email failed");return d.id;
 }
 async function one(p){
