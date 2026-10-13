@@ -67,6 +67,19 @@ async function dbDelete(resource,id){
   if(!r.ok)throw new Error(data.error||"Database delete failed");
   return data.data;
 }
+function recEvent(type,story,{value=null,eventKey=null,briefId=null}={}){
+  if(!story?.id)return Promise.resolve(null);
+  const key=eventKey||`${briefId||state.briefDbId||state.brief?.date||"brief"}:${story.id}:${type}:${value??"x"}`;
+  return fetch("/api/recommendation-event",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({type,eventKey:key,briefId:briefId||state.briefDbId||null,story,value})
+  }).then(async r=>{
+    const d=await r.json().catch(()=>({}));
+    if(r.ok&&d.behavioralInterest)state.prefs.behavioralInterest=d.behavioralInterest;
+    return d;
+  }).catch(()=>null);
+}
 async function hydrateFromDatabase(){
   try{
     const [briefs,explainers,preferences,knowledge,coverage,surveys]=await Promise.all([
@@ -106,8 +119,7 @@ async function hydrateFromDatabase(){
   }finally{
     state.hydrating=false;
     render();
-    if(new URLSearchParams(location.search).get("survey")==="1"&&state.brief?.stories?.length) renderSurvey();
-    else if(state.briefDbId&&Number(state.brief?.audio?.productionVersion||0)<2) setTimeout(()=>generateAudioForCurrentBrief(),350);
+    if(state.briefDbId&&Number(state.brief?.audio?.productionVersion||0)<2) setTimeout(()=>generateAudioForCurrentBrief(),350);
   }
 }
 
@@ -181,27 +193,52 @@ async function creditStoryConsumption(story,credit,modality){
 }
 
 function setupStoryReadTracking(){
-  if(!state.briefDbId || !("IntersectionObserver" in window)) return;
+  if(!state.briefDbId||!("IntersectionObserver" in window))return;
+  const active=new Map(),sent=new Map();
+  const thresholds=[[5000,.25],[12000,.5],[25000,.75],[45000,1]];
+  const start=id=>{
+    if(active.has(id))return;
+    const begun=Date.now(),timers=[];
+    for(const [ms,value] of thresholds){
+      timers.push(setTimeout(()=>{
+        const story=state.brief.stories.find(s=>String(s.id)===String(id));
+        const k=`${state.briefDbId}:${id}:read:${value}`;
+        if(story&&!sent.has(k)){sent.set(k,true);recEvent("read_progress",story,{value,eventKey:k}).catch(()=>{});}
+      },ms));
+    }
+    active.set(id,{begun,timers});
+  };
+  const stop=id=>{
+    const row=active.get(id);if(!row)return;
+    row.timers.forEach(clearTimeout);active.delete(id);
+  };
+  const observer=new IntersectionObserver(entries=>{
+    for(const entry of entries){
+      const id=entry.target.dataset.storyId;
+      if(entry.isIntersecting&&entry.intersectionRatio>=.6)start(id);else stop(id);
+    }
+  },{threshold:[.6]});
+  document.querySelectorAll(".story-card[data-story-id]").forEach(el=>observer.observe(el));
+}
+
+function setupArchiveRecommendationTracking(brief,row){
+  if(!("IntersectionObserver" in window))return;
   const timers=new Map();
   const observer=new IntersectionObserver(entries=>{
     for(const entry of entries){
       const id=entry.target.dataset.storyId;
-      if(entry.isIntersecting && entry.intersectionRatio>=0.6){
-        if(!timers.has(id)){
-          timers.set(id,setTimeout(()=>{
-            const story=state.brief.stories.find(s=>String(s.id)===String(id));
-            if(story) creditStoryConsumption(story,2,"read").catch(()=>{});
-            observer.unobserve(entry.target);
-            timers.delete(id);
-          },7000));
-        }
-      }else if(timers.has(id)){
-        clearTimeout(timers.get(id));
-        timers.delete(id);
+      if(entry.isIntersecting&&entry.intersectionRatio>=.6&&!timers.has(id)){
+        timers.set(id,setTimeout(()=>{
+          const story=(brief.stories||[]).find(s=>String(s.id)===String(id));
+          if(story)recEvent("archive_revisit",story,{briefId:row.id,eventKey:`${row.id}:${id}:archive-revisit`}).catch(()=>{});
+          observer.unobserve(entry.target);timers.delete(id);
+        },5000));
+      }else if(!entry.isIntersecting&&timers.has(id)){
+        clearTimeout(timers.get(id));timers.delete(id);
       }
     }
-  },{threshold:[0.6]});
-  document.querySelectorAll(".story-card[data-story-id]").forEach(el=>observer.observe(el));
+  },{threshold:[.6]});
+  document.querySelectorAll(".archive-story[data-story-id]").forEach(el=>observer.observe(el));
 }
 function learnFromSurvey(ratings,depth,missing){
   state.prefs.topicScores=state.prefs.topicScores||{};
@@ -575,10 +612,10 @@ function renderToday(){
 
         <section class="panel feedback-card">
           <div class="feedback-orb" aria-hidden="true">✦</div>
-          <div class="eyebrow">Teach Neosis</div>
-          <h2>Make tomorrow feel even more like you.</h2>
-          <p class="muted">A few quick signals help Neosis sharpen what it chooses and how deeply it explains it.</p>
-          <button class="primary" id="surveyBtn">Rate this edition</button>
+          <div class="eyebrow">Learning quietly</div>
+          <h2>Neosis gets better as you use it.</h2>
+          <p class="muted">What you read, finish, skip, revisit, explore, and explicitly ask for all shape future editions. No survey required.</p>
+          <button class="primary" id="feedbackTuneBtn">Tune Neosis</button>
         </section>
       </div>
 
@@ -610,7 +647,7 @@ function renderToday(){
 
         <section class="side-note">
           <span class="side-note-icon">◎</span>
-          <div><strong>Neosis remembers context.</strong><p>What you read, rate, and explore changes how future editions are explained.</p></div>
+          <div><strong>Neosis learns from behavior.</strong><p>Reading, listening, skipping, revisiting, and Tune instructions all sharpen future story selection.</p></div>
         </section>
       </aside>
     </div>`;
@@ -628,14 +665,30 @@ function renderToday(){
     node.querySelector(".story-sources").innerHTML="<span>Sources</span> "+(story.sources||[]).map(sourceHtml).join(" · ");
     node.querySelector(".teach-btn").innerHTML='<span>Go deeper</span><span>↗</span>';
     node.querySelector(".teach-btn").addEventListener("click",()=>createExplainer(story));
+    const actions=node.querySelector(".story-actions");
+    const feedback=document.createElement("div");
+    feedback.className="story-preference";
+    feedback.innerHTML='<span>Was this your kind of story?</span><button type="button" data-rec="more">More like this</button><button type="button" data-rec="less">Less like this</button>';
+    feedback.querySelector('[data-rec="more"]').addEventListener("click",e=>{
+      e.currentTarget.classList.add("selected");
+      recEvent("more_like_this",story,{eventKey:`${state.briefDbId}:${story.id}:more-like-this`}).catch(()=>{});
+    });
+    feedback.querySelector('[data-rec="less"]').addEventListener("click",e=>{
+      e.currentTarget.classList.add("selected");
+      recEvent("less_like_this",story,{eventKey:`${state.briefDbId}:${story.id}:less-like-this`}).catch(()=>{});
+    });
+    actions.appendChild(feedback);
     holder.appendChild(node);
+    article.querySelectorAll(".story-sources a").forEach((link,sourceIndex)=>link.addEventListener("click",()=>{
+      recEvent("source_click",story,{eventKey:`${state.briefDbId}:${story.id}:source:${sourceIndex}`}).catch(()=>{});
+    }));
   });
 
   const generateBtn=document.querySelector("#generateBtn");
   if(generateBtn&&!generateBtn.disabled) generateBtn.addEventListener("click",generateLiveBrief);
 
-  const surveyBtn=document.querySelector("#surveyBtn");
-  if(surveyBtn) surveyBtn.addEventListener("click",renderSurvey);
+  const feedbackTuneBtn=document.querySelector("#feedbackTuneBtn");
+  if(feedbackTuneBtn)feedbackTuneBtn.addEventListener("click",()=>{state.view="tune";render();});
 
   const openTune=document.querySelector("#openTuneView");
   if(openTune) openTune.addEventListener("click",()=>{state.view="tune";render();});
@@ -730,6 +783,7 @@ async function generateLiveBrief(){
 }
 
 async function createExplainer(story){
+  recEvent("deep_dive",story,{eventKey:`${state.briefDbId||state.brief?.date}:${story.id}:deep-dive`}).catch(()=>{});
   const existing=state.explainers.find(x=>String(x.storyId)===String(story.id));
   if(existing){state.libraryFocus=String(existing.id||existing.storyId);state.view="explainers";render();return;}
   const button=[...document.querySelectorAll(".teach-btn")].find(b=>b.closest(".story-card")?.querySelector(".story-title")?.textContent===story.title);
@@ -844,7 +898,7 @@ function renderArchivedBrief(row){
     </section>
     <div class="archive-reader-list">
       ${(brief.stories||[]).map((story,i)=>`
-        <article class="story-card archive-story">
+        <article class="story-card archive-story" data-story-id="${escapeHtml(String(story.id))}">
           <div class="story-accent" aria-hidden="true"></div>
           <div class="story-meta"><span class="story-index">${String(i+1).padStart(2,"0")}</span><span>${escapeHtml(story.contentType?story.contentType.replace(/_/g," "):story.category||"Story")}</span><i></i><span>${escapeHtml(story.category||"Neosis")}</span></div>
           <h2 class="story-title">${escapeHtml(story.title||"Untitled story")}</h2>
@@ -855,6 +909,13 @@ function renderArchivedBrief(row){
     </div>`;
 
   document.querySelector("#archiveBack")?.addEventListener("click",renderArchive);
+  setupArchiveRecommendationTracking(brief,row);
+  document.querySelectorAll(".archive-story").forEach(article=>{
+    const story=(brief.stories||[]).find(s=>String(s.id)===String(article.dataset.storyId));
+    article.querySelectorAll(".story-sources a").forEach((link,sourceIndex)=>link.addEventListener("click",()=>{
+      if(story)recEvent("source_click",story,{briefId:row.id,eventKey:`${row.id}:${story.id}:archive-source:${sourceIndex}`}).catch(()=>{});
+    }));
+  });
 }
 
 function libraryTopic(x){
