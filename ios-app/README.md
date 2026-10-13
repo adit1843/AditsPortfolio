@@ -1,8 +1,8 @@
-# Neosis iOS — Capacitor development app
+# Noesis iOS — Capacitor development app
 
 This project is under active development. It includes two configurations:
 
-- **Development mode:** Loads the full, live, authenticated Neosis product in WKWebView at its existing HTTPS origin. This keeps session cookies and `/api` calls working for personal iPhone testing. It depends on internet access. Capacitor's `server.url` is explicitly a development-only feature.
+- **Development mode:** Loads the full, live, authenticated Noesis product in WKWebView at its existing HTTPS origin. This keeps session cookies and `/api` calls working for personal iPhone testing. It depends on internet access. Capacitor's `server.url` is explicitly a development-only feature.
 - **Release mode (not yet ready):** Bundles local assets in `www/` and currently shows a branded entry screen. The production-grade mobile authentication/API integration and audio background handling have not been implemented yet. Do **not** submit this to TestFlight.
 
 ## On your Mac
@@ -24,7 +24,7 @@ In Xcode: select iPhone Simulator and press Run. For a physical iPhone, attach i
 
 ### Important before TestFlight
 
-1. Bundle a production version of the actual Neosis UI, not merely this starter screen.
+1. Bundle a production version of the actual Noesis UI, not merely this starter screen.
 2. Replace same-origin cookie assumptions and relative `/api` endpoints with an authenticated cross-origin mobile API architecture. Handle OAuth callbacks, logout, and account deletion.
 3. Add proper native media session / lock-screen playback, audio interruptions, and background modes; review App Store rules.
 4. Produce validated 1024×1024 iOS icon assets, native splash screens, and required privacy disclosures.

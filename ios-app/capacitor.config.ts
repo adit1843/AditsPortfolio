@@ -2,8 +2,8 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 // Release-safe default: bundled, local web assets. Do not set server.url in distribution builds.
 const config: CapacitorConfig = {
-  appId: 'com.neosis.daily', // Confirm final bundle identifier before App Store registration.
-  appName: 'Neosis',
+  appId: 'com.noesis.daily', // Confirm final bundle identifier before App Store registration.
+  appName: 'Noesis',
   webDir: 'www',
   ios: { contentInset: 'automatic', scrollEnabled: true },
   plugins: {

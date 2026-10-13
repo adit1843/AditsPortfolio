@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Neosis, curated stories">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Noesis, curated stories">
 <defs><linearGradient id="a" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f9e9db"/><stop offset="1" stop-color="#d8ad91"/></linearGradient><linearGradient id="b" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f6d1b9"/><stop offset="1" stop-color="#efa982"/></linearGradient><linearGradient id="c" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e5a07d"/><stop offset="1" stop-color="#a9563b"/></linearGradient></defs>
 <rect width="128" height="128" rx="30" fill="#fff8f1"/>
 <path d="M22 35Q22 26 30 31L51 44Q56 47 56 55V103Q56 109 49 105L27 92Q22 89 22 82Z" fill="url(#a)"/>
