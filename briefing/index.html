@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Neosis</title>
   <link rel="icon" type="image/svg+xml" href="/assets/neosis-favicon.svg" />
-  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./styles.css?v=mobile-header-2" />
   <style>html.auth-pending body{visibility:hidden}</style>
   <script>
     document.documentElement.classList.add("auth-pending");
@@ -41,7 +41,12 @@
       <button data-view="tune" class="nav-btn"><span class="nav-icon" aria-hidden="true">✦</span><span>Tune</span></button>
     </nav>
     <a href="/briefing/settings.html" class="profile-button" aria-label="Settings">
-      <span class="settings-icon" aria-hidden="true">⚙</span>
+      <span class="settings-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21h-4v-.1A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3v-4h-.1A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3h4v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.36.29.58.71.6 1.17V14c-.02.46-.24.88-.6 1z"></path>
+        </svg>
+      </span>
       <span>Settings</span>
     </a>
   </header>
