@@ -3,10 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Neosis — Your world, in focus.</title>
-  <meta name="theme-color" content="#F7F8FC" />
-  <link rel="icon" type="image/svg+xml" href="/assets/neosis-favicon.svg?v=5" />
-  <link rel="stylesheet" href="./styles.css?v=neosis-v5" />
+  <title>Neosis</title>
+  <link rel="icon" type="image/svg+xml" href="/assets/neosis-favicon.svg?v=original-restored-20261013" />
+  <link rel="stylesheet" href="./styles.css?v=original-restored-20261013" />
   <style>html.auth-pending body{visibility:hidden}</style>
   <script>
     document.documentElement.classList.add("auth-pending");
@@ -32,38 +31,20 @@
 <body>
   <header class="topbar">
     <a class="brand" href="/briefing/" aria-label="Neosis home">
-      <span class="brand-mark" aria-hidden="true">
-  <svg class="brand-logo brand-logo-inline" viewBox="0 0 128 128">
-    <rect width="128" height="128" rx="34" fill="#6558E8"/>
-    <path d="M35 91V36L93 92V37" fill="none" stroke="white" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M86 24l5 9 10 4-10 5-5 10-5-10-10-5 10-4z" fill="#D7D1FF"/>
-  </svg>
-</span>
-      <span class="brand-copy"><strong>Neosis</strong><small>Intelligence, your way.</small></span>
+      <span class="brand-mark"><img class="brand-logo" src="/assets/neosis-icon.svg?v=original-restored-20261013" alt="" /></span>
+      <span class="brand-copy"><strong>Neosis</strong><small>your daily intelligence</small></span>
     </a>
+    <nav class="main-nav" aria-label="Primary navigation">
+      <button data-view="today" class="nav-btn active"><span>Today</span></button>
+      <button data-view="archive" class="nav-btn"><span>Archive</span></button>
+      <button data-view="explainers" class="nav-btn"><span>Library</span></button>
+      <button data-view="tune" class="nav-btn"><span>Tune</span></button>
+    </nav>
     <a href="/briefing/settings.html" class="profile-button" aria-label="Settings">
-      <span class="settings-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2" fill="#faf9f6"/><circle cx="15" cy="17" r="2" fill="#faf9f6"/>
-        </svg>
-      </span><span class="settings-label">Settings</span>
+      <span class="profile-dot"></span>
+      <span>Settings</span>
     </a>
   </header>
-
-  <nav class="main-nav" aria-label="Primary navigation">
-    <button data-view="today" class="nav-btn active" type="button" aria-label="Today">
-      <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m3 10 9-7 9 7"/><path d="M5 9v11h14V9"/><path d="M9 20v-7h6v7"/></svg></span><span>Today</span>
-    </button>
-    <button data-view="archive" class="nav-btn" type="button" aria-label="Archive">
-      <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M8 13h3M8 17h3"/></svg></span><span>Archive</span>
-    </button>
-    <button data-view="explainers" class="nav-btn" type="button" aria-label="Library">
-      <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 20a8 8 0 0 0-8-2V4a8 8 0 0 1 8 2m0 14a8 8 0 0 1 8-2V4a8 8 0 0 0-8 2m0 0v14"/></svg></span><span>Library</span>
-    </button>
-    <button data-view="tune" class="nav-btn" type="button" aria-label="Tune">
-      <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 17h16M10 4v6M15 14v6"/><circle cx="10" cy="7" r="2" fill="#242721" stroke="currentColor"/><circle cx="15" cy="17" r="2" fill="#242721" stroke="currentColor"/></svg></span><span>Tune</span>
-    </button>
-  </nav>
 
   <main id="app" class="shell"></main>
 
@@ -109,6 +90,6 @@
     </article>
   </template>
 
-  <script src="./app.js?v=neosis-v5"></script>
+  <script src="./app.js?v=original-restored-20261013"></script>
 </body>
 </html>
