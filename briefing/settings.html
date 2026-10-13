@@ -17,6 +17,36 @@
 <div class="section-label">Usage this month</div>
 <div class="metric" id="usageCard"><span class="helper">Loading usage…</span></div>
 <div id="ownerUsage" style="display:none"><div class="section-label">All users · owner view</div><div class="panel" id="ownerUsageBody"></div></div>
+
+<div id="ownerControls" style="display:none">
+  <div class="section-label">Owner controls</div>
+  <div class="notice"><strong>Unlimited regenerations enabled.</strong><div class="helper">Your owner account can manually regenerate Neosis without the normal one-per-day limit. Other accounts remain limited.</div></div>
+</div>
+
+<div class="section-label">Danger zone</div>
+<section class="danger-zone">
+  <div>
+    <strong>Reset Neosis completely</strong>
+    <p>This permanently clears your saved editions, Deep Dives, tuning instructions, survey feedback, coverage memory, and learned knowledge. Your login, profile, email/audio delivery settings, and usage records are kept.</p>
+  </div>
+  <button class="danger-button" id="openReset" type="button">Reset Neosis</button>
+</section>
+
+<dialog id="resetDialog" class="reset-dialog">
+  <form method="dialog" class="reset-dialog-card" id="resetForm">
+    <div class="eyebrow">Permanent reset</div>
+    <h2>Start Neosis over from zero?</h2>
+    <p>This cannot be undone. Your archive, Deep Dives, tuning history, survey feedback, topic preferences, coverage memory, and knowledge model will all be erased.</p>
+    <div class="danger-note"><strong>Your account will remain active.</strong><br>Your name, email, timezone, delivery settings, and usage records will not be deleted.</div>
+    <label class="check-row reset-check"><input id="resetAcknowledge" type="checkbox"><span><strong>I understand this permanently deletes my Neosis history and personalization.</strong></span></label>
+    <div class="field"><label for="resetPhrase">Type <strong>RESET NEOSIS</strong> to confirm</label><input id="resetPhrase" autocomplete="off" placeholder="RESET NEOSIS"></div>
+    <div class="auth-actions">
+      <button class="danger-button" id="confirmReset" type="button" disabled>Permanently reset Neosis</button>
+      <button class="ghost" id="cancelReset" type="button">Cancel</button>
+      <span id="resetStatus" class="helper"></span>
+    </div>
+  </form>
+</dialog>
 </section></main>
 <script>
 function populateTimezones(select,value){
@@ -54,6 +84,7 @@ async function load(){
   f.displayName.value=d.profile?.display_name||"";
   populateTimezones(f.timezone,d.profile?.timezone||Intl.DateTimeFormat().resolvedOptions().timeZone||"UTC");
   f.emailEnabled.checked=d.profile?.email_enabled!==false;f.audioEnabled.checked=d.profile?.audio_enabled!==false;
+  if(d.owner)document.querySelector("#ownerControls").style.display="";
   loadUsage();
 }
 load().catch(e=>document.querySelector("#status").textContent=e.message);
@@ -62,6 +93,21 @@ document.querySelector("#settings").onsubmit=async e=>{
   const body={profile:{displayName:f.displayName.value,timezone:f.timezone.value,emailEnabled:f.emailEnabled.checked,audioEnabled:f.audioEnabled.checked}};
   try{const r=await fetch("/api/account",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}),d=await r.json();if(!r.ok)throw new Error(d.error||"Save failed");status.textContent="Saved.";await load();}
   catch(err){status.textContent=err.message;}finally{save.disabled=false;}
+};
+const resetDialog=document.querySelector("#resetDialog"),resetPhrase=document.querySelector("#resetPhrase"),resetAck=document.querySelector("#resetAcknowledge"),confirmReset=document.querySelector("#confirmReset"),resetStatus=document.querySelector("#resetStatus");
+function updateResetState(){confirmReset.disabled=!(resetAck.checked&&resetPhrase.value==="RESET NEOSIS");}
+document.querySelector("#openReset").onclick=()=>{resetPhrase.value="";resetAck.checked=false;resetStatus.textContent="";updateResetState();resetDialog.showModal();};
+document.querySelector("#cancelReset").onclick=()=>resetDialog.close();
+resetPhrase.addEventListener("input",updateResetState);resetAck.addEventListener("change",updateResetState);
+confirmReset.onclick=async()=>{
+  if(confirmReset.disabled)return;
+  confirmReset.disabled=true;resetStatus.textContent=" Resetting…";
+  try{
+    const r=await fetch("/api/account",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"reset_neosis",confirmation:resetPhrase.value})});
+    const d=await r.json();if(!r.ok)throw new Error(d.error||"Reset failed");
+    resetStatus.textContent=" Reset complete.";
+    setTimeout(()=>location.replace("/briefing/"),500);
+  }catch(e){resetStatus.textContent=" "+e.message;updateResetState();}
 };
 document.querySelector("#logout").onclick=async()=>{await fetch("/api/auth-logout",{method:"POST"});location.replace("/briefing/login.html");};
 </script></body></html>
