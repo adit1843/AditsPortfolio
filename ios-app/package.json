@@ -1,11 +1,12 @@
 {
   "name": "neosis-ios",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {
     "ios:init": "cap add ios",
     "ios:sync": "cap sync ios",
+    "ios:dev": "node scripts/prepare-dev.mjs",
     "ios:open": "cap open ios",
     "ios:run": "cap run ios",
     "check": "node scripts/check.mjs"
