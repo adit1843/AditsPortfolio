@@ -1,5 +1,5 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Neosis Settings</title><link rel="icon" href="/assets/neosis-favicon.svg"><link rel="stylesheet" href="./styles.css"></head>
-<body><header class="topbar"><div class="brand"><img class="brand-logo" src="/assets/neosis-icon.svg" alt=""><div><div class="eyebrow">Account</div><h1>Neosis</h1></div></div><nav><a class="nav-btn nav-link" href="/briefing/">← Today</a></nav></header>
+<body class="settings-page"><header class="topbar settings-topbar"><a class="brand" href="/briefing/" aria-label="Neosis home"><span class="brand-mark"><img class="brand-logo" src="/assets/neosis-icon.svg" alt=""></span><span class="brand-copy"><strong>Neosis</strong><small>Settings</small></span></a><nav><a class="nav-btn nav-link settings-back" href="/briefing/"><span aria-hidden="true">←</span><span>Today</span></a></nav></header>
 <main class="shell"><section class="auth-card auth-card-premium" style="margin:auto">
 <div class="eyebrow">Settings</div><h1>Your account</h1>
 <p>Manage account and delivery settings here. To change what Neosis covers or how it explains things, use <strong>Tune Neosis</strong> inside the briefing.</p>
@@ -9,9 +9,9 @@
     <div class="field"><label>Email</label><input id="email" disabled></div>
     <div class="field full"><label>Timezone</label><select name="timezone" id="timezone"></select></div>
   </div>
-  <label class="check-row"><input name="emailEnabled" type="checkbox"><span><strong>Daily email</strong><div class="helper">Email links to your new Read / Listen / Survey edition.</div></span></label>
+  <label class="check-row"><input name="emailEnabled" type="checkbox"><span><strong>Daily email</strong><div class="helper">Email links to your new Read / Listen edition.</div></span></label>
   <label class="check-row"><input name="audioEnabled" type="checkbox"><span><strong>Audio edition</strong><div class="helper">Generate the spoken edition when Neosis audio capacity is available.</div></span></label>
-  <div class="notice">Editorial preferences are intentionally not managed here. Use <strong>Tune Neosis</strong> conversationally, and Neosis will continue learning from your survey and consumption signals.</div>
+  <div class="notice">Editorial preferences are intentionally not managed here. Use <strong>Tune Neosis</strong> conversationally, and Neosis will continue learning from your reading, listening, skipping, revisiting, and explicit Tune signals.</div>
   <div class="auth-actions"><button class="primary" id="save">Save changes</button><button class="ghost" id="logout" type="button">Sign out</button><span id="status" class="helper"></span></div>
 </form>
 <div class="section-label">Usage this month</div>
@@ -27,7 +27,7 @@
 <section class="danger-zone">
   <div>
     <strong>Reset Neosis completely</strong>
-    <p>This permanently clears your saved editions, Deep Dives, tuning instructions, survey feedback, coverage memory, and learned knowledge. Your login, profile, email/audio delivery settings, and usage records are kept.</p>
+    <p>This permanently clears your saved editions, Deep Dives, tuning instructions, behavioral recommendation history, coverage memory, and learned knowledge. Your login, profile, email/audio delivery settings, and usage records are kept.</p>
   </div>
   <button class="danger-button" id="openReset" type="button">Reset Neosis</button>
 </section>
@@ -36,7 +36,7 @@
   <form method="dialog" class="reset-dialog-card" id="resetForm">
     <div class="eyebrow">Permanent reset</div>
     <h2>Start Neosis over from zero?</h2>
-    <p>This cannot be undone. Your archive, Deep Dives, tuning history, survey feedback, topic preferences, coverage memory, and knowledge model will all be erased.</p>
+    <p>This cannot be undone. Your archive, Deep Dives, tuning history, behavioral recommendation history, topic preferences, coverage memory, and knowledge model will all be erased.</p>
     <div class="danger-note"><strong>Your account will remain active.</strong><br>Your name, email, timezone, delivery settings, and usage records will not be deleted.</div>
     <label class="check-row reset-check"><input id="resetAcknowledge" type="checkbox"><span><strong>I understand this permanently deletes my Neosis history and personalization.</strong></span></label>
     <div class="field"><label for="resetPhrase">Type <strong>RESET NEOSIS</strong> to confirm</label><input id="resetPhrase" autocomplete="off" placeholder="RESET NEOSIS"></div>
