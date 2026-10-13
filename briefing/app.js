@@ -236,55 +236,82 @@ function learnFromSurvey(ratings,depth,missing){
 }
 
 
-function audioPanelHtml(){
-  const segments=state.brief?.audio?.segments||[];
-  if(!segments.length){
-    if(!state.audioGenerating)return "";
-    return `
-      <section class="panel" id="audioBrief">
-        <div class="eyebrow">Audio edition</div>
-        <h2>Preparing today's audio…</h2>
-        <p class="muted">Generation continues even if you open Archive, Library, or Tune.</p>
-      </section>`;
+function chapterKey(seg){return seg?.storyId||seg?.kind||"intro";}
+
+function chapterStarts(){
+  const starts=[];
+  let last=null;
+  playback.segments.forEach((seg,i)=>{
+    const key=chapterKey(seg);
+    if(key!==last){
+      starts.push({index:i,key,label:seg?.label||(
+        key==="intro"?"Introduction":key==="outro"?"Closing":"Chapter"
+      )});
+      last=key;
+    }
+  });
+  return starts;
+}
+
+function currentChapterStart(){
+  const starts=chapterStarts();
+  let current=0;
+  for(const ch of starts){
+    if(ch.index<=playback.index)current=ch.index;
+    else break;
   }
-  return `
-    <section class="panel" id="audioBrief">
-      <div class="eyebrow">Produced audio edition</div>
-      <h2>Listen to today's Neosis</h2>
-      <p class="muted" id="audioNow">${escapeHtml(playbackStatus())}</p>
-      <div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-top:12px">
-        <div class="field" style="max-width:180px;margin:0">
-          <label for="audioSpeed">Playback speed</label>
-          <select id="audioSpeed">
-            ${[1,1.25,1.5,1.75,2].map(v=>`<option value="${v}" ${Number(playback.speed)===v?"selected":""}>${v}×</option>`).join("")}
-          </select>
-        </div>
-        <button class="ghost" id="nextChapterBtn" type="button">Next chapter →</button>
-      </div>
-      <p class="muted persistent-note">Playback stays active while you move around Neosis.</p>
-    </section>`;
+  return current;
 }
 
 function playbackStatus(){
-  if(!playback.segments.length)return "Audio ready";
+  if(state.audioGenerating&&!playback.segments.length)return "Preparing today's audio…";
+  if(!playback.segments.length)return "Today's Neosis";
   const seg=playback.segments[playback.index]||playback.segments[0];
-  return `Now playing ${playback.index+1} of ${playback.segments.length} · ${seg?.label||"Neosis"}`;
+  return `${seg?.label||"Neosis"} · chapter ${chapterStarts().findIndex(x=>x.index===currentChapterStart())+1} of ${chapterStarts().length}`;
+}
+
+function rebuildChapterSelect(){
+  const select=document.querySelector("#chapterSelect");
+  if(!select)return;
+  const starts=chapterStarts();
+  const signature=starts.map(x=>`${x.index}:${x.label}`).join("|");
+  if(select.dataset.signature!==signature){
+    select.innerHTML=starts.map((ch,i)=>`<option value="${ch.index}">${i+1}. ${escapeHtml(ch.label)}</option>`).join("");
+    select.dataset.signature=signature;
+  }
+  select.value=String(currentChapterStart());
 }
 
 function updatePlaybackUi(){
-  const now=document.querySelector("#audioNow");
-  if(now)now.textContent=playbackStatus();
   const label=document.querySelector("#persistentAudioLabel");
-  if(label)label.textContent=playback.segments.length?playbackStatus():"Today's Neosis";
+  if(label)label.textContent=playbackStatus();
   const speed=document.querySelector("#audioSpeed");
   if(speed)speed.value=String(playback.speed);
+  rebuildChapterSelect();
+
+  const prev=document.querySelector("#prevChapterBtn");
+  const next=document.querySelector("#nextChapterBtn");
+  const starts=chapterStarts();
+  const pos=starts.findIndex(x=>x.index===currentChapterStart());
+  if(prev)prev.disabled=!starts.length||pos<=0;
+  if(next)next.disabled=!starts.length||pos<0||pos>=starts.length-1;
 }
 
 function syncPersistentAudioDock(){
   const dock=document.querySelector("#persistentAudioDock");
   if(!dock)return;
-  dock.hidden=!playback.segments.length;
-  document.body.classList.toggle("has-persistent-audio",playback.segments.length>0);
+  const visible=state.audioGenerating||playback.segments.length>0;
+  dock.hidden=!visible;
+  dock.classList.toggle("is-generating",state.audioGenerating&&!playback.segments.length);
+  document.body.classList.toggle("has-persistent-audio",visible);
+
+  const audio=document.querySelector("#briefAudio");
+  const disabled=state.audioGenerating&&!playback.segments.length;
+  if(audio)audio.classList.toggle("audio-disabled",disabled);
+  ["prevChapterBtn","nextChapterBtn","chapterSelect","audioSpeed"].forEach(id=>{
+    const el=document.querySelector("#"+id);
+    if(el)el.disabled=disabled;
+  });
   updatePlaybackUi();
 }
 
@@ -294,7 +321,7 @@ async function generateAudioForCurrentBrief(){
     return;
   }
   state.audioGenerating=true;
-  if(state.view==="today")renderToday();
+  syncPersistentAudioDock();
   try{
     const r=await fetch("/api/generate-brief-audio",{
       method:"POST",
@@ -310,7 +337,7 @@ async function generateAudioForCurrentBrief(){
     console.error("Neosis audio generation failed:",e);
   }finally{
     state.audioGenerating=false;
-    if(state.view==="today")renderToday();
+    syncPersistentAudioDock();
   }
 }
 
@@ -321,7 +348,6 @@ function setupBriefAudio(){
   if(!segments.length){syncPersistentAudioDock();return;}
 
   const key=String(state.briefDbId||state.brief?.date||"brief")+"|"+segments.map(s=>s.path).join("|");
-  const chapterKey=seg=>seg?.storyId||seg?.kind||"intro";
 
   const maybeCreditChapter=chapter=>{
     if(!chapter||chapter==="intro"||chapter==="outro")return;
@@ -354,11 +380,15 @@ function setupBriefAudio(){
     playback.lastTime=0;
     playback.listened=Array(segments.length).fill(0);
     playback.durations=Array(segments.length).fill(0);
+
     if(!playback.initialized){
       audio.addEventListener("loadedmetadata",()=>{
         if(Number.isFinite(audio.duration)&&audio.duration>0)playback.durations[playback.index]=audio.duration;
         playback.lastTime=audio.currentTime||0;
+        updatePlaybackUi();
       });
+      audio.addEventListener("play",updatePlaybackUi);
+      audio.addEventListener("pause",updatePlaybackUi);
       audio.addEventListener("seeking",()=>{playback.seeking=true;});
       audio.addEventListener("seeked",()=>{playback.seeking=false;playback.lastTime=audio.currentTime||0;});
       audio.addEventListener("timeupdate",()=>{
@@ -367,7 +397,6 @@ function setupBriefAudio(){
           playback.listened[playback.index]=Math.min(playback.durations[playback.index]||Infinity,playback.listened[playback.index]+delta);
         }
         playback.lastTime=current;
-        updatePlaybackUi();
       });
       audio.addEventListener("ended",async()=>{
         if(playback.durations[playback.index])playback.listened[playback.index]=Math.max(playback.listened[playback.index],playback.durations[playback.index]);
@@ -391,14 +420,32 @@ function setupBriefAudio(){
     updatePlaybackUi();
   };
 
-  const nextChapter=document.querySelector("#nextChapterBtn");
-  if(nextChapter)nextChapter.onclick=async()=>{
-    const currentChapter=chapterKey(playback.segments[playback.index]);
-    maybeCreditChapter(currentChapter);
-    let next=playback.index+1;
-    while(next<playback.segments.length&&chapterKey(playback.segments[next])===currentChapter)next++;
-    if(next<playback.segments.length){load(next);await playLoaded();}
-    else audio.pause();
+  const chapterSelect=document.querySelector("#chapterSelect");
+  if(chapterSelect)chapterSelect.onchange=async()=>{
+    const current=chapterKey(playback.segments[playback.index]);
+    maybeCreditChapter(current);
+    load(Number(chapterSelect.value)||0);
+    await playLoaded();
+  };
+
+  const prev=document.querySelector("#prevChapterBtn");
+  if(prev)prev.onclick=async()=>{
+    const starts=chapterStarts(),start=currentChapterStart(),pos=starts.findIndex(x=>x.index===start);
+    if(pos>0){
+      maybeCreditChapter(chapterKey(playback.segments[playback.index]));
+      load(starts[pos-1].index);
+      await playLoaded();
+    }
+  };
+
+  const next=document.querySelector("#nextChapterBtn");
+  if(next)next.onclick=async()=>{
+    const starts=chapterStarts(),start=currentChapterStart(),pos=starts.findIndex(x=>x.index===start);
+    if(pos>=0&&pos<starts.length-1){
+      maybeCreditChapter(chapterKey(playback.segments[playback.index]));
+      load(starts[pos+1].index);
+      await playLoaded();
+    }
   };
 
   syncPersistentAudioDock();
@@ -492,8 +539,6 @@ function renderToday(){
       </div>
     </section>
 
-    ${audioPanelHtml()}
-
     <div class="today-layout">
       <div class="today-main">
         <div class="section-heading-row" id="briefingStart">
@@ -581,8 +626,14 @@ function renderToday(){
   const listenBtn=document.querySelector("#heroListenBtn");
   if(listenBtn)listenBtn.addEventListener("click",()=>{
     const audio=document.querySelector("#briefAudio");
-    if(audio){audio.scrollIntoView({behavior:"smooth",block:"center"});setTimeout(()=>audio.play().catch(()=>{}),350);}
-    else document.querySelector("#audioBrief")?.scrollIntoView({behavior:"smooth",block:"center"});
+    if(audio&&playback.segments.length){
+      document.querySelector("#persistentAudioDock")?.scrollIntoView({behavior:"smooth",block:"end"});
+      setTimeout(()=>audio.play().catch(()=>{}),250);
+    }else if(state.audioGenerating){
+      syncPersistentAudioDock();
+    }else if(state.briefDbId){
+      generateAudioForCurrentBrief();
+    }
   });
 
   const quickTuneForm=document.querySelector("#quickTuneForm");
