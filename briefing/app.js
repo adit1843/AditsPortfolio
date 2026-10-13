@@ -28,6 +28,7 @@ const state={
     tuningHistory:[]
   },
   coverage:[],
+  surveys:[],
   archivedBriefs:[],
   api:{configured:false,model:null,loading:true,error:null,canRegenerate:true},
   hydrating:true,
@@ -44,15 +45,19 @@ async function dbGet(resource){
   return data.data||[];
 }
 async function dbPost(resource,payload){
-  const r=await fetch(`/api/data?resource=${encodeURIComponent(resource)}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+  const r=fetch(`/api/data?resource=${encodeURIComponent(resource)}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+  return r.then(async response=>{const data=await response.json();if(!response.ok)throw new Error(data.error||"Database write failed");return data.data;});
+}
+async function dbDelete(resource,id){
+  const r=await fetch(`/api/data?resource=${encodeURIComponent(resource)}&id=${encodeURIComponent(id)}`,{method:"DELETE"});
   const data=await r.json();
-  if(!r.ok) throw new Error(data.error||"Database write failed");
+  if(!r.ok)throw new Error(data.error||"Database delete failed");
   return data.data;
 }
 async function hydrateFromDatabase(){
   try{
-    const [briefs,explainers,preferences,knowledge,coverage]=await Promise.all([
-      dbGet("briefs"),dbGet("explainers"),dbGet("preferences"),dbGet("knowledge"),dbGet("coverage")
+    const [briefs,explainers,preferences,knowledge,coverage,surveys]=await Promise.all([
+      dbGet("briefs"),dbGet("explainers"),dbGet("preferences"),dbGet("knowledge"),dbGet("coverage"),dbGet("surveys")
     ]);
     const params=new URLSearchParams(location.search);
     const requestedBrief=params.get("brief");
@@ -80,6 +85,7 @@ async function hydrateFromDatabase(){
       };
     }
     if(coverage.length) state.coverage=coverage.map(x=>x.payload);
+    state.surveys=surveys||[];
     state.dbError=null;
   }catch(e){
     state.dbError=e.message;
@@ -865,15 +871,79 @@ async function applyTuneMessage(message){
   return data;
 }
 
+async function rebuildTuning(){
+  const briefByDate=new Map(state.archivedBriefs.map(x=>[String(x.payload?.date||x.briefDate||""),x.payload]));
+  const surveyEvents=state.surveys.map(row=>({
+    id:row.id,
+    createdAt:row.created_at,
+    payload:row.payload||{},
+    stories:briefByDate.get(String(row.brief_date||""))?.stories||[]
+  }));
+  const r=await fetch("/api/tune-briefline",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      action:"rebuild",
+      history:state.prefs.tuningHistory||[],
+      surveys:surveyEvents,
+      knowledge:state.knowledge
+    })
+  });
+  const data=await r.json();
+  if(!r.ok)throw new Error(data.error||"Could not rebuild tuning");
+  state.prefs=data.preferences;
+  state.knowledge=data.knowledge;
+  await Promise.all([
+    dbPost("preferences",{payload:state.prefs}),
+    dbPost("knowledge",{payload:state.knowledge})
+  ]);
+}
+function tuneDate(v){
+  try{return new Date(v).toLocaleString([], {month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});}catch{return"";}
+}
+function surveySummary(row){
+  const p=row.payload||{},ratings=Object.values(p.ratings||{}).map(Number).filter(Boolean);
+  const avg=ratings.length?(ratings.reduce((a,b)=>a+b,0)/ratings.length).toFixed(1):null;
+  const bits=[];
+  if(avg)bits.push(`Average story rating ${avg}/5`);
+  if(p.depth)bits.push(`Depth: ${p.depth}`);
+  if(String(p.missing||"").trim())bits.push(`Requested: ${p.missing.trim()}`);
+  return bits.join(" · ")||"Survey feedback";
+}
+async function deleteTuneInstruction(at,button){
+  if(!confirm("Delete this tuning instruction and remove its influence from future editions?"))return;
+  button.disabled=true;button.textContent="Removing…";
+  try{
+    state.prefs.tuningHistory=(state.prefs.tuningHistory||[]).filter(x=>String(x.at)!==String(at));
+    await rebuildTuning();
+    renderTune();
+  }catch(e){button.disabled=false;button.textContent="Delete";alert(e.message);}
+}
+async function deleteSurveyTuning(id,button){
+  if(!confirm("Delete this survey feedback and remove its tuning influence from future editions?"))return;
+  button.disabled=true;button.textContent="Removing…";
+  try{
+    await dbDelete("surveys",id);
+    state.surveys=state.surveys.filter(x=>String(x.id)!==String(id));
+    await rebuildTuning();
+    renderTune();
+  }catch(e){button.disabled=false;button.textContent="Delete";alert(e.message);}
+}
 function renderTune(){
-  const history=(state.prefs.tuningHistory||[]).slice(-12);
+  const history=(state.prefs.tuningHistory||[]).slice().reverse();
+  const surveys=(state.surveys||[]).slice().sort((a,b)=>Date.parse(b.created_at||0)-Date.parse(a.created_at||0));
   const mix=state.prefs.mixTargets||{news:45,general_knowledge:20,deep_dive:15,history:7,science:8,business_case:5};
   const labels={news:"News",general_knowledge:"General knowledge",deep_dive:"Deep dives",history:"History",science:"Science",business_case:"Business cases"};
+  const ledger=[
+    ...history.map(x=>({kind:"chat",at:x.at,entry:x})),
+    ...surveys.map(x=>({kind:"survey",at:x.created_at,entry:x}))
+  ].sort((a,b)=>Date.parse(b.at||0)-Date.parse(a.at||0));
+
   app.innerHTML=`
     <section class="hero">
-      <div class="eyebrow">Generation controls</div>
+      <div class="eyebrow">Your personalization</div>
       <h2>Tune Neosis</h2>
-      <p>Tell Neosis what you like, dislike, understand, want explained differently, or how you want the daily mix changed. It will translate that into the hidden interest and knowledge models.</p>
+      <p>Tell Neosis what to change, then review every signal that is shaping future editions. You stay in control of what Neosis has learned from direct instructions and surveys.</p>
     </section>
     <section class="panel">
       <div class="section-label">Current story mix</div>
@@ -882,17 +952,46 @@ function renderTune(){
       </div>
       <p class="muted">These are approximate targets. Neosis can still override them when a major story deserves coverage.</p>
     </section>
-    <section class="panel">
+    <section class="panel tune-compose">
       <div class="section-label">Talk to Neosis</div>
-      <div id="tuneHistory">${history.length?history.map(x=>`
-        <div class="tune-message user"><strong>You</strong><p>${escapeHtml(x.user)}</p></div>
-        <div class="tune-message assistant"><strong>Neosis</strong><p>${escapeHtml(x.assistant)}</p></div>
-      `).join(""):'<p class="muted">Try: “Less market news, more science and history. I understand basic data-center cooling, but networking terms still lose me. Use less jargon in finance stories.”</p>'}</div>
       <form id="tuneForm">
-        <div class="field"><label for="tuneInput">What should change?</label><textarea id="tuneInput" rows="5" placeholder="Tell Neosis what you want more or less of, what you already understand, or how explanations should feel."></textarea></div>
+        <div class="field"><label for="tuneInput">What should change?</label><textarea id="tuneInput" rows="5" placeholder="More robotics. Less politics. Teach me finance with less jargon. Add one practical cooking idea each morning."></textarea></div>
         <button class="primary" id="tuneSubmit" type="submit">Update Neosis</button>
         <span id="tuneStatus" class="muted"></span>
       </form>
+    </section>
+    <section class="panel tuning-ledger">
+      <div class="tuning-ledger-head">
+        <div><div class="section-label">Tuning history</div><h3>Everything shaping your Neosis</h3></div>
+        <span class="tuning-count">${ledger.length} signal${ledger.length===1?"":"s"}</span>
+      </div>
+      <p class="muted">Deleting an item rebuilds your personalization without that signal. It does not delete the underlying brief or your reading history.</p>
+      <div class="tuning-ledger-list">
+        ${ledger.length?ledger.map(item=>{
+          if(item.kind==="chat"){
+            const x=item.entry;
+            return `<article class="tuning-event">
+              <div class="tuning-event-icon chat">✦</div>
+              <div class="tuning-event-body">
+                <div class="tuning-event-meta"><span>Direct instruction</span><time>${escapeHtml(tuneDate(x.at))}</time></div>
+                <strong>${escapeHtml(x.user)}</strong>
+                <p>${escapeHtml(x.assistant||"Neosis updated your preferences.")}</p>
+              </div>
+              <button class="tuning-delete" type="button" data-kind="chat" data-key="${escapeHtml(x.at||"")}">Delete</button>
+            </article>`;
+          }
+          const x=item.entry;
+          return `<article class="tuning-event">
+            <div class="tuning-event-icon survey">◎</div>
+            <div class="tuning-event-body">
+              <div class="tuning-event-meta"><span>Survey feedback</span><time>${escapeHtml(tuneDate(x.created_at))}</time></div>
+              <strong>${escapeHtml(x.brief_date||"Daily edition")}</strong>
+              <p>${escapeHtml(surveySummary(x))}</p>
+            </div>
+            <button class="tuning-delete" type="button" data-kind="survey" data-key="${escapeHtml(String(x.id))}">Delete</button>
+          </article>`;
+        }).join(""):'<div class="tuning-empty"><strong>No tuning history yet.</strong><p>Your direct instructions and survey-driven changes will appear here.</p></div>'}
+      </div>
     </section>`;
 
   document.querySelector("#tuneForm").addEventListener("submit",async e=>{
@@ -901,15 +1000,16 @@ function renderTune(){
     const btn=document.querySelector("#tuneSubmit");
     const status=document.querySelector("#tuneStatus");
     const message=input.value.trim();
-    if(!message) return;
+    if(!message)return;
     btn.disabled=true;btn.textContent="Updating…";status.textContent=" Interpreting your preferences.";
-    try{
-      await applyTuneMessage(message);
-      renderTune();
-    }catch(err){
-      btn.disabled=false;btn.textContent="Update Neosis";status.textContent=" "+err.message;
-    }
+    try{await applyTuneMessage(message);renderTune();}
+    catch(err){btn.disabled=false;btn.textContent="Update Neosis";status.textContent=" "+err.message;}
   });
+
+  document.querySelectorAll(".tuning-delete").forEach(btn=>btn.addEventListener("click",()=>{
+    if(btn.dataset.kind==="chat")deleteTuneInstruction(btn.dataset.key,btn);
+    else deleteSurveyTuning(btn.dataset.key,btn);
+  }));
 }
 
 function renderSurvey(){
