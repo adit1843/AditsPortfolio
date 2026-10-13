@@ -5,6 +5,7 @@ const {requireAuth}=require("../lib/briefline/auth");
 const {getProfile,userRows,insertUserRow}=require("../lib/briefline/store");
 const {createResponse,DEFAULT_MODEL}=require("../lib/briefline/openai");
 const {buildContentPlan,resolveSourcePlan,webSearchTool}=require("../lib/briefline/source-planner");
+const {buildBehavioralInterest}=require("../lib/briefline/behavior");
 
 function out(d){const p=[];for(const i of d.output||[]){if(i.type!=="message")continue;for(const c of i.content||[]){if(c.type==="output_text"&&c.text)p.push(c.text);}}return p.join("\n").trim();}
 function clean(t){return String(t||"").replace(/^\s*```(?:json)?/i,"").replace(/```\s*$/i,"").trim();}
@@ -34,8 +35,10 @@ module.exports=async(req,res)=>{
   if(req.method!=="POST"){res.setHeader("Allow","GET, POST");return res.status(405).json({error:"Method not allowed"});}
   if(!process.env.OPENAI_API_KEY)return res.status(503).json({error:"Neosis generation is not configured."});
   if(!owner&&await manualAlreadyUsed(s.userId,day))return res.status(429).json({error:"You’ve already used today’s regeneration. Neosis allows one regeneration per local day.",code:"daily_regeneration_limit"});
-  const preferences=req.body?.preferences||{},knowledge=req.body?.knowledge||{},coverage=req.body?.coverage||[];
+  let preferences=req.body?.preferences||{};const knowledge=req.body?.knowledge||{},coverage=req.body?.coverage||[];
   try{
+    const behaviorEvents=await userRows("recommendation_events",s.userId,{limit:1000,order:"created_at.asc"}).catch(()=>[]);
+    preferences={...preferences,behavioralInterest:buildBehavioralInterest(behaviorEvents)};
     const contentPlan=await buildContentPlan({userId:s.userId,date:day,preferences,knowledge,coverage});
     const sourcePlan=await resolveSourcePlan({userId:s.userId,contentPlan});
     const discovery=await jsonResponse({
