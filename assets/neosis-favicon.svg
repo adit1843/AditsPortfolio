@@ -1,6 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Neosis">
-  <rect x="18" y="26" width="25" height="78" rx="9" fill="#111"/>
-  <rect x="85" y="26" width="25" height="78" rx="9" fill="#111"/>
-  <path d="M34 29 C49 30 62 44 73 59 C84 75 94 88 110 89 L110 105 C86 105 70 91 57 73 C47 59 39 48 18 47 L18 30 C24 29 29 29 34 29Z" fill="#fff"/>
-  <path d="M64 15 L68 24 L77 28 L68 32 L64 42 L60 32 L51 28 L60 24 Z" fill="#111"/>
+  <rect width="128" height="128" rx="31" fill="#262722"/>
+  <defs><linearGradient id="g" x1="18" y1="10" x2="111" y2="116" gradientUnits="userSpaceOnUse"><stop stop-color="#E5C38D"/><stop offset=".54" stop-color="#C39156"/><stop offset="1" stop-color="#8B633B"/></linearGradient></defs>
+  <path d="M23 93V39c0-12 9-19 19-15 5 2 9 7 15 14L92 84V35" fill="none" stroke="url(#g)" stroke-width="11.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M23 60c0-14 8-24 19-24 13 0 22 14 33 28 10 13 19 22 30 13" fill="none" stroke="#E0B77F" stroke-width="7" stroke-linecap="round"/>
+  <path d="M99 33c0-5 3-9 8-10" fill="none" stroke="#D0A26B" stroke-width="7" stroke-linecap="round"/>
 </svg>
