@@ -1,0 +1,18 @@
+{
+  "name": "Neosis — Your Daily Intelligence",
+  "short_name": "Neosis",
+  "description": "Your personalized daily briefing to read and listen to.",
+  "start_url": "/briefing/",
+  "scope": "/briefing/",
+  "display": "standalone",
+  "background_color": "#fff8f1",
+  "theme_color": "#f6eee6",
+  "icons": [
+    {
+      "src": "/assets/neosis-icon.svg?v=cards-20261013",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
