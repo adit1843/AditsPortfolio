@@ -557,7 +557,10 @@ async function generateLiveBrief(){
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({preferences:state.prefs,knowledge:state.knowledge,coverage:state.coverage.slice(0,20)})
     });
-    const data=await r.json();
+    const raw=await r.text();
+    let data={};
+    try{data=raw?JSON.parse(raw):{};}
+    catch{data={error:raw||"Generation failed"};}
     if(!r.ok) throw new Error(data.error||"Generation failed");
 
     if(state.brief!==demoBrief&&state.brief?.stories?.length){
@@ -573,11 +576,11 @@ async function generateLiveBrief(){
     state.brief=data.brief;
 
     state.briefDbId=data.briefId||null;
-    state.api.canRegenerate=false;
+    state.api.canRegenerate=state.api.unlimitedRegenerations===true;
     renderToday();
     if(state.briefDbId) await generateAudioForCurrentBrief();
   }catch(e){
-    btn.disabled=false; btn.textContent="↻ Regenerate once today";
+    btn.disabled=false; btn.textContent=state.api.unlimitedRegenerations?"Refresh edition ∞":"↻ Regenerate once today";
     status.textContent=` ${e.message}`;
   }
 }
