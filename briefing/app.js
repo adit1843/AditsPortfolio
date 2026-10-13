@@ -1110,7 +1110,8 @@ async function rebuildTuning(){
       action:"rebuild",
       history:state.prefs.tuningHistory||[],
       surveys:surveyEvents,
-      knowledge:state.knowledge
+      knowledge:state.knowledge,
+      preferences:state.prefs
     })
   });
   const data=await r.json();
@@ -1155,66 +1156,77 @@ async function deleteSurveyTuning(id,button){
 }
 function renderTune(){
   const history=(state.prefs.tuningHistory||[]).slice().reverse();
-  const surveys=(state.surveys||[]).slice().sort((a,b)=>Date.parse(b.created_at||0)-Date.parse(a.created_at||0));
   const mix=state.prefs.mixTargets||{news:45,general_knowledge:20,deep_dive:15,history:7,science:8,business_case:5};
   const labels={news:"News",general_knowledge:"General knowledge",deep_dive:"Deep dives",history:"History",science:"Science",business_case:"Business cases"};
-  const ledger=[
-    ...history.map(x=>({kind:"chat",at:x.at,entry:x})),
-    ...surveys.map(x=>({kind:"survey",at:x.created_at,entry:x}))
-  ].sort((a,b)=>Date.parse(b.at||0)-Date.parse(a.at||0));
+  const learned=Object.values(state.prefs.behavioralInterest?.features||{})
+    .map(x=>{
+      const longTerm=Number(x.longTerm??50),recent=Number(x.recent??50),confidence=Number(x.confidence||0);
+      return {...x,score:longTerm*.7+recent*.3,confidence};
+    })
+    .filter(x=>x.label&&x.confidence>=8&&["domain","topic","subtopic","theme","entity","format"].includes(x.kind))
+    .sort((a,b)=>(Math.abs(b.score-50)*(b.confidence/100))-(Math.abs(a.score-50)*(a.confidence/100)))
+    .slice(0,12);
 
   app.innerHTML=`
     <section class="hero">
       <div class="eyebrow">Your personalization</div>
       <h2>Tune Neosis</h2>
-      <p>Tell Neosis what to change, then review every signal that is shaping future editions. You stay in control of what Neosis has learned from direct instructions and surveys.</p>
+      <p>Neosis learns mostly from what you actually read, listen to, skip, revisit, and explore. Direct instructions here always outrank passive behavior.</p>
     </section>
+
+    <section class="panel learned-profile">
+      <div class="tuning-ledger-head">
+        <div><div class="section-label">What Neosis has learned</div><h3>Your emerging interest map</h3></div>
+        <span class="tuning-count">${learned.length} signal${learned.length===1?"":"s"}</span>
+      </div>
+      <p class="muted">These are behavioral inferences, not permanent settings. Confidence rises gradually, recent interests fade over time, and one skip never changes your profile much.</p>
+      <div class="learned-grid">
+        ${learned.length?learned.map(x=>{
+          const direction=x.score>=53?"More interested":x.score<=47?"Less interested":"Still learning";
+          const strength=Math.round(Math.abs(x.score-50)*2);
+          return `<article class="learned-item">
+            <div class="learned-item-top"><span class="learned-kind">${escapeHtml(x.kind||"interest")}</span><span>${Math.round(x.confidence)}% confidence</span></div>
+            <strong>${escapeHtml(x.label)}</strong>
+            <div class="learned-meter"><i style="width:${Math.max(5,Math.min(100,strength))}%"></i></div>
+            <div class="learned-item-foot"><span>${direction}</span><button type="button" class="learned-correct" data-label="${escapeHtml(x.label)}">Correct</button></div>
+          </article>`;
+        }).join(""):'<div class="tuning-empty"><strong>Still getting to know you.</strong><p>Read, listen, skip, revisit, or use More/Less on stories and this map will begin to form.</p></div>'}
+      </div>
+    </section>
+
     <section class="panel">
       <div class="section-label">Current story mix</div>
       <div class="mix-grid">
         ${Object.entries(mix).map(([k,v])=>`<div class="knowledge-row"><div><strong>${escapeHtml(labels[k]||k)}</strong></div><div class="bar"><span style="width:${Number(v)||0}%"></span></div><div>${Number(v)||0}%</div></div>`).join("")}
       </div>
-      <p class="muted">These are approximate targets. Neosis can still override them when a major story deserves coverage.</p>
+      <p class="muted">These are approximate presentation targets. Explicit recurring instructions can override the learned mix.</p>
     </section>
+
     <section class="panel tune-compose">
       <div class="section-label">Talk to Neosis</div>
       <form id="tuneForm">
-        <div class="field"><label for="tuneInput">What should change?</label><textarea id="tuneInput" rows="5" placeholder="More robotics. Less politics. Teach me finance with less jargon. Add one practical cooking idea each morning."></textarea></div>
+        <div class="field"><label for="tuneInput">What should change?</label><textarea id="tuneInput" rows="5" placeholder="More robotics. Less politics. Give me a full U.S. market recap every morning. I’m not actually interested in celebrity news."></textarea></div>
         <button class="primary" id="tuneSubmit" type="submit">Update Neosis</button>
         <span id="tuneStatus" class="muted"></span>
       </form>
     </section>
+
     <section class="panel tuning-ledger">
       <div class="tuning-ledger-head">
-        <div><div class="section-label">Tuning history</div><h3>Everything shaping your Neosis</h3></div>
-        <span class="tuning-count">${ledger.length} signal${ledger.length===1?"":"s"}</span>
+        <div><div class="section-label">Direct instructions</div><h3>What you’ve explicitly told Neosis</h3></div>
+        <span class="tuning-count">${history.length} instruction${history.length===1?"":"s"}</span>
       </div>
-      <p class="muted">Deleting an item rebuilds your personalization without that signal. It does not delete the underlying brief or your reading history.</p>
+      <p class="muted">These are stronger than passive behavior. Delete an instruction whenever you no longer want it shaping future editions.</p>
       <div class="tuning-ledger-list">
-        ${ledger.length?ledger.map(item=>{
-          if(item.kind==="chat"){
-            const x=item.entry;
-            return `<article class="tuning-event">
-              <div class="tuning-event-icon chat">✦</div>
-              <div class="tuning-event-body">
-                <div class="tuning-event-meta"><span>Direct instruction</span><time>${escapeHtml(tuneDate(x.at))}</time></div>
-                <strong>${escapeHtml(x.user)}</strong>
-                <p>${escapeHtml(x.assistant||"Neosis updated your preferences.")}</p>
-              </div>
-              <button class="tuning-delete" type="button" data-kind="chat" data-key="${escapeHtml(x.at||"")}">Delete</button>
-            </article>`;
-          }
-          const x=item.entry;
-          return `<article class="tuning-event">
-            <div class="tuning-event-icon survey">◎</div>
-            <div class="tuning-event-body">
-              <div class="tuning-event-meta"><span>Survey feedback</span><time>${escapeHtml(tuneDate(x.created_at))}</time></div>
-              <strong>${escapeHtml(x.brief_date||"Daily edition")}</strong>
-              <p>${escapeHtml(surveySummary(x))}</p>
-            </div>
-            <button class="tuning-delete" type="button" data-kind="survey" data-key="${escapeHtml(String(x.id))}">Delete</button>
-          </article>`;
-        }).join(""):'<div class="tuning-empty"><strong>No tuning history yet.</strong><p>Your direct instructions and survey-driven changes will appear here.</p></div>'}
+        ${history.length?history.map(x=>`<article class="tuning-event">
+          <div class="tuning-event-icon chat">✦</div>
+          <div class="tuning-event-body">
+            <div class="tuning-event-meta"><span>Direct instruction</span><time>${escapeHtml(tuneDate(x.at))}</time></div>
+            <strong>${escapeHtml(x.user)}</strong>
+            <p>${escapeHtml(x.assistant||"Neosis updated your preferences.")}</p>
+          </div>
+          <button class="tuning-delete" type="button" data-kind="chat" data-key="${escapeHtml(x.at||"")}">Delete</button>
+        </article>`).join(""):'<div class="tuning-empty"><strong>No direct instructions yet.</strong><p>Use natural language above whenever you want to steer Neosis deliberately.</p></div>'}
       </div>
     </section>`;
 
@@ -1230,9 +1242,12 @@ function renderTune(){
     catch(err){btn.disabled=false;btn.textContent="Update Neosis";status.textContent=" "+err.message;}
   });
 
-  document.querySelectorAll(".tuning-delete").forEach(btn=>btn.addEventListener("click",()=>{
-    if(btn.dataset.kind==="chat")deleteTuneInstruction(btn.dataset.key,btn);
-    else deleteSurveyTuning(btn.dataset.key,btn);
+  document.querySelectorAll(".tuning-delete[data-kind='chat']").forEach(btn=>btn.addEventListener("click",()=>deleteTuneInstruction(btn.dataset.key,btn)));
+  document.querySelectorAll(".learned-correct").forEach(btn=>btn.addEventListener("click",()=>{
+    const input=document.querySelector("#tuneInput");
+    input.value=`My activity may suggest I’m interested in ${btn.dataset.label}, but that’s not accurate. Reduce how much this affects recommendations.`;
+    input.focus();
+    input.scrollIntoView({behavior:"smooth",block:"center"});
   }));
 }
 
