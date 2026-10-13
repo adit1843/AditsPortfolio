@@ -1796,3 +1796,47 @@ body:before{display:none}
 @media(max-width:390px){
   .topbar>.brand .brand-copy small{display:none!important}
 }
+
+
+/* Mobile header final fallback: inline logo + labeled settings */
+@media(max-width:760px){
+  .topbar>.brand{
+    max-width:calc(100vw - 132px)!important;
+  }
+  .topbar>.brand .brand-mark{
+    background:#fffaf5!important;
+  }
+  .brand-logo-inline{
+    display:block!important;
+    width:34px!important;
+    height:34px!important;
+    overflow:visible!important;
+  }
+  .topbar>.profile-button{
+    width:auto!important;
+    min-width:94px!important;
+    padding:0 12px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:7px!important;
+  }
+  .topbar>.profile-button .settings-label{
+    display:inline!important;
+    font-size:11px!important;
+    font-weight:750!important;
+    color:#5f4438!important;
+  }
+  .topbar>.profile-button .settings-icon{
+    display:grid!important;
+  }
+}
+@media(max-width:390px){
+  .topbar>.profile-button{
+    min-width:40px!important;
+    width:40px!important;
+    padding:0!important;
+  }
+  .topbar>.profile-button .settings-label{display:none!important}
+  .topbar>.brand{max-width:calc(100vw - 70px)!important}
+}
