@@ -387,16 +387,31 @@ function setupBriefAudio(){
 
   const key=String(state.briefDbId||state.brief?.date||"brief")+"|"+segments.map(s=>s.path).join("|");
 
-  const maybeCreditChapter=chapter=>{
-    if(!chapter||chapter==="intro"||chapter==="outro")return;
+  const chapterProgress=chapter=>{
+    if(!chapter||chapter==="intro"||chapter==="outro")return null;
     const indexes=playback.segments.map((seg,i)=>chapterKey(seg)===chapter?i:-1).filter(i=>i>=0);
-    if(!indexes.length||indexes.some(i=>!playback.durations[i]))return;
+    if(!indexes.length||indexes.some(i=>!playback.durations[i]))return null;
     const total=indexes.reduce((s,i)=>s+playback.durations[i],0);
     const heard=indexes.reduce((s,i)=>s+Math.min(playback.listened[i],playback.durations[i]),0);
-    if(total>0&&heard/total>=.75){
-      const story=state.brief.stories.find(s=>String(s.id)===String(chapter));
-      if(story)creditStoryConsumption(story,3,"audio").catch(()=>{});
+    return total>0?{total,heard,ratio:heard/total}:null;
+  };
+  const maybeCreditChapter=chapter=>{
+    const progress=chapterProgress(chapter);
+    if(!progress)return;
+    const story=state.brief.stories.find(s=>String(s.id)===String(chapter));
+    if(!story)return;
+    for(const threshold of [.25,.5,.75,1]){
+      if(progress.ratio>=threshold){
+        recEvent("audio_progress",story,{value:threshold,eventKey:`${state.briefDbId}:${story.id}:audio:${threshold}`}).catch(()=>{});
+      }
     }
+    if(progress.ratio>=.75)creditStoryConsumption(story,3,"audio").catch(()=>{});
+  };
+  const maybeCreditSkip=chapter=>{
+    const progress=chapterProgress(chapter);
+    if(!progress||progress.ratio>=.15)return;
+    const story=state.brief.stories.find(s=>String(s.id)===String(chapter));
+    if(story)recEvent("quick_skip",story,{eventKey:`${state.briefDbId}:${story.id}:quick-skip`}).catch(()=>{});
   };
 
   const load=i=>{
@@ -435,6 +450,7 @@ function setupBriefAudio(){
           playback.listened[playback.index]=Math.min(playback.durations[playback.index]||Infinity,playback.listened[playback.index]+delta);
         }
         playback.lastTime=current;
+        maybeCreditChapter(chapterKey(playback.segments[playback.index]));
       });
       audio.addEventListener("ended",async()=>{
         if(playback.durations[playback.index])playback.listened[playback.index]=Math.max(playback.listened[playback.index],playback.durations[playback.index]);
@@ -461,7 +477,7 @@ function setupBriefAudio(){
   const chapterSelect=document.querySelector("#chapterSelect");
   if(chapterSelect)chapterSelect.onchange=async()=>{
     const current=chapterKey(playback.segments[playback.index]);
-    maybeCreditChapter(current);
+    maybeCreditChapter(current);maybeCreditSkip(current);
     load(Number(chapterSelect.value)||0);
     await playLoaded();
   };
@@ -470,7 +486,7 @@ function setupBriefAudio(){
   if(prev)prev.onclick=async()=>{
     const starts=chapterStarts(),start=currentChapterStart(),pos=starts.findIndex(x=>x.index===start);
     if(pos>0){
-      maybeCreditChapter(chapterKey(playback.segments[playback.index]));
+      const current=chapterKey(playback.segments[playback.index]);maybeCreditChapter(current);maybeCreditSkip(current);
       load(starts[pos-1].index);
       await playLoaded();
     }
@@ -480,7 +496,7 @@ function setupBriefAudio(){
   if(next)next.onclick=async()=>{
     const starts=chapterStarts(),start=currentChapterStart(),pos=starts.findIndex(x=>x.index===start);
     if(pos>=0&&pos<starts.length-1){
-      maybeCreditChapter(chapterKey(playback.segments[playback.index]));
+      const current=chapterKey(playback.segments[playback.index]);maybeCreditChapter(current);maybeCreditSkip(current);
       load(starts[pos+1].index);
       await playLoaded();
     }
