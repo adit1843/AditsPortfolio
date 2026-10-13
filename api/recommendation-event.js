@@ -2,20 +2,36 @@ const {requireAuth}=require("../lib/briefline/auth");
 const {request,userRows,insertUserRow}=require("../lib/briefline/store");
 const {buildBehavioralInterest}=require("../lib/briefline/behavior");
 
+function storySnapshot(story={}){
+  return {
+    id:String(story.id||""),
+    title:String(story.title||"").slice(0,240),
+    category:String(story.category||"").slice(0,120),
+    topics:Array.isArray(story.topics)?story.topics.slice(0,12):[],
+    contentType:story.contentType||story.formatIntent||null,
+    tags:{
+      taxonomy:story.tags?.taxonomy||story.taxonomy||null,
+      themes:(story.tags?.themes||story.themes||[]).slice(0,16),
+      entities:(story.tags?.entities||story.entities||[]).slice(0,16),
+      eventType:story.tags?.eventType||story.eventType||null,
+      timeliness:story.tags?.timeliness||story.timeliness||null
+    }
+  };
+}
 function eventWeight(type,value){
   if(type==="read_progress"){
     const p=Number(value)||0;
-    if(p>=1)return 3;
-    if(p>=.75)return 2.2;
-    if(p>=.5)return 1.2;
+    if(p>=1)return .8;
+    if(p>=.75)return 1;
+    if(p>=.5)return .7;
     if(p>=.25)return .5;
     return 0;
   }
   if(type==="audio_progress"){
     const p=Number(value)||0;
-    if(p>=1)return 3.2;
-    if(p>=.75)return 2.4;
-    if(p>=.5)return 1.3;
+    if(p>=1)return .9;
+    if(p>=.75)return 1;
+    if(p>=.5)return .8;
     if(p>=.25)return .5;
     return 0;
   }
@@ -37,10 +53,10 @@ module.exports=async(req,res)=>{
     if(!type||!eventKey||!story?.id)return res.status(400).json({error:"type, eventKey, and story are required"});
     const existing=await request(`recommendation_events?user_id=eq.${encodeURIComponent(s.userId)}&event_key=eq.${encodeURIComponent(eventKey)}&select=id&limit=1`);
     if(existing?.length)return res.status(200).json({ok:true,duplicate:true});
-    const weight=eventWeight(type,b.value);
+    const weight=eventWeight(type,b.value),snapshot=storySnapshot(story);
     await insertUserRow("recommendation_events",s.userId,{
       event_key:eventKey,event_type:type,brief_id:b.briefId||null,story_id:String(story.id),
-      weight,payload:{value:b.value??null,story}
+      weight,payload:{value:b.value??null,story:snapshot}
     });
     const [prefsRows,events]=await Promise.all([
       userRows("preferences",s.userId,{limit:1}),
