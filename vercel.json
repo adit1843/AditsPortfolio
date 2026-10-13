@@ -3,6 +3,10 @@
     {
       "path": "/api/cron-generate-brief",
       "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/cron-generate-brief",
+      "schedule": "0 13 13 10 *"
     }
   ]
 }
