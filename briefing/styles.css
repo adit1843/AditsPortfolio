@@ -494,14 +494,15 @@ textarea{resize:vertical}
   .empty-edition-card{padding:38px 22px}
   .empty-edition-card h2{font-size:44px}
 
-  .persistent-audio-dock{left:9px;right:9px;bottom:83px;transform:none;width:auto;padding:10px 11px;grid-template-columns:1fr;gap:9px;border-radius:15px}
+  .persistent-audio-dock{left:9px;right:9px;bottom:calc(83px + env(safe-area-inset-bottom,0px));transform:none;width:auto;padding:10px 11px;grid-template-columns:1fr;gap:9px;border-radius:15px}
   .persistent-audio-copy{display:none}
   .persistent-audio-dock audio{height:35px}
   .persistent-audio-controls{grid-template-columns:34px minmax(0,1fr) 34px 70px;gap:6px}
   .dock-control{height:34px;width:34px}
   .dock-field select{height:34px}
-  .has-persistent-audio .shell{padding-bottom:242px}
+  .has-persistent-audio .shell{padding-bottom:calc(242px + env(safe-area-inset-bottom,0px))}
 
+  .settings-page .settings-back{min-height:39px;height:39px;padding:8px 12px;flex-direction:row;border:1px solid var(--line);background:var(--surface);color:var(--ink-soft);font-size:11px}
   .settings-page .shell{padding:22px 13px 105px}
   .settings-page .auth-card{padding:24px 19px}
   .auth-shell{padding:16px 12px}
