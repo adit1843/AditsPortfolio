@@ -206,33 +206,32 @@ async function creditStoryConsumption(story,credit,modality){
 
 function setupStoryReadTracking(){
   if(!state.briefDbId||!("IntersectionObserver" in window))return;
-  const active=new Map(),sent=new Map();
+  const active=new Map(),sent=new Set();
   const thresholds=[[5000,.25],[12000,.5],[25000,.75],[45000,1]];
-  const start=id=>{
-    if(active.has(id))return;
-    const begun=Date.now(),timers=[];
-    for(const [ms,value] of thresholds){
-      timers.push(setTimeout(()=>{
-        const story=state.brief.stories.find(s=>String(s.id)===String(id));
-        const k=`${state.briefDbId}:${id}:read:${value}`;
-        if(story&&!sent.has(k)){sent.set(k,true);recEvent("read_progress",story,{value,eventKey:k}).catch(()=>{});}
-      },ms));
-    }
-    active.set(id,{begun,timers});
-  };
-  const stop=id=>{
-    const row=active.get(id);if(!row)return;
-    row.timers.forEach(clearTimeout);active.delete(id);
-  };
+  const stop=id=>{const timers=active.get(id);if(timers){timers.forEach(clearTimeout);active.delete(id);}};
   const observer=new IntersectionObserver(entries=>{
+    if(document.visibilityState==="hidden")return;
     for(const entry of entries){
       const id=entry.target.dataset.storyId;
-      if(entry.isIntersecting&&entry.intersectionRatio>=.6)start(id);else stop(id);
+      if(entry.isIntersecting&&entry.intersectionRatio>=.08&&!entry.target.hidden){
+        if(active.has(id))continue;
+        const timers=thresholds.map(([ms,value])=>setTimeout(()=>{
+          if(entry.target.hidden||document.visibilityState==="hidden")return;
+          const story=state.brief?.stories?.find(s=>String(s.id)===String(id));
+          const key=`${state.briefDbId}:${id}:read:${value}`;
+          if(story&&!sent.has(key)){
+            sent.add(key);
+            recEvent("read_progress",story,{value,eventKey:key}).catch(()=>{});
+            if(value>=.75)creditStoryConsumption(story,3,"read").catch(()=>{});
+          }
+        },ms));
+        active.set(id,timers);
+      }else stop(id);
     }
-  },{threshold:[.6]});
-  document.querySelectorAll(".story-card[data-story-id]").forEach(el=>observer.observe(el));
+  },{threshold:[0,.08,.25]});
+  document.querySelectorAll(".story-card .story-body[data-story-id]").forEach(el=>observer.observe(el));
+  document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")for(const id of active.keys())stop(id);},{once:false});
 }
-
 function setupArchiveRecommendationTracking(brief,row){
   if(!("IntersectionObserver" in window))return;
   const timers=new Map();
@@ -571,61 +570,60 @@ function renderToday(){
   if(!state.brief?.stories?.length){renderEmptyToday();return;}
   const [heroLine,heroSubline]=dailyHeadline(state.brief.date);
   app.innerHTML=`
-    <section class="today-hero" aria-label="Your daily edition">
+    <section class="today-hero">
       <div class="hero-topline">
-        <div class="today-kicker"><span class="live-pip" aria-hidden="true"></span>${escapeHtml(state.brief.date)}</div>
-        <div class="hero-meta">${state.brief.stories.length} stories <i aria-hidden="true"></i> ${escapeHtml(state.brief.readTime||"Daily edition")}</div>
+        <div class="today-kicker"><span class="live-pip"></span> YOUR DAILY BRIEF · ${escapeHtml(state.brief.date)}</div>
+        <div class="hero-meta">${state.brief.stories.length} stories <i></i> ${escapeHtml(state.brief.readTime||"Your edition")}</div>
       </div>
       <div class="hero-content">
-        <div class="hero-label">A personal perspective, every morning</div>
-        <h2><span class="hero-warm">${escapeHtml(heroLine)}</span><em>${escapeHtml(heroSubline)}</em></h2>
-        <p class="hero-intro">${escapeHtml(state.brief.intro)}</p>
-        <div class="hero-actions">
-          <button class="hero-listen" type="button" id="heroListenBtn"><span class="hero-play" aria-hidden="true">▶</span><span><strong>Listen to your edition</strong><small>${escapeHtml(state.brief.readTime||"Audio edition")}</small></span></button>
-          <button class="hero-scroll" type="button" id="heroReadBtn">Start reading <span aria-hidden="true">↓</span></button>
+        <div class="hero-copy">
+          <div class="hero-label">MADE FOR YOUR CURIOSITY ✳</div>
+          <h2><span class="hero-warm">Your world,</span><em>in focus.</em></h2>
+          <p class="hero-intro">${escapeHtml(state.brief.intro||"Everything worth knowing, selected just for you.")}</p>
+          <div class="hero-actions">
+            <button class="hero-listen" id="heroListenBtn" type="button"><span class="hero-play">▶</span><span><strong>Listen to today's brief</strong><small>${escapeHtml(state.brief.readTime||"Daily edition")}</small></span></button>
+            <button class="hero-scroll" id="heroReadBtn" type="button">Explore stories ↘</button>
+          </div>
         </div>
+        <aside class="hero-feature">
+          <div class="hero-feature-top"><span>✦ &nbsp; TODAY'S HIGHLIGHT</span><span>01 / ${String(state.brief.stories.length).padStart(2,"0")}</span></div>
+          <div class="hero-feature-rule"></div>
+          <h3>${escapeHtml(state.brief.stories[0]?.title||"Your stories are ready")}</h3>
+          <p>${escapeHtml(state.brief.stories[0]?.summary||"A better way to stay curious.")}</p>
+          <div class="hero-feature-foot"><span>${escapeHtml(state.brief.stories[0]?.category||"Neosis")}</span><span class="feature-arrow">↗</span></div>
+        </aside>
       </div>
     </section>
-
     <div class="today-layout">
       <div class="today-main">
         <div class="section-heading-row" id="briefingStart">
-          <div><div class="eyebrow">The daily edit</div><h3>Today's stories</h3></div>
+          <div><div class="eyebrow">PICKED JUST FOR YOU</div><h3>Today's stories <span aria-hidden="true">✳</span></h3></div>
           <div class="edition-tools">
-            <button class="ghost compact" type="button" id="generateBtn" ${state.api.configured&&state.api.canRegenerate&&!state.briefGenerating?"":"disabled"}>${!state.api.configured?"Unavailable":state.briefGenerating?"Researching…":state.api.canRegenerate?(state.api.unlimitedRegenerations?"Refresh ↻":"Refresh"):"Refresh used"}</button>
+            <button class="ghost compact" type="button" id="generateBtn" ${state.api.configured&&state.api.canRegenerate&&!state.briefGenerating?"":"disabled"}>${!state.api.configured?"Unavailable":state.briefGenerating?"Working…":state.api.canRegenerate?(state.api.unlimitedRegenerations?"↻ Refresh":"↻ Refresh"):"Refresh used"}</button>
           </div>
         </div>
         <span id="generateStatus" class="muted" role="status"></span>
         <div id="stories" class="story-stack"></div>
-
         <section class="panel feedback-card">
-          <div class="eyebrow">A better brief, every day</div>
-          <h2>Make Neosis yours.</h2>
-          <p class="muted">A little more of what you enjoy, a little less of what you don’t. Neosis learns as you read and listen.</p>
-          <button class="primary" id="feedbackTuneBtn">Tune your edition <span aria-hidden="true">↗</span></button>
+          <div class="eyebrow">A LITTLE SMARTER EVERY DAY</div>
+          <h2>Make it feel more like you ✨</h2>
+          <p>More of what you love. Less of what you don't. Your Neosis gets smarter as you read, listen, and explore.</p>
+          <button class="primary" type="button" id="feedbackTuneBtn">Tune my Neosis ↗</button>
         </section>
       </div>
-
-      <aside class="today-sidebar">
-        <section class="edition-index" aria-label="Stories in this edition">
-          <div class="eyebrow">A look inside</div>
-          <h3>In this edition</h3>
-          <ol class="edition-index-list">
-            ${state.brief.stories.map((story,i)=>`<li><button type="button" data-jump-story="${i+1}"><span class="num">${String(i+1).padStart(2,"0")}</span><span class="topic">${escapeHtml(story.title)}</span></button></li>`).join("")}
-          </ol>
-          <p class="edition-index-note">Curated for you. Updated every morning. Your preferences quietly shape what comes next.</p>
-        </section>
-      </aside>
     </div>`;
-
-  document.querySelectorAll("[data-jump-story]").forEach(button=>button.addEventListener("click",()=>{
-    document.querySelector("#story-"+button.dataset.jumpStory)?.scrollIntoView({behavior:"smooth",block:"start"});
-  }));
   const holder=document.querySelector("#stories");
   state.brief.stories.forEach((story,i)=>{
     const node=document.querySelector("#story-template").content.cloneNode(true);
     const article=node.querySelector(".story-card");
     article.dataset.storyId=story.id;
+    article.id=`story-${i+1}`;
+    article.classList.add("is-preview");
+    const body=node.querySelector(".story-body");
+    const sources=node.querySelector(".story-sources");
+    body.hidden=true;
+    sources.hidden=true;
+    body.dataset.storyId=String(story.id);
     article.id=`story-${i+1}`;
     article.style.setProperty("--story-index",i);
     node.querySelector(".story-meta").innerHTML=`<span class="story-index">${String(i+1).padStart(2,"0")}</span><span>${escapeHtml(story.contentType?story.contentType.replace(/_/g," "):story.category)}</span><i></i><span>${escapeHtml(story.category)}</span>`;
@@ -636,9 +634,24 @@ function renderToday(){
     node.querySelector(".teach-btn").innerHTML='<span>Go deeper</span><span>↗</span>';
     node.querySelector(".teach-btn").addEventListener("click",()=>createExplainer(story));
     const actions=node.querySelector(".story-actions");
+    const readButton=document.createElement("button");
+    readButton.type="button";
+    readButton.className="story-read-toggle";
+    readButton.setAttribute("aria-expanded","false");
+    readButton.innerHTML="Read story <span aria-hidden='true'>↗</span>";
+    readButton.addEventListener("click",()=>{
+      const open=body.hidden;
+      body.hidden=!open;
+      sources.hidden=!open;
+      article.classList.toggle("is-open",open);
+      article.classList.toggle("is-preview",!open);
+      readButton.setAttribute("aria-expanded",String(open));
+      readButton.innerHTML=open?"Show less <span aria-hidden='true'>↑</span>":"Read story <span aria-hidden='true'>↗</span>";
+    });
+    actions.prepend(readButton);
     const feedback=document.createElement("div");
     feedback.className="story-preference";
-    feedback.innerHTML='<span>Shape your feed</span><button type="button" data-rec="more" aria-label="More stories like this">↑ More</button><button type="button" data-rec="less" aria-label="Fewer stories like this">↓ Less</button>';
+    feedback.innerHTML='<span>Shape your feed</span><button type="button" data-rec="more" aria-label="More stories like this">♡ More</button><button type="button" data-rec="less" aria-label="Fewer stories like this">− Less</button>';
     feedback.querySelector('[data-rec="more"]').addEventListener("click",e=>{
       e.currentTarget.classList.add("selected");
       feedback.querySelectorAll('[data-rec="more"],[data-rec="less"]').forEach(b=>b.disabled=true);
