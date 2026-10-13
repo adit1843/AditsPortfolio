@@ -124,9 +124,21 @@ async function hydrateFromDatabase(){
 }
 
 const app=document.querySelector("#app");
-document.querySelectorAll(".nav-btn").forEach(btn=>btn.addEventListener("click",()=>{state.view=btn.dataset.view;render();}));
+document.querySelectorAll(".nav-btn").forEach(btn=>btn.addEventListener("click",()=>{
+  if(state.view===btn.dataset.view){window.scrollTo({top:0,behavior:"smooth"});return;}
+  state.view=btn.dataset.view;
+  render();
+  window.scrollTo({top:0,behavior:"instant"});
+}));
 
-function setActive(){document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===state.view));}
+function setActive(){
+  document.querySelectorAll(".nav-btn").forEach(b=>{
+    const active=b.dataset.view===state.view;
+    b.classList.toggle("active",active);
+    if(active)b.setAttribute("aria-current","page");
+    else b.removeAttribute("aria-current");
+  });
+}
 function render(){
   setActive();
   if(state.hydrating){
@@ -558,20 +570,6 @@ function renderEmptyToday(){
 function renderToday(){
   if(!state.brief?.stories?.length){renderEmptyToday();return;}
   const [heroLine,heroSubline]=dailyHeadline(state.brief.date);
-  const apiMessage=state.api.loading
-    ? "Checking live generation…"
-    : state.api.configured
-      ? `Live · ${escapeHtml(state.api.model||"generation ready")}`
-      : "Generation unavailable";
-
-  const mix=state.prefs.mixTargets||{news:45,general_knowledge:20,deep_dive:15,history:7,science:8,business_case:5};
-  const mixSummary=[
-    ["News",mix.news||0],
-    ["Knowledge",mix.general_knowledge||0],
-    ["Deep dives",mix.deep_dive||0]
-  ];
-  const leadStory=state.brief.stories?.[0];
-
   app.innerHTML=`
     <section class="today-hero" aria-label="Your daily edition">
       <div class="hero-topline">
@@ -662,7 +660,7 @@ function renderToday(){
   if(generateBtn&&!generateBtn.disabled) generateBtn.addEventListener("click",generateLiveBrief);
 
   const feedbackTuneBtn=document.querySelector("#feedbackTuneBtn");
-  if(feedbackTuneBtn)feedbackTuneBtn.addEventListener("click",()=>{state.view="tune";render();});
+  if(feedbackTuneBtn)feedbackTuneBtn.addEventListener("click",()=>{state.view="tune";render();window.scrollTo({top:0,behavior:"instant"});});
 
   const openTune=document.querySelector("#openTuneView");
   if(openTune) openTune.addEventListener("click",()=>{state.view="tune";render();});
@@ -852,7 +850,7 @@ function renderArchive(){
 
   document.querySelectorAll(".archive-card").forEach(card=>card.addEventListener("click",()=>{
     const row=state.archivedBriefs.find(x=>String(x.id)===String(card.dataset.archiveId));
-    if(row)renderArchivedBrief(row);
+    if(row){renderArchivedBrief(row);window.scrollTo({top:0,behavior:"instant"});}
   }));
 }
 
@@ -882,7 +880,7 @@ function renderArchivedBrief(row){
         </article>`).join("")||'<div class="panel"><p class="muted">This saved edition has no stories.</p></div>'}
     </div>`;
 
-  document.querySelector("#archiveBack")?.addEventListener("click",renderArchive);
+  document.querySelector("#archiveBack")?.addEventListener("click",()=>{renderArchive();window.scrollTo({top:0,behavior:"instant"});});
   setupArchiveRecommendationTracking(brief,row);
   document.querySelectorAll(".archive-story").forEach(article=>{
     const story=(brief.stories||[]).find(s=>String(s.id)===String(article.dataset.storyId));
@@ -1132,6 +1130,15 @@ function renderTune(){
       <p>Neosis learns mostly from what you actually read, listen to, skip, revisit, and explore. Direct instructions here always outrank passive behavior.</p>
     </section>
 
+    <section class="panel tune-compose">
+      <div class="section-label">Talk to Neosis</div>
+      <form id="tuneForm">
+        <div class="field"><label for="tuneInput">What should change?</label><textarea id="tuneInput" rows="5" placeholder="More robotics. Less politics. Give me a full U.S. market recap every morning. I’m not actually interested in celebrity news."></textarea></div>
+        <button class="primary" id="tuneSubmit" type="submit">Update Neosis</button>
+        <span id="tuneStatus" class="muted"></span>
+      </form>
+    </section>
+
     <section class="panel learned-profile">
       <div class="tuning-ledger-head">
         <div><div class="section-label">What Neosis has learned</div><h3>Your emerging interest map</h3></div>
@@ -1160,14 +1167,7 @@ function renderTune(){
       <p class="muted">These are approximate presentation targets. Explicit recurring instructions can override the learned mix.</p>
     </section>
 
-    <section class="panel tune-compose">
-      <div class="section-label">Talk to Neosis</div>
-      <form id="tuneForm">
-        <div class="field"><label for="tuneInput">What should change?</label><textarea id="tuneInput" rows="5" placeholder="More robotics. Less politics. Give me a full U.S. market recap every morning. I’m not actually interested in celebrity news."></textarea></div>
-        <button class="primary" id="tuneSubmit" type="submit">Update Neosis</button>
-        <span id="tuneStatus" class="muted"></span>
-      </form>
-    </section>
+
 
     <section class="panel tuning-ledger">
       <div class="tuning-ledger-head">
