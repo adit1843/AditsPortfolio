@@ -1,7 +1,7 @@
 const {requireAuth}=require("../lib/briefline/auth");
 const {userRows,insertUserRow,upsert,getProfile,request}=require("../lib/briefline/store");
 
-function defaults(){return{generalNews:40,politics:"important-only",markets:true,topicScores:{},contentTypeScores:{news:55,general_knowledge:50,deep_dive:50,history:50,science:50,business_case:50},mixTargets:{news:45,general_knowledge:20,deep_dive:15,history:7,science:8,business_case:5},requestedTopics:[],avoidedTopics:[],explanationBias:0,languageDirectives:[],editorialDirectives:[],tuningHistory:[]};}
+function defaults(){return{generalNews:40,politics:"important-only",markets:true,topicScores:{},contentTypeScores:{news:55,general_knowledge:50,deep_dive:50,history:50,science:50,business_case:50},mixTargets:{news:45,general_knowledge:20,deep_dive:15,history:7,science:8,business_case:5},requestedTopics:[],avoidedTopics:[],explanationBias:0,languageDirectives:[],editorialDirectives:[],tuningHistory:[],behavioralInterest:{version:1,features:{}}};}
 
 module.exports=async(req,res)=>{
   const s=requireAuth(req,res);if(!s)return;
@@ -16,7 +16,7 @@ module.exports=async(req,res)=>{
     if(b.action==="reset_neosis"){
       if(String(b.confirmation||"")!=="RESET NEOSIS")return res.status(400).json({error:"Reset confirmation did not match."});
       const old=await getProfile(s.userId);
-      for(const table of ["briefs","explainers","preferences","knowledge","coverage","surveys"]){
+      for(const table of ["briefs","explainers","preferences","knowledge","coverage","surveys","recommendation_events"]){
         await request(`${table}?user_id=eq.${encodeURIComponent(s.userId)}`,{method:"DELETE"});
       }
       await insertUserRow("preferences",s.userId,{payload:defaults()});
