@@ -52,7 +52,7 @@ module.exports=async(req,res)=>{
       userId:s.userId,
       operation:"manual_final",
       input:buildBriefPrompt({date:day,preferences,knowledge,coverage,candidates:ranked.selected,contentPlan,sourcePlan}),
-      web:true,
+      web:false,
       max:10000
     });
     const brief=final.json;
