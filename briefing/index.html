@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Neosis</title>
   <link rel="icon" type="image/svg+xml" href="/assets/neosis-favicon.svg" />
-  <link rel="stylesheet" href="./styles.css?v=mobile-header-2" />
+  <link rel="stylesheet" href="./styles.css?v=mobile-header-3" />
   <style>html.auth-pending body{visibility:hidden}</style>
   <script>
     document.documentElement.classList.add("auth-pending");
@@ -31,7 +31,14 @@
 <body>
   <header class="topbar">
     <a class="brand" href="/briefing/" aria-label="Neosis home">
-      <span class="brand-mark"><img class="brand-logo" src="/assets/neosis-icon.svg" alt="" /></span>
+      <span class="brand-mark" aria-hidden="true">
+        <svg class="brand-logo brand-logo-inline" viewBox="0 0 128 128" role="img" aria-label="">
+          <rect x="18" y="26" width="25" height="78" rx="9" fill="#153f7a"></rect>
+          <rect x="85" y="26" width="25" height="78" rx="9" fill="#153f7a"></rect>
+          <path d="M34 29 C49 30 62 44 73 59 C84 75 94 88 110 89 L110 105 C86 105 70 91 57 73 C47 59 39 48 18 47 L18 30 C24 29 29 29 34 29Z" fill="#29d7d3"></path>
+          <path d="M64 15 L68 24 L77 28 L68 32 L64 42 L60 32 L51 28 L60 24 Z" fill="#42e4de"></path>
+        </svg>
+      </span>
       <span class="brand-copy"><strong>Neosis</strong><small>your daily intelligence</small></span>
     </a>
     <nav class="main-nav" aria-label="Primary navigation">
@@ -47,7 +54,7 @@
           <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21h-4v-.1A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3v-4h-.1A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3h4v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.36.29.58.71.6 1.17V14c-.02.46-.24.88-.6 1z"></path>
         </svg>
       </span>
-      <span>Settings</span>
+      <span class="settings-label">Settings</span>
     </a>
   </header>
 
