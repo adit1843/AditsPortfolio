@@ -34,7 +34,20 @@ const state={
   hydrating:true,
   dbError:null,
   briefDbId:null,
-  audioGenerating:false
+  audioGenerating:false,
+  briefGenerating:false
+};
+
+const playback={
+  key:null,
+  segments:[],
+  index:0,
+  seeking:false,
+  lastTime:0,
+  listened:[],
+  durations:[],
+  speed:1,
+  initialized:false
 };
 
 
@@ -226,76 +239,96 @@ function learnFromSurvey(ratings,depth,missing){
 function audioPanelHtml(){
   const segments=state.brief?.audio?.segments||[];
   if(!segments.length){
-    if(!state.audioGenerating) return "";
+    if(!state.audioGenerating)return "";
     return `
       <section class="panel" id="audioBrief">
         <div class="eyebrow">Audio edition</div>
         <h2>Preparing today's audio…</h2>
-        <p class="muted">Neosis is generating and caching the spoken edition automatically.</p>
+        <p class="muted">Generation continues even if you open Archive, Library, or Tune.</p>
       </section>`;
   }
   return `
     <section class="panel" id="audioBrief">
       <div class="eyebrow">Produced audio edition</div>
       <h2>Listen to today's Neosis</h2>
-      <p class="muted" id="audioNow">Ready · ${segments.length} produced segments · production baked into audio</p>
-      <audio id="briefAudio" controls preload="metadata" style="width:100%"></audio>
+      <p class="muted" id="audioNow">${escapeHtml(playbackStatus())}</p>
       <div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-top:12px">
         <div class="field" style="max-width:180px;margin:0">
           <label for="audioSpeed">Playback speed</label>
           <select id="audioSpeed">
-            <option value="1">1×</option>
-            <option value="1.25">1.25×</option>
-            <option value="1.5">1.5×</option>
-            <option value="1.75">1.75×</option>
-            <option value="2">2×</option>
+            ${[1,1.25,1.5,1.75,2].map(v=>`<option value="${v}" ${Number(playback.speed)===v?"selected":""}>${v}×</option>`).join("")}
           </select>
         </div>
         <button class="ghost" id="nextChapterBtn" type="button">Next chapter →</button>
       </div>
+      <p class="muted persistent-note">Playback stays active while you move around Neosis.</p>
     </section>`;
 }
 
+function playbackStatus(){
+  if(!playback.segments.length)return "Audio ready";
+  const seg=playback.segments[playback.index]||playback.segments[0];
+  return `Now playing ${playback.index+1} of ${playback.segments.length} · ${seg?.label||"Neosis"}`;
+}
+
+function updatePlaybackUi(){
+  const now=document.querySelector("#audioNow");
+  if(now)now.textContent=playbackStatus();
+  const label=document.querySelector("#persistentAudioLabel");
+  if(label)label.textContent=playback.segments.length?playbackStatus():"Today's Neosis";
+  const speed=document.querySelector("#audioSpeed");
+  if(speed)speed.value=String(playback.speed);
+}
+
+function syncPersistentAudioDock(){
+  const dock=document.querySelector("#persistentAudioDock");
+  if(!dock)return;
+  dock.hidden=!playback.segments.length;
+  document.body.classList.toggle("has-persistent-audio",playback.segments.length>0);
+  updatePlaybackUi();
+}
+
 async function generateAudioForCurrentBrief(){
-  if(!state.briefDbId || (state.brief?.audio?.segments?.length&&Number(state.brief?.audio?.productionVersion||0)>=2)) return;
+  if(!state.briefDbId || (state.brief?.audio?.segments?.length&&Number(state.brief?.audio?.productionVersion||0)>=2)){
+    setupBriefAudio();
+    return;
+  }
   state.audioGenerating=true;
-  renderToday();
+  if(state.view==="today")renderToday();
   try{
     const r=await fetch("/api/generate-brief-audio",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({briefId:state.briefDbId})
     });
-    const data=await r.json();
-    if(!r.ok) throw new Error(data.error||"Audio generation failed");
+    const raw=await r.text();
+    let data={};try{data=raw?JSON.parse(raw):{};}catch{data={error:raw||"Audio generation failed"};}
+    if(!r.ok)throw new Error(data.error||"Audio generation failed");
     state.brief=data.brief||state.brief;
-
+    setupBriefAudio();
   }catch(e){
     console.error("Neosis audio generation failed:",e);
   }finally{
     state.audioGenerating=false;
-    renderToday();
+    if(state.view==="today")renderToday();
   }
 }
 
 function setupBriefAudio(){
   const audio=document.querySelector("#briefAudio");
-  if(!audio) return;
+  if(!audio)return;
   const segments=state.brief?.audio?.segments||[];
-  let index=0,seeking=false,lastTime=0;
-  const listened=Array(segments.length).fill(0);
-  const durations=Array(segments.length).fill(0);
-  const now=document.querySelector("#audioNow");
-  const speed=document.querySelector("#audioSpeed");
+  if(!segments.length){syncPersistentAudioDock();return;}
+
+  const key=String(state.briefDbId||state.brief?.date||"brief")+"|"+segments.map(s=>s.path).join("|");
   const chapterKey=seg=>seg?.storyId||seg?.kind||"intro";
-  const chapterIndexes=chapter=>segments.map((seg,i)=>chapterKey(seg)===chapter?i:-1).filter(i=>i>=0);
 
   const maybeCreditChapter=chapter=>{
     if(!chapter||chapter==="intro"||chapter==="outro")return;
-    const indexes=chapterIndexes(chapter);
-    if(!indexes.length||indexes.some(i=>!durations[i]))return;
-    const total=indexes.reduce((s,i)=>s+durations[i],0);
-    const heard=indexes.reduce((s,i)=>s+Math.min(listened[i],durations[i]),0);
+    const indexes=playback.segments.map((seg,i)=>chapterKey(seg)===chapter?i:-1).filter(i=>i>=0);
+    if(!indexes.length||indexes.some(i=>!playback.durations[i]))return;
+    const total=indexes.reduce((s,i)=>s+playback.durations[i],0);
+    const heard=indexes.reduce((s,i)=>s+Math.min(playback.listened[i],playback.durations[i]),0);
     if(total>0&&heard/total>=.75){
       const story=state.brief.stories.find(s=>String(s.id)===String(chapter));
       if(story)creditStoryConsumption(story,3,"audio").catch(()=>{});
@@ -303,39 +336,72 @@ function setupBriefAudio(){
   };
 
   const load=i=>{
-    index=Math.max(0,Math.min(segments.length-1,i));
-    const seg=segments[index];lastTime=0;
+    playback.index=Math.max(0,Math.min(playback.segments.length-1,i));
+    const seg=playback.segments[playback.index];
+    playback.lastTime=0;
     audio.src=`/api/brief-audio?path=${encodeURIComponent(seg.path)}`;
-    audio.playbackRate=Number(speed?.value||1);
-    if(now)now.textContent=`Now playing ${index+1} of ${segments.length} · ${seg.label||"Neosis"}`;
+    audio.playbackRate=playback.speed;
+    updatePlaybackUi();
   };
-  const playLoaded=async()=>{try{await audio.play();}catch{}};
-  load(0);
 
-  audio.addEventListener("loadedmetadata",()=>{if(Number.isFinite(audio.duration)&&audio.duration>0)durations[index]=audio.duration;lastTime=audio.currentTime||0;});
-  audio.addEventListener("seeking",()=>{seeking=true;});
-  audio.addEventListener("seeked",()=>{seeking=false;lastTime=audio.currentTime||0;});
-  audio.addEventListener("timeupdate",()=>{
-    const current=audio.currentTime||0,delta=current-lastTime;
-    if(!seeking&&!audio.paused&&delta>0&&delta<3)listened[index]=Math.min((durations[index]||Infinity),listened[index]+delta);
-    lastTime=current;
-  });
-  audio.addEventListener("ended",async()=>{
-    if(durations[index])listened[index]=Math.max(listened[index],durations[index]);
-    const finishedChapter=chapterKey(segments[index]),nextIndex=index+1;
-    const nextChapter=nextIndex<segments.length?chapterKey(segments[nextIndex]):null;
-    if(nextChapter!==finishedChapter)maybeCreditChapter(finishedChapter);
-    if(nextIndex<segments.length){load(nextIndex);await playLoaded();}
-    else if(now)now.textContent="Finished today's Neosis.";
-  });
-  if(speed)speed.addEventListener("change",()=>{audio.playbackRate=Number(speed.value||1);});
+  const playLoaded=async()=>{try{await audio.play();}catch{}};
+
+  if(playback.key!==key){
+    playback.key=key;
+    playback.segments=segments;
+    playback.index=0;
+    playback.seeking=false;
+    playback.lastTime=0;
+    playback.listened=Array(segments.length).fill(0);
+    playback.durations=Array(segments.length).fill(0);
+    if(!playback.initialized){
+      audio.addEventListener("loadedmetadata",()=>{
+        if(Number.isFinite(audio.duration)&&audio.duration>0)playback.durations[playback.index]=audio.duration;
+        playback.lastTime=audio.currentTime||0;
+      });
+      audio.addEventListener("seeking",()=>{playback.seeking=true;});
+      audio.addEventListener("seeked",()=>{playback.seeking=false;playback.lastTime=audio.currentTime||0;});
+      audio.addEventListener("timeupdate",()=>{
+        const current=audio.currentTime||0,delta=current-playback.lastTime;
+        if(!playback.seeking&&!audio.paused&&delta>0&&delta<3){
+          playback.listened[playback.index]=Math.min(playback.durations[playback.index]||Infinity,playback.listened[playback.index]+delta);
+        }
+        playback.lastTime=current;
+        updatePlaybackUi();
+      });
+      audio.addEventListener("ended",async()=>{
+        if(playback.durations[playback.index])playback.listened[playback.index]=Math.max(playback.listened[playback.index],playback.durations[playback.index]);
+        const finished=chapterKey(playback.segments[playback.index]),next=playback.index+1;
+        const nextChapter=next<playback.segments.length?chapterKey(playback.segments[next]):null;
+        if(nextChapter!==finished)maybeCreditChapter(finished);
+        if(next<playback.segments.length){load(next);await playLoaded();}
+        else updatePlaybackUi();
+      });
+      playback.initialized=true;
+    }
+    load(0);
+  }else{
+    playback.segments=segments;
+  }
+
+  const speed=document.querySelector("#audioSpeed");
+  if(speed)speed.onchange=()=>{
+    playback.speed=Number(speed.value||1);
+    audio.playbackRate=playback.speed;
+    updatePlaybackUi();
+  };
+
   const nextChapter=document.querySelector("#nextChapterBtn");
-  if(nextChapter)nextChapter.addEventListener("click",async()=>{
-    const currentChapter=chapterKey(segments[index]);maybeCreditChapter(currentChapter);
-    let next=index+1;while(next<segments.length&&chapterKey(segments[next])===currentChapter)next++;
-    if(next<segments.length){load(next);await playLoaded();}
-    else{if(now)now.textContent="Finished today's Neosis.";audio.pause();}
-  });
+  if(nextChapter)nextChapter.onclick=async()=>{
+    const currentChapter=chapterKey(playback.segments[playback.index]);
+    maybeCreditChapter(currentChapter);
+    let next=playback.index+1;
+    while(next<playback.segments.length&&chapterKey(playback.segments[next])===currentChapter)next++;
+    if(next<playback.segments.length){load(next);await playLoaded();}
+    else audio.pause();
+  };
+
+  syncPersistentAudioDock();
 }
 
 async function checkApi(){
@@ -437,7 +503,7 @@ function renderToday(){
           </div>
           <div class="edition-tools">
             <span class="edition-generation">${apiMessage}</span>
-            <button class="ghost compact" id="generateBtn" ${state.api.configured&&state.api.canRegenerate?"":"disabled"}>${!state.api.configured?"Unavailable":state.api.canRegenerate?(state.api.unlimitedRegenerations?"Refresh edition ∞":"Refresh edition"):"Refresh used"}</button>
+            <button class="ghost compact" id="generateBtn" ${state.api.configured&&state.api.canRegenerate&&!state.briefGenerating?"":"disabled"}>${!state.api.configured?"Unavailable":state.briefGenerating?"Researching…":state.api.canRegenerate?(state.api.unlimitedRegenerations?"Refresh edition ∞":"Refresh edition"):"Refresh used"}</button>
           </div>
         </div>
         <span id="generateStatus" class="muted"></span>
@@ -550,7 +616,7 @@ function renderToday(){
 async function generateLiveBrief(){
   const btn=document.querySelector("#generateBtn");
   const status=document.querySelector("#generateStatus");
-  btn.disabled=true; btn.textContent="Researching today…"; status.textContent=" This can take a little while.";
+  state.briefGenerating=true; btn.disabled=true; btn.textContent="Researching today…"; status.textContent=" You can keep using Neosis while this runs.";
   try{
     const r=await fetch("/api/generate-brief",{
       method:"POST",
@@ -577,11 +643,16 @@ async function generateLiveBrief(){
 
     state.briefDbId=data.briefId||null;
     state.api.canRegenerate=state.api.unlimitedRegenerations===true;
-    renderToday();
-    if(state.briefDbId) await generateAudioForCurrentBrief();
+    state.briefGenerating=false;
+    if(state.view==="today")renderToday();
+    if(state.briefDbId)await generateAudioForCurrentBrief();
   }catch(e){
-    btn.disabled=false; btn.textContent=state.api.unlimitedRegenerations?"Refresh edition ∞":"↻ Regenerate once today";
-    status.textContent=` ${e.message}`;
+    state.briefGenerating=false;
+    if(state.view==="today"){
+      const liveBtn=document.querySelector("#generateBtn"),liveStatus=document.querySelector("#generateStatus");
+      if(liveBtn){liveBtn.disabled=false;liveBtn.textContent=state.api.unlimitedRegenerations?"Refresh edition ∞":"↻ Regenerate once today";}
+      if(liveStatus)liveStatus.textContent=` ${e.message}`;
+    }
   }
 }
 
