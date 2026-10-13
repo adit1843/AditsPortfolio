@@ -86,7 +86,8 @@ async function hydrateFromDatabase(){
       if(match?.payload){state.brief=match.payload;state.briefDbId=match.id;}
       else {state.brief=briefs[0].payload;state.briefDbId=briefs[0].id;}
     }else{
-      state.brief=demoBrief;
+      state.brief=null;
+      state.briefDbId=null;
     }
 
     if(explainers.length) state.explainers=explainers.map(x=>x.payload);
@@ -105,7 +106,7 @@ async function hydrateFromDatabase(){
   }finally{
     state.hydrating=false;
     render();
-    if(new URLSearchParams(location.search).get("survey")==="1") renderSurvey();
+    if(new URLSearchParams(location.search).get("survey")==="1"&&state.brief?.stories?.length) renderSurvey();
     else if(state.briefDbId&&Number(state.brief?.audio?.productionVersion||0)<2) setTimeout(()=>generateAudioForCurrentBrief(),350);
   }
 }
@@ -484,7 +485,25 @@ function dailyHeadline(dateLabel=""){
   return warm[Math.abs(key)%warm.length];
 }
 
+function renderEmptyToday(){
+  const apiReady=state.api.configured&&!state.api.loading;
+  app.innerHTML=`
+    <section class="empty-edition-shell">
+      <div class="empty-edition-card">
+        <div class="empty-edition-mark"><img src="/assets/neosis-icon.svg" alt=""></div>
+        <div class="eyebrow">Your next edition</div>
+        <h2>A fresh Neosis is on the way.</h2>
+        <p>Your personalized stories refresh automatically at <strong>5:00 AM Central</strong> each morning. Your next scheduled edition will be ready tomorrow.</p>
+        <div class="empty-edition-separator"><span>Want something today?</span></div>
+        <button class="primary empty-refresh" id="emptyRefreshBtn" type="button" ${apiReady&&!state.briefGenerating?"":"disabled"}>${state.briefGenerating?"Building your edition…":"Refresh now"}</button>
+        <div class="empty-edition-note" id="emptyRefreshStatus">${state.briefGenerating?"Neosis is researching and writing your stories. You can keep using the app while it works.":"Create a fresh edition now without changing tomorrow’s scheduled refresh."}</div>
+      </div>
+    </section>`;
+  const btn=document.querySelector("#emptyRefreshBtn");
+  if(btn&&!btn.disabled)btn.addEventListener("click",generateLiveBrief);
+}
 function renderToday(){
+  if(!state.brief?.stories?.length){renderEmptyToday();return;}
   const [heroLine,heroSubline]=dailyHeadline(state.brief.date);
   const apiMessage=state.api.loading
     ? "Checking live generation…"
@@ -665,9 +684,12 @@ function renderToday(){
 }
 
 async function generateLiveBrief(){
-  const btn=document.querySelector("#generateBtn");
-  const status=document.querySelector("#generateStatus");
-  state.briefGenerating=true; btn.disabled=true; btn.textContent="Researching today…"; status.textContent=" You can keep using Neosis while this runs.";
+  const btn=document.querySelector("#generateBtn")||document.querySelector("#emptyRefreshBtn");
+  const status=document.querySelector("#generateStatus")||document.querySelector("#emptyRefreshStatus");
+  state.briefGenerating=true;
+  if(btn){btn.disabled=true;btn.textContent="Building your edition…";}
+  if(status)status.textContent=" Neosis is researching and writing your stories. You can keep using the app while it works.";
+  if(state.view==="today"&&!state.brief?.stories?.length)renderEmptyToday();
   try{
     const r=await fetch("/api/generate-brief",{
       method:"POST",
@@ -680,7 +702,7 @@ async function generateLiveBrief(){
     catch{data={error:raw||"Generation failed"};}
     if(!r.ok) throw new Error(data.error||"Generation failed");
 
-    if(state.brief!==demoBrief&&state.brief?.stories?.length){
+    if(state.brief?.stories?.length){
       state.coverage.unshift({
         date:state.brief.date,
         stories:state.brief.stories.map(s=>({title:s.title,category:s.category,summary:s.summary,tags:s.tags||null}))
