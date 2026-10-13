@@ -50,10 +50,30 @@
 
   <aside id="persistentAudioDock" class="persistent-audio-dock" hidden aria-label="Neosis audio player">
     <div class="persistent-audio-copy">
-      <span class="eyebrow">Now playing</span>
+      <span class="eyebrow">Audio edition</span>
       <strong id="persistentAudioLabel">Today's Neosis</strong>
     </div>
+
     <audio id="briefAudio" controls preload="metadata"></audio>
+
+    <div class="persistent-audio-controls">
+      <button class="dock-control dock-skip" id="prevChapterBtn" type="button" aria-label="Previous chapter">←</button>
+      <div class="dock-field dock-chapter-field">
+        <label for="chapterSelect">Chapter</label>
+        <select id="chapterSelect" aria-label="Chapter"></select>
+      </div>
+      <button class="dock-control dock-skip" id="nextChapterBtn" type="button" aria-label="Next chapter">→</button>
+      <div class="dock-field dock-speed-field">
+        <label for="audioSpeed">Speed</label>
+        <select id="audioSpeed" aria-label="Playback speed">
+          <option value="1">1×</option>
+          <option value="1.25">1.25×</option>
+          <option value="1.5">1.5×</option>
+          <option value="1.75">1.75×</option>
+          <option value="2">2×</option>
+        </select>
+      </div>
+    </div>
   </aside>
 
   <template id="story-template">
