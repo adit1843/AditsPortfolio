@@ -5,6 +5,7 @@ const {selectCandidates}=require("../lib/briefline/recommender");
 const {getSession}=require("../lib/briefline/auth");
 const {request,userRows,insertUserRow,listProfiles}=require("../lib/briefline/store");
 const {createResponse}=require("../lib/briefline/openai");
+const {buildContentPlan,resolveSourcePlan,webSearchTool}=require("../lib/briefline/source-planner");
 
 const CRON_SECRET=process.env.CRON_SECRET,RESEND_API_KEY=process.env.RESEND_API_KEY,SITE_URL=process.env.SITE_URL;
 
@@ -43,14 +44,30 @@ async function one(p){
   const[prefs,k,cov,old]=await Promise.all([userRows("preferences",uid,{limit:1}),userRows("knowledge",uid,{limit:1}),userRows("coverage",uid,{limit:14}),userRows("briefs",uid,{limit:1})]);
   const preferences=prefs?.[0]?.payload||{},knowledge=k?.[0]?.payload||{concepts:{},seenEvents:{}},coverage=cov.map(x=>x.payload);
 
-  const dd=await createResponse({userId:uid,operation:"scheduled_discovery",input:buildDiscoveryPrompt({date:day(p),preferences,coverage}),tools:[{type:"web_search"}],maxOutputTokens:9000});
+  const localDate=day(p);
+  const contentPlan=await buildContentPlan({userId:uid,date:localDate,preferences,knowledge,coverage});
+  const sourcePlan=await resolveSourcePlan({userId:uid,contentPlan});
+
+  const dd=await createResponse({
+    userId:uid,
+    operation:"scheduled_discovery",
+    input:buildDiscoveryPrompt({date:localDate,preferences,coverage,contentPlan,sourcePlan}),
+    tools:[webSearchTool(sourcePlan)],
+    maxOutputTokens:9000
+  });
   const discovered=await parse(out(dd),uid,"scheduled_discovery"),candidates=Array.isArray(discovered?.candidates)?discovered.candidates:[];
   if(candidates.length<8)throw new Error(`Candidate discovery returned too few segments (${candidates.length})`);
 
-  const ranked=selectCandidates(candidates,{preferences,knowledge,coverage},12);
-  const final=await createResponse({userId:uid,operation:"scheduled_final",input:buildBriefPrompt({date:day(p),preferences,knowledge,coverage,candidates:ranked.selected}),tools:[{type:"web_search"}],maxOutputTokens:10000});
+  const ranked=selectCandidates(candidates,{preferences,knowledge,coverage,contentPlan},12);
+  const final=await createResponse({
+    userId:uid,
+    operation:"scheduled_final",
+    input:buildBriefPrompt({date:localDate,preferences,knowledge,coverage,candidates:ranked.selected,contentPlan,sourcePlan}),
+    tools:[{type:"web_search"}],
+    maxOutputTokens:10000
+  });
   const brief=await parse(out(final),uid,"scheduled_final");
-  brief.generation={kind:"scheduled",localDate:day(p),generatedAt:new Date().toISOString(),candidateCount:candidates.length,rankedCandidateIds:ranked.selected.map(c=>c.id)};
+  brief.generation={kind:"scheduled",localDate,generatedAt:new Date().toISOString(),candidateCount:candidates.length,rankedCandidateIds:ranked.selected.map(c=>c.id),contentPlan,sourceRegistrySize:sourcePlan.registrySize,sourceDomains:sourcePlan.domains};
 
   if(old?.[0]?.payload?.stories?.length)await insertUserRow("coverage",uid,{payload:{date:old[0].payload.date,stories:old[0].payload.stories.map(x=>({title:x.title,category:x.category,summary:x.summary,tags:x.tags||null}))}});
   const ins=await insertUserRow("briefs",uid,{brief_date:brief.date,payload:brief}),id=ins?.[0]?.id;if(!id)throw new Error("Brief save failed");
@@ -70,7 +87,7 @@ async function one(p){
       }
     }catch(e){audioError=e instanceof Error?e.message:"Audio generation failed";}
   }
-  return{userId:uid,briefId:id,emailId,candidateCount:candidates.length,audioGenerated,audioError};
+  return{userId:uid,briefId:id,emailId,candidateCount:candidates.length,contentBuckets:contentPlan.buckets.map(b=>({topic:b.topic,share:b.share})),sourceRegistrySize:sourcePlan.registrySize,audioGenerated,audioError};
 }
 module.exports=async(req,res)=>{
   const ok=Boolean(CRON_SECRET&&req.headers.authorization===`Bearer ${CRON_SECRET}`),s=getSession(req);
