@@ -22,7 +22,7 @@ function eventWeight(type,value){
   if(type==="quick_skip")return -1.2;
   if(type==="source_click")return 3;
   if(type==="archive_revisit")return 3;
-  if(type==="deep_dive")return 4;
+  if(type==="deep_dive")return 0;
   if(type==="more_like_this")return 8;
   if(type==="less_like_this")return -8;
   if(type==="share_or_copy")return 4;
