@@ -1267,3 +1267,35 @@ body:before{display:none}
 .has-persistent-audio .shell{padding-bottom:145px}
 .persistent-note{margin-top:10px!important}
 @media(max-width:650px){.persistent-audio-dock{bottom:78px;grid-template-columns:1fr;gap:8px;padding:10px 12px}.persistent-audio-copy{display:none}.has-persistent-audio .shell{padding-bottom:190px}}
+
+
+/* Full persistent audio console */
+.persistent-audio-dock{
+  grid-template-columns:minmax(145px,.8fr) minmax(260px,1.7fr) minmax(360px,1.5fr);
+  gap:14px;
+  width:min(1120px,calc(100vw - 34px));
+  padding:11px 14px;
+}
+.persistent-audio-dock audio{min-width:0}
+.persistent-audio-controls{display:grid;grid-template-columns:38px minmax(150px,1fr) 38px 78px;gap:8px;align-items:end}
+.dock-field{display:grid;gap:4px;min-width:0}
+.dock-field label{font-size:8px;line-height:1;text-transform:uppercase;letter-spacing:.11em;color:#c6aa99;font-weight:800}
+.dock-field select{width:100%;height:34px;border:1px solid rgba(255,255,255,.13);border-radius:9px;background:rgba(255,255,255,.08);color:#fff;padding:0 8px;font-size:10px;outline:none}
+.dock-field select option{color:#2f211b;background:#fffaf5}
+.dock-control{height:34px;min-width:34px;border:1px solid rgba(255,255,255,.14);border-radius:9px;background:rgba(255,255,255,.08);color:#fff;font-size:15px;cursor:pointer}
+.dock-control:hover:not(:disabled){background:rgba(255,255,255,.16)}
+.dock-control:disabled,.dock-field select:disabled{opacity:.35;cursor:not-allowed}
+.persistent-audio-dock.is-generating audio,
+.persistent-audio-dock.is-generating .persistent-audio-controls{opacity:.35;pointer-events:none}
+.audio-disabled{pointer-events:none}
+@media(max-width:900px){
+  .persistent-audio-dock{grid-template-columns:1fr 1.7fr}
+  .persistent-audio-copy{display:none}
+  .persistent-audio-controls{grid-column:1/-1}
+}
+@media(max-width:650px){
+  .persistent-audio-dock{grid-template-columns:1fr;gap:8px;padding:10px 11px}
+  .persistent-audio-controls{grid-template-columns:34px minmax(0,1fr) 34px 72px;grid-column:auto}
+  .dock-field select{height:32px}
+  .dock-control{height:32px}
+}
