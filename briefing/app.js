@@ -687,10 +687,12 @@ function renderToday(){
     feedback.innerHTML='<span>Was this your kind of story?</span><button type="button" data-rec="more">More like this</button><button type="button" data-rec="less">Less like this</button><button type="button" data-rec="copy">Copy</button>';
     feedback.querySelector('[data-rec="more"]').addEventListener("click",e=>{
       e.currentTarget.classList.add("selected");
+      feedback.querySelectorAll('[data-rec="more"],[data-rec="less"]').forEach(b=>b.disabled=true);
       recEvent("more_like_this",story,{eventKey:`${state.briefDbId}:${story.id}:more-like-this`}).catch(()=>{});
     });
     feedback.querySelector('[data-rec="less"]').addEventListener("click",e=>{
       e.currentTarget.classList.add("selected");
+      feedback.querySelectorAll('[data-rec="more"],[data-rec="less"]').forEach(b=>b.disabled=true);
       recEvent("less_like_this",story,{eventKey:`${state.briefDbId}:${story.id}:less-like-this`}).catch(()=>{});
     });
     feedback.querySelector('[data-rec="copy"]').addEventListener("click",async e=>{
