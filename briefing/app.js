@@ -30,7 +30,7 @@ const state={
   coverage:[],
   surveys:[],
   archivedBriefs:[],
-  api:{configured:false,model:null,loading:true,error:null,canRegenerate:true},
+  api:{configured:false,model:null,loading:true,error:null,canRegenerate:true,unlimitedRegenerations:false},
   hydrating:true,
   dbError:null,
   briefDbId:null,
@@ -342,9 +342,9 @@ async function checkApi(){
   try{
     const r=await fetch("/api/generate-brief");
     const data=await r.json();
-    state.api={configured:!!data.configured,model:data.model||null,loading:false,error:null,canRegenerate:data.canRegenerate!==false};
+    state.api={configured:!!data.configured,model:data.model||null,loading:false,error:null,canRegenerate:data.canRegenerate!==false,unlimitedRegenerations:data.unlimitedRegenerations===true};
   }catch(e){
-    state.api={configured:false,model:null,loading:false,error:"Could not reach generation API.",canRegenerate:false};
+    state.api={configured:false,model:null,loading:false,error:"Could not reach generation API.",canRegenerate:false,unlimitedRegenerations:false};
   }
   if(state.view==="today") render();
 }
@@ -437,7 +437,7 @@ function renderToday(){
           </div>
           <div class="edition-tools">
             <span class="edition-generation">${apiMessage}</span>
-            <button class="ghost compact" id="generateBtn" ${state.api.configured&&state.api.canRegenerate?"":"disabled"}>${!state.api.configured?"Unavailable":state.api.canRegenerate?"Refresh edition":"Refresh used"}</button>
+            <button class="ghost compact" id="generateBtn" ${state.api.configured&&state.api.canRegenerate?"":"disabled"}>${!state.api.configured?"Unavailable":state.api.canRegenerate?(state.api.unlimitedRegenerations?"Refresh edition ∞":"Refresh edition"):"Refresh used"}</button>
           </div>
         </div>
         <span id="generateStatus" class="muted"></span>
