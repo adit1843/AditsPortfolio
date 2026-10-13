@@ -19,7 +19,8 @@ function defaultPrefs(){
     explanationBias:0,
     languageDirectives:[],
     editorialDirectives:[],
-    tuningHistory:[]
+    tuningHistory:[],
+    behavioralInterest:{version:1,features:{}}
   };
 }
 function applySurveyEvent(prefs,event){
@@ -50,10 +51,10 @@ function applySurveyEvent(prefs,event){
   if(String(p.missing||"").trim())prefs.requestedTopics=[String(p.missing).trim(),...(prefs.requestedTopics||[])].slice(0,10);
   return prefs;
 }
-async function rebuildFromSources({userId,history,surveys,currentKnowledge}){
+async function rebuildFromSources({userId,history,surveys,currentKnowledge,currentPreferences={}}){
   const base=defaultPrefs();
   const cleanHistory=(Array.isArray(history)?history:[]).map(x=>({at:x.at,user:String(x.user||""),assistant:String(x.assistant||"")})).filter(x=>x.user.trim());
-  let next={...base,tuningHistory:cleanHistory.slice(-20)};
+  let next={...base,behavioralInterest:currentPreferences.behavioralInterest||base.behavioralInterest,tuningHistory:cleanHistory.slice(-20)};
   let nk={
     concepts:Object.fromEntries(Object.entries(currentKnowledge?.concepts||{}).filter(([,v])=>v?.updatedBy!=="user")),
     seenEvents:{...(currentKnowledge?.seenEvents||{})}
@@ -92,7 +93,8 @@ module.exports=async(req,res)=>{
         userId:s.userId,
         history:req.body?.history||[],
         surveys:req.body?.surveys||[],
-        currentKnowledge:req.body?.knowledge||{concepts:{},seenEvents:{}}
+        currentKnowledge:req.body?.knowledge||{concepts:{},seenEvents:{}},
+        currentPreferences:req.body?.preferences||{}
       });
       return res.status(200).json(rebuilt);
     }catch(e){return res.status(e.status||500).json({error:e instanceof Error?e.message:"Could not rebuild Neosis tuning"});}
