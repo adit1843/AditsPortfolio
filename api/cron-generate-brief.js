@@ -6,6 +6,7 @@ const {getSession}=require("../lib/briefline/auth");
 const {request,userRows,insertUserRow,listProfiles}=require("../lib/briefline/store");
 const {createResponse}=require("../lib/briefline/openai");
 const {buildContentPlan,resolveSourcePlan,webSearchTool}=require("../lib/briefline/source-planner");
+const {buildBehavioralInterest}=require("../lib/briefline/behavior");
 
 const CRON_SECRET=process.env.CRON_SECRET,RESEND_API_KEY=process.env.RESEND_API_KEY,SITE_URL=process.env.SITE_URL;
 
@@ -41,8 +42,8 @@ async function email(p,b,id){
 async function one(p){
   const uid=p.user_id;
   if(!process.env.OPENAI_API_KEY)return{userId:uid,skipped:"openai_not_configured"};
-  const[prefs,k,cov,old]=await Promise.all([userRows("preferences",uid,{limit:1}),userRows("knowledge",uid,{limit:1}),userRows("coverage",uid,{limit:14}),userRows("briefs",uid,{limit:1})]);
-  const preferences=prefs?.[0]?.payload||{},knowledge=k?.[0]?.payload||{concepts:{},seenEvents:{}},coverage=cov.map(x=>x.payload);
+  const[prefs,k,cov,old,behaviorEvents]=await Promise.all([userRows("preferences",uid,{limit:1}),userRows("knowledge",uid,{limit:1}),userRows("coverage",uid,{limit:14}),userRows("briefs",uid,{limit:1}),userRows("recommendation_events",uid,{limit:1000,order:"created_at.asc"}).catch(()=>[])]);
+  const preferences={...(prefs?.[0]?.payload||{}),behavioralInterest:buildBehavioralInterest(behaviorEvents)},knowledge=k?.[0]?.payload||{concepts:{},seenEvents:{}},coverage=cov.map(x=>x.payload);
 
   const localDate=day(p);
   const contentPlan=await buildContentPlan({userId:uid,date:localDate,preferences,knowledge,coverage});
