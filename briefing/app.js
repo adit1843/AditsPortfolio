@@ -70,7 +70,7 @@ async function dbDelete(resource,id){
 function recEvent(type,story,{value=null,eventKey=null,briefId=null}={}){
   if(!story?.id)return Promise.resolve(null);
   const key=eventKey||`${briefId||state.briefDbId||state.brief?.date||"brief"}:${story.id}:${type}:${value??"x"}`;
-  return fetch("/api/recommendation-event",{
+  return fetch("/api/data?resource=recommendation_event",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({type,eventKey:key,briefId:briefId||state.briefDbId||null,story,value})
