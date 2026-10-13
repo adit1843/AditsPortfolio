@@ -48,6 +48,14 @@
 
   <main id="app" class="shell"></main>
 
+  <aside id="persistentAudioDock" class="persistent-audio-dock" hidden aria-label="Neosis audio player">
+    <div class="persistent-audio-copy">
+      <span class="eyebrow">Now playing</span>
+      <strong id="persistentAudioLabel">Today's Neosis</strong>
+    </div>
+    <audio id="briefAudio" controls preload="metadata"></audio>
+  </aside>
+
   <template id="story-template">
     <article class="story-card">
       <div class="story-accent" aria-hidden="true"></div>
