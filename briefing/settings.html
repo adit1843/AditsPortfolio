@@ -18,6 +18,11 @@
 <div class="metric" id="usageCard"><span class="helper">Loading usage…</span></div>
 <div id="ownerUsage" style="display:none"><div class="section-label">All users · owner view</div><div class="panel" id="ownerUsageBody"></div></div>
 
+<div id="ownerAudio" style="display:none">
+  <div class="section-label">Audio completion · owner view</div>
+  <div class="panel" id="ownerAudioBody"><span class="helper">Loading chapter completion…</span></div>
+</div>
+
 <div id="ownerControls" style="display:none">
   <div class="section-label">Owner controls</div>
   <div class="notice"><strong>Unlimited regenerations enabled.</strong><div class="helper">Your owner account can manually regenerate Noesis without the normal one-per-day limit. Other accounts remain limited.</div></div>
@@ -56,6 +61,7 @@ function populateTimezones(select,value){
   select.innerHTML=zones.map(z=>`<option value="${z}">${z.replaceAll("_"," ")}</option>`).join("");
   select.value=zones.includes(value)?value:(Intl.DateTimeFormat().resolvedOptions().timeZone||"UTC");
 }
+function esc(v=""){return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));}
 function usageText(u){
   if(!u)return "No usage yet.";
   const total=u.estimatedCostUsd===null?"Cost estimate unavailable":`Estimated total cost: ${Number(u.estimatedCostUsd||0).toFixed(4)}`;
@@ -73,7 +79,16 @@ async function loadUsage(){
     if(all.ok){
       const x=await all.json(),wrap=document.querySelector("#ownerUsage"),body=document.querySelector("#ownerUsageBody");
       wrap.style.display="";
-      body.innerHTML=(x.users||[]).map(u=>`<div class="knowledge-row"><div><strong>${u.displayName||u.email||u.userId}</strong><div class="helper">${u.email||""}</div></div><div><div>${Number(u.totalTokens||0).toLocaleString()} OpenAI tokens</div><div class="helper">${Number(u.ttsCharacters||0).toLocaleString()} TTS chars</div></div><div>${u.estimatedCostUsd===null?"—":"$"+Number(u.estimatedCostUsd||0).toFixed(4)}</div></div>`).join("")||'<p class="muted">No usage yet.</p>';
+      body.innerHTML=(x.users||[]).map(u=>`<div class="knowledge-row"><div><strong>${esc(u.displayName||u.email||u.userId)}</strong><div class="helper">${esc(u.email||"")}</div></div><div><div>${Number(u.totalTokens||0).toLocaleString()} OpenAI tokens</div><div class="helper">${Number(u.ttsCharacters||0).toLocaleString()} TTS chars</div></div><div>${u.estimatedCostUsd===null?"—":"$"+Number(u.estimatedCostUsd||0).toFixed(4)}</div></div>`).join("")||'<p class="muted">No usage yet.</p>';
+    }
+    const audio=await fetch("/api/usage?scope=audio_completion");
+    if(audio.ok){
+      const x=await audio.json(),wrap=document.querySelector("#ownerAudio"),body=document.querySelector("#ownerAudioBody");
+      wrap.style.display="";
+      body.innerHTML=(x.users||[]).map(u=>{
+        const chapters=(u.chapters||[]).map((ch,i)=>`<div style="display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid rgba(56,37,30,.09)"><span aria-hidden="true" style="width:18px">${ch.completed?"✓":"○"}</span><div style="min-width:0"><strong style="font-size:13px">${i+1}. ${esc(ch.label)}</strong><div class="helper">${ch.completed?"Completed":ch.progress>0?Math.round(ch.progress*100)+"% listened":"Not completed"}</div></div></div>`).join("")||'<div class="helper">No audio chapters for this edition.</div>';
+        return `<section style="padding:16px 0;border-bottom:1px solid rgba(56,37,30,.12)"><div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:8px"><div><strong>${esc(u.displayName||u.email||u.userId)}</strong><div class="helper">${esc(u.email||"")} · ${esc(u.briefDate||"No brief")}</div></div><strong>${u.completed||0}/${u.total||0}</strong></div>${chapters}</section>`;
+      }).join("")||'<p class="muted">No user audio data yet.</p>';
     }
   }catch{}
 }
