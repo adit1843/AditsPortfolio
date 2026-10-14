@@ -454,9 +454,19 @@ function setupBriefAudio(){
       });
       audio.addEventListener("ended",async()=>{
         if(playback.durations[playback.index])playback.listened[playback.index]=Math.max(playback.listened[playback.index],playback.durations[playback.index]);
-        const finished=chapterKey(playback.segments[playback.index]),next=playback.index+1;
+        const finishedSeg=playback.segments[playback.index],finished=chapterKey(finishedSeg),next=playback.index+1;
         const nextChapter=next<playback.segments.length?chapterKey(playback.segments[next]):null;
-        if(nextChapter!==finished)maybeCreditChapter(finished);
+        if(nextChapter!==finished){
+          maybeCreditChapter(finished);
+          const story=state.brief.stories.find(s=>String(s.id)===String(finished))||{
+            id:String(finished),
+            title:finishedSeg?.label||(finished==="intro"?"Introduction":finished==="outro"?"Closing":"Chapter"),
+            category:"Audio",
+            topics:[],
+            concepts:[]
+          };
+          recEvent("audio_chapter_complete",story,{value:1,eventKey:`${state.briefDbId}:${finished}:audio-chapter-complete`}).catch(()=>{});
+        }
         if(next<playback.segments.length){load(next);await playLoaded();}
         else updatePlaybackUi();
       });
