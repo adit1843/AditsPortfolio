@@ -9,7 +9,7 @@ const {buildContentPlan,resolveSourcePlan,webSearchTool}=require("../lib/briefli
 const {buildBehavioralInterest}=require("../lib/briefline/behavior");
 const {buildDailyEmail}=require("../lib/briefline/daily-email");
 
-const CRON_SECRET=process.env.CRON_SECRET,RESEND_API_KEY=process.env.RESEND_API_KEY,SITE_URL=process.env.SITE_URL;
+const CRON_SECRET=process.env.CRON_SECRET,DISPATCH_SECRET=process.env.NOESIS_DISPATCH_SECRET,RESEND_API_KEY=process.env.RESEND_API_KEY,SITE_URL=process.env.SITE_URL;
 
 function out(d){const p=[];for(const i of d.output||[]){if(i.type!=="message")continue;for(const c of i.content||[]){if(c.type==="output_text"&&c.text)p.push(c.text);}}return p.join("\n").trim();}
 function clean(t){return String(t||"").replace(/^\s*```(?:json)?/i,"").replace(/```\s*$/i,"").trim();}
@@ -36,16 +36,21 @@ function day(p){try{return new Intl.DateTimeFormat("en-CA",{timeZone:p.timezone|
 async function email(p,b,id){
   if(!p.email_enabled||!RESEND_API_KEY||!SITE_URL)return null;
   const {html,text,subject}=buildDailyEmail({brief:b,briefId:id,baseUrl:SITE_URL,audioEnabled:Boolean(p.audio_enabled)});
-  const rr=await fetch("https://api.resend.com/emails",{method:"POST",headers:{Authorization:`Bearer ${RESEND_API_KEY}`,"Content-Type":"application/json"},body:JSON.stringify({from:"Noesis <briefline@mail.aditsanghani.com>",to:[p.email],subject,html,text})});
+  const rr=await fetch("https://api.resend.com/emails",{method:"POST",headers:{Authorization:`Bearer ${RESEND_API_KEY}`,"Content-Type":"application/json","Idempotency-Key":`noesis-daily-${p.user_id}-${day(p)}`},body:JSON.stringify({from:"Noesis <briefline@mail.aditsanghani.com>",to:[p.email],subject,html,text})});
   const d=await rr.json();if(!rr.ok)throw new Error(d?.message||"Email failed");return d.id;
 }
 async function one(p){
-  const uid=p.user_id;
+  const uid=p.user_id,localDate=day(p);
   if(!process.env.OPENAI_API_KEY)return{userId:uid,skipped:"openai_not_configured"};
   const[prefs,k,cov,old,behaviorEvents]=await Promise.all([userRows("preferences",uid,{limit:1}),userRows("knowledge",uid,{limit:1}),userRows("coverage",uid,{limit:14}),userRows("briefs",uid,{limit:1}),userRows("recommendation_events",uid,{limit:1000,order:"created_at.asc"}).catch(()=>[])]);
   const preferences={...(prefs?.[0]?.payload||{}),behavioralInterest:buildBehavioralInterest(behaviorEvents)},knowledge=k?.[0]?.payload||{concepts:{},seenEvents:{}},coverage=cov.map(x=>x.payload);
 
-  const localDate=day(p);
+  const latest=old?.[0];
+  if(latest?.payload?.generation?.localDate===localDate){
+    const emailId=await email(p,latest.payload,latest.id);
+    await request(`profiles?user_id=eq.${encodeURIComponent(uid)}`,{method:"PATCH",body:JSON.stringify({last_brief_local_date:localDate,brief_generation_date:localDate,brief_generation_status:"complete",brief_generation_error:null,updated_at:new Date().toISOString()})});
+    return{userId:uid,briefId:latest.id,emailId,recoveredExisting:true};
+  }
   const contentPlan=await buildContentPlan({userId:uid,date:localDate,preferences,knowledge,coverage});
   const sourcePlan=await resolveSourcePlan({userId:uid,contentPlan});
 
@@ -74,7 +79,7 @@ async function one(p){
 
   // Email immediately after the brief is saved. Audio is an enhancement and must never block delivery.
   const emailId=await email(p,brief,id);
-  await request(`profiles?user_id=eq.${encodeURIComponent(uid)}`,{method:"PATCH",body:JSON.stringify({last_brief_local_date:day(p),updated_at:new Date().toISOString()})});
+  await request(`profiles?user_id=eq.${encodeURIComponent(uid)}`,{method:"PATCH",body:JSON.stringify({last_brief_local_date:localDate,brief_generation_date:localDate,brief_generation_status:"complete",brief_generation_error:null,updated_at:new Date().toISOString()})});
 
   let audioGenerated=false,audioError=null;
   if(p.audio_enabled){
@@ -90,26 +95,32 @@ async function one(p){
   return{userId:uid,briefId:id,emailId,candidateCount:candidates.length,contentBuckets:contentPlan.buckets.map(b=>({topic:b.topic,share:b.share})),sourceRegistrySize:sourcePlan.registrySize,audioGenerated,audioError};
 }
 module.exports=async(req,res)=>{
-  const ok=Boolean(CRON_SECRET&&req.headers.authorization===`Bearer ${CRON_SECRET}`),s=getSession(req);
-  if(!ok&&!s)return res.status(401).json({error:"Unauthorized"});
+  const auth=req.headers.authorization||"";
+  const schedulerOk=Boolean((DISPATCH_SECRET&&auth===`Bearer ${DISPATCH_SECRET}`)||(CRON_SECRET&&auth===`Bearer ${CRON_SECRET}`));
+  const s=getSession(req);
+  if(!schedulerOk&&!s)return res.status(401).json({error:"Unauthorized"});
+  let p=null;
   try{
-    const ps=s?await request(`profiles?user_id=eq.${encodeURIComponent(s.userId)}&select=*&limit=1`):await listProfiles();
+    if(s){
+      const rows=await request(`profiles?user_id=eq.${encodeURIComponent(s.userId)}&select=*&limit=1`);
+      p=rows?.[0]||null;
+      if(!p)return res.status(404).json({error:"Profile not found"});
+      if(p.last_brief_local_date===day(p))return res.status(200).json({ok:true,skipped:"already_generated"});
+    }else{
+      const claimed=await request("rpc/claim_next_noesis_profile",{method:"POST",body:"{}"});
+      p=claimed?.[0]||null;
+      if(!p)return res.status(200).json({ok:true,skipped:"no_due_users"});
+    }
 
-    // Run each user's edition independently so one slow/failing account cannot block the rest.
-    const tasks=ps.map(async p=>{
-      if(p.last_brief_local_date===day(p))return{userId:p.user_id,skipped:"already_generated"};
-      try{return await one(p);}
-      catch(e){return{userId:p.user_id,error:e instanceof Error?e.message:"User generation failed"};}
-    });
-    const results=await Promise.all(tasks);
-
-    return res.status(200).json({
-      ok:true,
-      processed:results.length,
-      succeeded:results.filter(x=>x.briefId).length,
-      skipped:results.filter(x=>x.skipped).length,
-      failed:results.filter(x=>x.error).length,
-      results
-    });
+    try{
+      const result=await one(p);
+      return res.status(200).json({ok:true,result});
+    }catch(e){
+      const message=e instanceof Error?e.message:"User generation failed";
+      if(!s&&p?.user_id){
+        await request(`profiles?user_id=eq.${encodeURIComponent(p.user_id)}`,{method:"PATCH",body:JSON.stringify({brief_generation_status:"failed",brief_generation_error:message.slice(0,1000),updated_at:new Date().toISOString()})}).catch(()=>null);
+      }
+      return res.status(200).json({ok:false,userId:p?.user_id||null,error:message});
+    }
   }catch(e){return res.status(500).json({error:e instanceof Error?e.message:"Daily generation failed"});}
 };
