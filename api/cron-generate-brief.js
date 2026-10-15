@@ -52,7 +52,7 @@ async function one(p){
     return{userId:uid,briefId:latest.id,emailId,recoveredExisting:true};
   }
   const contentPlan=await buildContentPlan({userId:uid,date:localDate,preferences,knowledge,coverage});
-  const sourcePlan=await resolveSourcePlan({userId:uid,contentPlan});
+  const sourcePlan=await resolveSourcePlan({userId:uid,contentPlan,discoverRegistry:false});
 
   const dd=await createResponse({
     userId:uid,
