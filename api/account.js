@@ -4,7 +4,7 @@ const {userRows,insertUserRow,upsert,getProfile,request}=require("../lib/briefli
 function defaults(){return{generalNews:40,politics:"important-only",markets:true,topicScores:{},contentTypeScores:{news:55,general_knowledge:50,deep_dive:50,history:50,science:50,business_case:50},mixTargets:{news:45,general_knowledge:20,deep_dive:15,history:7,science:8,business_case:5},requestedTopics:[],avoidedTopics:[],explanationBias:0,languageDirectives:[],editorialDirectives:[],tuningHistory:[],behavioralInterest:{version:1,features:{}}};}
 
 module.exports=async(req,res)=>{
-  const s=requireAuth(req,res);if(!s)return;
+  const s=await requireAuth(req,res);if(!s)return;
   try{
     if(req.method==="GET"){
       const [p,prefs]=await Promise.all([getProfile(s.userId),userRows("preferences",s.userId,{limit:1})]);
