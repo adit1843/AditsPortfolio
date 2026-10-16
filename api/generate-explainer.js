@@ -2,7 +2,7 @@ const {requireAuth}=require("../lib/briefline/auth");
 const {createResponse}=require("../lib/briefline/openai");
 function out(d){const p=[];for(const i of d.output||[]){if(i.type!=="message")continue;for(const c of i.content||[]){if(c.type==="output_text"&&c.text)p.push(c.text);}}return p.join("\n").trim();}
 module.exports=async(req,res)=>{
-  const s=requireAuth(req,res);if(!s)return;
+  const s=await requireAuth(req,res);if(!s)return;
   if(req.method!=="POST"){res.setHeader("Allow","POST");return res.status(405).json({error:"Method not allowed"});}
   if(!process.env.OPENAI_API_KEY)return res.status(503).json({error:"Noesis generation is not configured."});
   const story=req.body?.story,knowledge=req.body?.knowledge||{};
