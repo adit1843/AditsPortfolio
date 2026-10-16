@@ -26,6 +26,8 @@
 <div id="ownerControls" style="display:none">
   <div class="section-label">Owner controls</div>
   <div class="notice"><strong>Unlimited regenerations enabled.</strong><div class="helper">Your owner account can manually regenerate Noesis without the normal one-per-day limit. Other accounts remain limited.</div></div>
+  <div class="section-label">Accounts</div>
+  <div class="panel" id="ownerAccountsBody"><span class="helper">Loading accounts…</span></div>
 </div>
 
 <div class="section-label">Danger zone</div>
@@ -92,6 +94,30 @@ async function loadUsage(){
     }
   }catch{}
 }
+async function loadOwnerAccounts(){
+  const r=await fetch("/api/account?scope=users");
+  if(!r.ok)return;
+  const d=await r.json(),body=document.querySelector("#ownerAccountsBody");
+  body.innerHTML=(d.users||[]).map(u=>{
+    const active=u.account_active!==false;
+    return `<div class="knowledge-row" style="align-items:center">
+      <div><strong>${esc(u.display_name||u.email||u.user_id)}</strong><div class="helper">${esc(u.email||"")} · ${active?"Active":"Disabled"}</div></div>
+      <div><div>${u.email_enabled!==false?"Daily email on":"Daily email off"}</div><div class="helper">${u.audio_enabled!==false?"Audio on":"Audio off"}</div></div>
+      <button class="${active?"ghost":"primary"} account-toggle" type="button" data-user-id="${esc(u.user_id)}" data-active="${active?"1":"0"}">${active?"Disable":"Revive"}</button>
+    </div>`;
+  }).join("")||'<p class="muted">No accounts found.</p>';
+  body.querySelectorAll(".account-toggle").forEach(btn=>btn.onclick=async()=>{
+    const active=btn.dataset.active==="1",next=!active;
+    const verb=next?"revive":"disable";
+    if(!confirm(`${verb[0].toUpperCase()+verb.slice(1)} this Noesis account? ${next?"It will be able to sign in and receive future editions again.":"It will be signed out on its next request and excluded from future daily generation."}`))return;
+    btn.disabled=true;
+    try{
+      const rr=await fetch("/api/account",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"set_account_active",userId:btn.dataset.userId,active:next})});
+      const x=await rr.json();if(!rr.ok)throw new Error(x.error||"Could not update account");
+      await loadOwnerAccounts();
+    }catch(e){alert(e.message);}finally{btn.disabled=false;}
+  });
+}
 async function load(){
   const s=await fetch("/api/auth-session").then(r=>r.json());if(!s.authenticated)return location.replace("/briefing/login.html");
   const r=await fetch("/api/account"),d=await r.json();if(!r.ok)throw new Error(d.error);
@@ -99,7 +125,7 @@ async function load(){
   f.displayName.value=d.profile?.display_name||"";
   populateTimezones(f.timezone,d.profile?.timezone||Intl.DateTimeFormat().resolvedOptions().timeZone||"UTC");
   f.emailEnabled.checked=d.profile?.email_enabled!==false;f.audioEnabled.checked=d.profile?.audio_enabled!==false;
-  if(d.owner)document.querySelector("#ownerControls").style.display="";
+  if(d.owner){document.querySelector("#ownerControls").style.display="";loadOwnerAccounts();}
   loadUsage();
 }
 load().catch(e=>document.querySelector("#status").textContent=e.message);
