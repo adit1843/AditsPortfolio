@@ -51,7 +51,7 @@ async function recommendationEvent(s,req,res){
 }
 
 module.exports=async(req,res)=>{
-  const s=requireAuth(req,res);if(!s)return;
+  const s=await requireAuth(req,res);if(!s)return;
   const {resource}=req.query||{};
   if(resource==="recommendation_event"){
     if(req.method!=="POST"){res.setHeader("Allow","POST");return res.status(405).json({error:"Method not allowed"});}
