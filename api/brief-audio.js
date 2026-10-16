@@ -1,5 +1,5 @@
 const {requireAuth}=require("../lib/briefline/auth");const {request}=require("../lib/briefline/store");const U=process.env.SUPABASE_URL,K=process.env.SUPABASE_SECRET_KEY,B=process.env.BRIEFLINE_AUDIO_BUCKET||"briefline-audio";function base(){return(U||"").replace(/\/+$/,"").replace(/\/rest\/v1$/,"");}
-module.exports=async(req,res)=>{const s=requireAuth(req,res);if(!s)return;const path=String(req.query?.path||"");if(!path||path.includes(".."))return res.status(400).json({error:"Invalid audio path"});let briefId=null;
+module.exports=async(req,res)=>{const s=await requireAuth(req,res);if(!s)return;const path=String(req.query?.path||"");if(!path||path.includes(".."))return res.status(400).json({error:"Invalid audio path"});let briefId=null;
 const scoped=/^users\/([^/]+)\/briefs\/([^/]+)\//.exec(path);
 const legacy=/^briefs\/([^/]+)\//.exec(path);
 if(scoped){if(scoped[1]!==s.userId)return res.status(403).json({error:"Audio access denied"});briefId=scoped[2];}
