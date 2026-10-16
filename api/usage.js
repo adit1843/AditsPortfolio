@@ -52,7 +52,7 @@ function chapterRows(brief,events){
 }
 
 module.exports=async(req,res)=>{
-  const s=requireAuth(req,res);if(!s)return;
+  const s=await requireAuth(req,res);if(!s)return;
   if(req.method!=="GET"){res.setHeader("Allow","GET");return res.status(405).json({error:"Method not allowed"});}
   try{
     const month=String(req.query?.month||new Date().toISOString().slice(0,7));
