@@ -83,7 +83,7 @@ async function rebuildFromSources({userId,history,surveys,currentKnowledge,curre
 }
 
 module.exports=async(req,res)=>{
-  const s=requireAuth(req,res);if(!s)return;
+  const s=await requireAuth(req,res);if(!s)return;
   if(req.method!=="POST"){res.setHeader("Allow","POST");return res.status(405).json({error:"Method not allowed"});}
   if(!process.env.OPENAI_API_KEY)return res.status(503).json({error:"Noesis generation is not configured."});
   const action=String(req.body?.action||"tune");
