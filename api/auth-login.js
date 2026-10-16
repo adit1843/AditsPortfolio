@@ -1,4 +1,5 @@
 const {createSession,cookieHeader}=require("../lib/briefline/auth");
+const {getProfile}=require("../lib/briefline/store");
 
 const U=process.env.SUPABASE_URL;
 const A=process.env.SUPABASE_ANON_KEY;
@@ -6,6 +7,10 @@ const SITE=(process.env.NOESIS_SITE_URL||"https://aditsanghani.com").replace(/\/
 
 function base(){return (U||"").replace(/\/+$/,"").replace(/\/rest\/v1$/,"");}
 function callbackUrl(mode){return `${SITE}/briefing/auth-callback.html?mode=${encodeURIComponent(mode)}`;}
+async function assertActive(userId){
+  const p=await getProfile(userId).catch(()=>null);
+  if(p&&p.account_active===false)throw Object.assign(new Error("This Noesis account is disabled."),{status:403});
+}
 
 async function call(path,body){
   const r=await fetch(`${base()}/auth/v1/${path}`,{
@@ -38,6 +43,7 @@ module.exports=async(req,res)=>{
       const r=await fetch(`${base()}/auth/v1/user`,{headers:{apikey:A,Authorization:`Bearer ${token}`}});
       const user=await r.json().catch(()=>({}));
       if(!r.ok||!user?.id)throw Object.assign(new Error(user?.message||"This verification link is invalid or expired."),{status:401});
+      await assertActive(user.id);
       res.setHeader("Set-Cookie",cookieHeader(createSession(user)));
       return res.status(200).json({ok:true,user:{id:user.id,email:user.email}});
     }
@@ -75,6 +81,7 @@ module.exports=async(req,res)=>{
     if(action==="signup"){
       const d=await call(`signup?redirect_to=${encodeURIComponent(callbackUrl("signup"))}`,{email,password});
       if(d?.access_token&&d?.user?.id){
+        await assertActive(d.user.id);
         res.setHeader("Set-Cookie",cookieHeader(createSession(d.user)));
         return res.status(200).json({ok:true,authenticated:true});
       }
@@ -88,6 +95,7 @@ module.exports=async(req,res)=>{
 
     const d=await call("token?grant_type=password",{email,password});
     if(!d?.user?.id)throw new Error("No user was returned.");
+    await assertActive(d.user.id);
     res.setHeader("Set-Cookie",cookieHeader(createSession(d.user)));
     return res.status(200).json({ok:true,authenticated:true});
   }catch(e){
