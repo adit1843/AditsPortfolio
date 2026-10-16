@@ -24,7 +24,7 @@ async function manualAlreadyUsed(userId,day){
   return rows.some(r=>r?.payload?.generation?.kind==="manual"&&r?.payload?.generation?.localDate===day);
 }
 module.exports=async(req,res)=>{
-  const s=requireAuth(req,res);if(!s)return;
+  const s=await requireAuth(req,res);if(!s)return;
   const profile=await getProfile(s.userId).catch(()=>null);
   const day=localDay(profile);
   const owner=Boolean(process.env.SURVEY_EMAIL_TO&&String(s.email||"").toLowerCase()===String(process.env.SURVEY_EMAIL_TO).toLowerCase());
